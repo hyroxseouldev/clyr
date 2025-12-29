@@ -1,39 +1,53 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { updateSession } from "@/lib/supabase/middleware";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  // 1. 세션 업데이트 및 유저/클라이언트 가져오기
+  const { response, user, supabase } = await updateSession(request);
   const { pathname } = request.nextUrl;
 
-  // 가상의 유저 세션 정보 (실제로는 쿠키나 Auth 라이브러리에서 가져옴)
-  const user = {
-    isLoggedIn: false,
-    role: "USER", // 'ADMIN' | 'COACH' | 'USER'
-  };
+  // 2. 로그인 상태라면 DB에서 Role 가져오기
+  let userRole = null;
+  if (user) {
+    const { data: account } = await supabase
+      .from("account")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    userRole = account?.role;
+  }
 
-  // 1. 코치 전용 경로 보호
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/coach")) {
-    if (!user.isLoggedIn || user.role !== "COACH") {
+  // --- [권한 제어 로직] ---
+
+  // 1. 코치 전용 경로 (/coach)
+  if (pathname.startsWith("/coach")) {
+    if (!user || userRole !== "COACH") {
       return NextResponse.redirect(
         new URL("/signin?message=denied", request.url)
       );
     }
   }
 
-  // 2. 유저 전용 경로 보호
+  // 2. 일반 유저 전용 경로 (/user)
   if (pathname.startsWith("/user")) {
-    // 유저의 signin/signup은 public이므로 제외 로직 필요
     const isAuthPath =
       pathname.includes("/signin") || pathname.includes("/signup");
-
-    if (!isAuthPath && (!user.isLoggedIn || user.role !== "USER")) {
+    if (!isAuthPath && (!user || userRole !== "USER")) {
       return NextResponse.redirect(new URL("/signin", request.url));
     }
   }
 
-  return NextResponse.next();
+  // 3. 로그인 된 유저가 로그인 페이지 가려고 할 때 (역 리다이렉트)
+  if (user && (pathname === "/signin" || pathname === "/signup")) {
+    const dest = userRole === "COACH" ? "/coach/dashboard" : "/user/program";
+    return NextResponse.redirect(new URL(dest, request.url));
+  }
+
+  return response;
 }
 
 export const config = {
-  // 미들웨어가 실행될 경로 설정
-  matcher: ["/dashboard/:path*", "/coach/:path*", "/user/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
