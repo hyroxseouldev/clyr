@@ -5,3 +5,4 @@
 4. UI 는 Shadncn 공용 Components 를 우선적으로 사용한다.
 5. Form 데이터는 React Hook Form + Zod 로 명확한 타입 생성을 한다.
    6-1. Compoennt 또한 Shadcn UI Form 을 사용
+6. DB Model 에 대한 CRUD 쿼리는 drizzle 쿼리를 사용하며 위치는 src/db/queries/modelName 이다.
