@@ -1,3 +1,2 @@
-// Get all queries export
-
+// export all actions
 export * from "./program";

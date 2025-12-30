@@ -6,3 +6,6 @@
 5. Form 데이터는 React Hook Form + Zod 로 명확한 타입 생성을 한다.
    6-1. Compoennt 또한 Shadcn UI Form 을 사용
 6. DB Model 에 대한 CRUD 쿼리는 drizzle 쿼리를 사용하며 위치는 src/db/queries/modelName 이다.
+
+7. Controller, Drizzle 쿼리는 순수하게 DB만 다룹니다. 트랜잭션도 이곳에서 다룹니다.
+   7-1. 서버 액션 레이어 에서는 캐시 갱신등을 처리합니다.
