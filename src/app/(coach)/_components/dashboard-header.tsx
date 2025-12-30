@@ -4,7 +4,7 @@ import Link from "next/link";
 
 const DashboardHeader = () => {
   return (
-    <div className="flex flex-row justify-between items-center px-4 py-2 border-b w-full">
+    <div className="flex flex-row justify-between items-center px-4 py-2 w-full">
       <Link href="/coach/dashboard">
         <h1 className="text-2xl font-bold">CLYR LOGO</h1>
       </Link>

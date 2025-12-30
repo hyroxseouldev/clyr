@@ -7,7 +7,7 @@ export default function CoachLayout({
 }) {
   return (
     // 1. 전체 화면을 flex-col로 설정하고 스크롤을 막음
-    <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
+    <div className="flex h-screen flex-col overflow-hidden">
       {/* 2. 상단: 높이 고정 (shrink-0을 줘야 본문에 안 밀림) */}
       <header className="h-16 shrink-0 border-b bg-white px-6">
         <div className="mx-auto flex h-full max-w-7xl items-center">

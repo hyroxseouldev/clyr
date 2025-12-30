@@ -95,7 +95,7 @@ export function SignUpForm({
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-8 flex flex-col gap-4"
+              className="space-y-4"
             >
               <FormField
                 control={form.control}
