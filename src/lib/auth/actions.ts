@@ -2,6 +2,14 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import {
+  createCoachProfileQuery,
+  getCoachProfileByAccountIdQuery,
+  getCoachProfileByIdQuery,
+  updateCoachProfileQuery,
+  deleteCoachProfileQuery,
+} from "@/db/queries/coach";
 
 export async function signInWithEmailAndPassword(
   email: string,
@@ -67,4 +75,185 @@ export async function getUserId() {
   }
 
   return user.id;
+}
+
+/**
+ * ==========================================
+ * COACH PROFILE CRUD ACTIONS
+ * ==========================================
+ */
+
+/**
+ * 코치 프로필 생성
+ */
+export async function createCoachProfileAction(data: {
+  nickname?: string | null;
+  introduction?: string | null;
+  experience?: string | null;
+  certifications?: string[];
+  contactNumber?: string | null;
+  snsLinks?: {
+    instagram?: string;
+    youtube?: string;
+    blog?: string;
+  };
+}) {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // 이미 프로필이 있는지 확인
+    const existing = await getCoachProfileByAccountIdQuery(userId);
+    if (existing) {
+      return {
+        success: false,
+        message: "이미 프로필이 존재합니다. 수정 기능을 사용해주세요.",
+      };
+    }
+
+    const profile = await createCoachProfileQuery({
+      accountId: userId,
+      nickname: data.nickname ?? null,
+      introduction: data.introduction ?? null,
+      experience: data.experience ?? null,
+      certifications: data.certifications ?? [],
+      contactNumber: data.contactNumber ?? null,
+      snsLinks: data.snsLinks ?? {},
+    });
+
+    revalidatePath("/coach/profile");
+    return {
+      success: true,
+      data: profile,
+    };
+  } catch (error) {
+    console.error("CREATE_COACH_PROFILE_ERROR", error);
+    return {
+      success: false,
+      message: "프로필 생성에 실패했습니다.",
+    };
+  }
+}
+
+/**
+ * 코치 프로필 조회 (현재 로그인한 사용자)
+ */
+export async function getMyCoachProfileAction() {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    const profile = await getCoachProfileByAccountIdQuery(userId);
+
+    if (!profile) {
+      return {
+        success: false,
+        message: "프로필을 찾을 수 없습니다.",
+      };
+    }
+
+    return {
+      success: true,
+      data: profile,
+    };
+  } catch (error) {
+    console.error("GET_COACH_PROFILE_ERROR", error);
+    return {
+      success: false,
+      message: "프로필을 불러오는데 실패했습니다.",
+    };
+  }
+}
+
+/**
+ * 코치 프로필 수정
+ */
+export async function updateCoachProfileAction(data: {
+  nickname?: string | null;
+  introduction?: string | null;
+  experience?: string | null;
+  certifications?: string[];
+  contactNumber?: string | null;
+  snsLinks?: {
+    instagram?: string;
+    youtube?: string;
+    blog?: string;
+  };
+}) {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // 프로필 존재 확인
+    const existing = await getCoachProfileByAccountIdQuery(userId);
+    if (!existing) {
+      return {
+        success: false,
+        message: "프로필이 존재하지 않습니다. 먼저 프로필을 생성해주세요.",
+      };
+    }
+
+    const updatedProfile = await updateCoachProfileQuery(userId, {
+      nickname: data.nickname,
+      introduction: data.introduction,
+      experience: data.experience,
+      certifications: data.certifications,
+      contactNumber: data.contactNumber,
+      snsLinks: data.snsLinks,
+    });
+
+    revalidatePath("/coach/profile");
+    return {
+      success: true,
+      data: updatedProfile,
+    };
+  } catch (error) {
+    console.error("UPDATE_COACH_PROFILE_ERROR", error);
+    return {
+      success: false,
+      message: "프로필 수정에 실패했습니다.",
+    };
+  }
+}
+
+/**
+ * 코치 프로필 삭제
+ */
+export async function deleteCoachProfileAction() {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // 프로필 존재 확인
+    const existing = await getCoachProfileByAccountIdQuery(userId);
+    if (!existing) {
+      return {
+        success: false,
+        message: "프로필이 존재하지 않습니다.",
+      };
+    }
+
+    await deleteCoachProfileQuery(userId);
+
+    revalidatePath("/coach/profile");
+    return { success: true };
+  } catch (error) {
+    console.error("DELETE_COACH_PROFILE_ERROR", error);
+    return {
+      success: false,
+      message: "프로필 삭제에 실패했습니다.",
+    };
+  }
 }

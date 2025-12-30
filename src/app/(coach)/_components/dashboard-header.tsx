@@ -10,10 +10,12 @@ const DashboardHeader = () => {
       </Link>
 
       <div className="flex flex-row justify-between items-center gap-2">
-        <Avatar>
-          <AvatarImage src="https://github.com/shadcn.png" />
-          <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
+        <Link href="/coach/profile">
+          <Avatar>
+            <AvatarImage src="https://github.com/shadcn.png" />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+        </Link>
         <SignoutButton />
       </div>
     </div>
