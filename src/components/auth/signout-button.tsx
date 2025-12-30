@@ -2,28 +2,31 @@
 
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/actions";
-import { useState } from "react";
+import { useTransition } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
+import { LogOutIcon } from "lucide-react";
 
 export function SignoutButton() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, startTransition] = useTransition();
   const handleSignOut = async () => {
-    setIsLoading(true);
+    startTransition(async () => {
+      const result = await signOut();
 
-    const result = await signOut();
-
-    if (result && "error" in result) {
-      toast.error(result.error);
-      return;
-    }
-
-    toast.success("Signed out successfully");
-    setIsLoading(false);
+      if (result && "error" in result) {
+        toast.error(result.error);
+        return;
+      }
+    });
   };
   return (
-    <Button onClick={handleSignOut} disabled={isLoading}>
-      {isLoading ? <Spinner /> : "Sign out"}
+    <Button variant="outline" onClick={handleSignOut} disabled={isLoading}>
+      {isLoading ? (
+        <Spinner className="mr-2" />
+      ) : (
+        <LogOutIcon className="mr-2 size-4" />
+      )}
+      로그아웃
     </Button>
   );
 }

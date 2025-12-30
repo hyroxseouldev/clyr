@@ -219,6 +219,16 @@ export const workoutsRelations = relations(workouts, ({ one, many }) => ({
   sessions: many(workoutSessions),
 }));
 
+export const workoutSessionsRelations = relations(
+  workoutSessions,
+  ({ one }) => ({
+    workout: one(workouts, {
+      fields: [workoutSessions.workoutId],
+      references: [workouts.id],
+    }),
+  })
+);
+
 // ==========================================
 // 6. Type Exports (타입 추출)
 // ==========================================

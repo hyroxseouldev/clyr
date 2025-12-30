@@ -9,3 +9,5 @@
 
 7. Controller 에 해당하는 부분, Drizzle 쿼리는 순수하게 DB만 다룹니다. 트랜잭션도 이곳에서 다룹니다.
    7-1. 서버 액션 레이어 에서는 캐시 갱신등을 처리합니다.
+
+8. 아키텍쳐는 MVC 를 지향합니다. Model(Drizzle), View(Page, Components), Controller(Actions)

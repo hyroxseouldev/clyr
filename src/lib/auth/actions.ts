@@ -52,3 +52,19 @@ export async function signOut() {
   }
   redirect("/");
 }
+
+// Get User ID
+export async function getUserId() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return null;
+  }
+
+  return user.id;
+}
