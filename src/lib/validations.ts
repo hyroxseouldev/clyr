@@ -34,3 +34,21 @@ export const sessionSchema = z.object({
   content: z.string().optional(),
   orderIndex: z.number().default(0),
 });
+
+// 코치 프로필 스키마
+export const coachProfileSchema = z.object({
+  nickname: z.string().optional(),
+  introduction: z.string().max(200, "소개는 200자 이내로 입력해주세요").optional(),
+  experience: z.string().optional(),
+  certifications: z.array(z.string()).default([]),
+  contactNumber: z.string().optional(),
+  snsLinks: z
+    .object({
+      instagram: z.string().optional(),
+      youtube: z.string().optional(),
+      blog: z.string().optional(),
+    })
+    .default({}),
+});
+
+export type CoachProfileInput = z.infer<typeof coachProfileSchema>;
