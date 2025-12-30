@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import { FolderCodeIcon, ArrowUpRightIcon, PlusIcon } from "lucide-react";
-import { ProgramCard } from "./components";
+import { ProgramCard } from "@/components/program/program-card";
 import Link from "next/link";
 
 /**

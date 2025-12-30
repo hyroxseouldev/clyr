@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { signOut } from "@/lib/auth/actions";
+import { signOut } from "@/actions/auth";
 import { useTransition } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";

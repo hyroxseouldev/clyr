@@ -3,11 +3,11 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ProfileViewCard } from "@/components/coach/ProfileViewCard";
+import { ProfileViewCard } from "@/components/auth/profile-view-card";
 import {
   ProfileFormDialog,
   DeleteProfileAlertDialog,
-} from "@/components/coach/ProfileFormDialog";
+} from "@/components/auth/profile-form-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -22,7 +22,7 @@ import { UserPlus } from "lucide-react";
 import {
   deleteCoachProfileAction,
   getMyCoachProfileAction,
-} from "@/lib/auth/actions";
+} from "@/actions/auth";
 import type { CoachProfile } from "@/db/schema";
 
 interface CoachProfileContentProps {

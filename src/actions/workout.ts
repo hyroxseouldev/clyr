@@ -22,7 +22,7 @@ import {
   getFullProgramContentQuery,
 } from "@/db/queries/workout";
 import { getProgramFullCurriculumQuery } from "@/db/queries/program";
-import { getUserId } from "@/lib/auth/actions";
+import { getUserId } from "@/actions/auth";
 
 /**
  * 프로그램 소유자 확인 헬퍼 함수

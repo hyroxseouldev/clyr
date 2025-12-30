@@ -9,7 +9,7 @@ import {
   getProgramFullCurriculumQuery,
 } from "@/db/queries";
 import { createClient } from "@/lib/supabase/server";
-import { getUserId } from "@/lib/auth/actions";
+import { getUserId } from "@/actions/auth";
 
 /**
  * [READ] 현재 로그인한 유저(코치)의 프로그램 목록 가져오기

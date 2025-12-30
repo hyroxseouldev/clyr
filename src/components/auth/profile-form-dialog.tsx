@@ -38,7 +38,7 @@ import { X, Plus } from "lucide-react";
 import {
   createCoachProfileAction,
   updateCoachProfileAction,
-} from "@/lib/auth/actions";
+} from "@/actions/auth";
 import { coachProfileSchema, type CoachProfileInput } from "@/lib/validations";
 import type { CoachProfile } from "@/db/schema";
 
@@ -63,7 +63,7 @@ export function ProfileFormDialog({
   const isEditMode = !!profile;
 
   const form = useForm<CoachProfileInput>({
-    resolver: zodResolver(coachProfileSchema),
+    resolver: zodResolver(coachProfileSchema) as any,
     defaultValues: {
       nickname: profile?.nickname ?? "",
       introduction: profile?.introduction ?? "",
@@ -97,9 +97,7 @@ export function ProfileFormDialog({
 
       if (result.success) {
         toast.success(
-          isEditMode
-            ? "프로필이 수정되었습니다."
-            : "프로필이 생성되었습니다."
+          isEditMode ? "프로필이 수정되었습니다." : "프로필이 생성되었습니다."
         );
         onOpenChange(false);
         onSuccess?.();
@@ -139,13 +137,16 @@ export function ProfileFormDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(onSubmit as any)}
+            className="space-y-6"
+          >
             {/* 기본 정보 섹션 */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium">기본 정보</h3>
 
               <FormField
-                control={form.control}
+                control={form.control as any}
                 name="nickname"
                 render={({ field }) => (
                   <FormItem>
@@ -159,7 +160,7 @@ export function ProfileFormDialog({
               />
 
               <FormField
-                control={form.control}
+                control={form.control as any}
                 name="introduction"
                 render={({ field }) => (
                   <FormItem>
@@ -177,7 +178,7 @@ export function ProfileFormDialog({
               />
 
               <FormField
-                control={form.control}
+                control={form.control as any}
                 name="contactNumber"
                 render={({ field }) => (
                   <FormItem>
@@ -196,7 +197,7 @@ export function ProfileFormDialog({
               <h3 className="text-sm font-medium">경력 및 자격증</h3>
 
               <FormField
-                control={form.control}
+                control={form.control as any}
                 name="experience"
                 render={({ field }) => (
                   <FormItem>
@@ -260,7 +261,7 @@ export function ProfileFormDialog({
               <h3 className="text-sm font-medium">SNS 링크</h3>
 
               <FormField
-                control={form.control}
+                control={form.control as any}
                 name="snsLinks.instagram"
                 render={({ field }) => (
                   <FormItem>
@@ -274,7 +275,7 @@ export function ProfileFormDialog({
               />
 
               <FormField
-                control={form.control}
+                control={form.control as any}
                 name="snsLinks.youtube"
                 render={({ field }) => (
                   <FormItem>
@@ -288,7 +289,7 @@ export function ProfileFormDialog({
               />
 
               <FormField
-                control={form.control}
+                control={form.control as any}
                 name="snsLinks.blog"
                 render={({ field }) => (
                   <FormItem>

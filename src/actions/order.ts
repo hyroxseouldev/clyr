@@ -17,7 +17,7 @@ import {
   completeOrderAndCreateEnrollmentQuery,
 } from "@/db/queries/order";
 import { getProgramFullCurriculumQuery } from "@/db/queries/program";
-import { getUserId } from "@/lib/auth/actions";
+import { getUserId } from "@/actions/auth";
 
 /**
  * ==========================================

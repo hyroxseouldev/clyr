@@ -38,9 +38,12 @@ export const sessionSchema = z.object({
 // 코치 프로필 스키마
 export const coachProfileSchema = z.object({
   nickname: z.string().optional(),
-  introduction: z.string().max(200, "소개는 200자 이내로 입력해주세요").optional(),
+  introduction: z
+    .string()
+    .max(200, "소개는 200자 이내로 입력해주세요")
+    .optional(),
   experience: z.string().optional(),
-  certifications: z.array(z.string()).default([]),
+  certifications: z.array(z.string()).optional().default([]),
   contactNumber: z.string().optional(),
   snsLinks: z
     .object({
@@ -48,6 +51,7 @@ export const coachProfileSchema = z.object({
       youtube: z.string().optional(),
       blog: z.string().optional(),
     })
+    .optional()
     .default({}),
 });
 
