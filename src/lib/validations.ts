@@ -12,3 +12,25 @@ export const programSchema = z.object({
   isPublic: z.boolean().default(false),
   isForSale: z.boolean().default(false),
 });
+
+// 주차 스키마
+export const weekSchema = z.object({
+  weekNumber: z.number().min(1, "주차 번호를 입력해주세요"),
+  title: z.string().min(1, "제목을 입력해주세요"),
+  description: z.string().optional(),
+});
+
+// 일차 스키마
+export const workoutSchema = z.object({
+  weekId: z.string().min(1, "주차를 선택해주세요"),
+  dayNumber: z.number().min(1, "일차 번호를 입력해주세요"),
+  title: z.string().min(1, "제목을 입력해주세요"),
+});
+
+// 세션 스키마
+export const sessionSchema = z.object({
+  workoutId: z.string().min(1, "일차를 선택해주세요"),
+  title: z.string().min(1, "제목을 입력해주세요"),
+  content: z.string().optional(),
+  orderIndex: z.number().default(0),
+});

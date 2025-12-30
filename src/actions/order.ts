@@ -321,3 +321,86 @@ export async function checkUserEnrollmentAction(programId: string) {
     };
   }
 }
+
+/**
+ * ==========================================
+ * COACH ACTIONS (코치 전용)
+ * ==========================================
+ */
+
+// 코치의 프로그램 주문/수강권 조회 액션
+export async function getProgramOrdersAndEnrollmentsAction(programId: string) {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // 프로그램 소유자 확인
+    const program = await getProgramFullCurriculumQuery(programId);
+    if (!program) {
+      return { success: false, message: "프로그램을 찾을 수 없습니다." };
+    }
+
+    if (program.coachId !== userId) {
+      return { success: false, message: "권한이 없습니다." };
+    }
+
+    // 프로그램의 수강권 목록 조회
+    const enrollments = await getEnrollmentsByProgramIdQuery(programId);
+
+    return {
+      success: true,
+      data: enrollments,
+    };
+  } catch (error) {
+    console.error("GET_PROGRAM_ORDERS_ERROR", error);
+    return {
+      success: false,
+      message: "주문/수강권 내역을 불러오는데 실패했습니다.",
+    };
+  }
+}
+
+// 코치용 수강권 상태 변경 액션
+export async function updateEnrollmentStatusByCoachAction(
+  enrollmentId: string,
+  programId: string,
+  status: "ACTIVE" | "EXPIRED" | "PAUSED"
+) {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // 프로그램 소유자 확인
+    const program = await getProgramFullCurriculumQuery(programId);
+    if (!program) {
+      return { success: false, message: "프로그램을 찾을 수 없습니다." };
+    }
+
+    if (program.coachId !== userId) {
+      return { success: false, message: "권한이 없습니다." };
+    }
+
+    const updatedEnrollment = await updateEnrollmentStatusQuery(
+      enrollmentId,
+      status
+    );
+
+    revalidatePath(`/coach/dashboard/${programId}`);
+    return {
+      success: true,
+      data: updatedEnrollment,
+    };
+  } catch (error) {
+    console.error("UPDATE_ENROLLMENT_STATUS_BY_COACH_ERROR", error);
+    return {
+      success: false,
+      message: "수강 권한 상태 변경에 실패했습니다.",
+    };
+  }
+}

@@ -14,9 +14,6 @@ const CoachDashboardPidPage = async ({
   const { pid } = await params;
   const { data: program } = await getProgramByIdAction(pid);
 
-  // Tab 을 추가합나디
-  // 프로그램 정보 / 워크 아웃 / 구매 목록 / 설정 메뉴
-
   const tabs = [
     { label: "프로그램 정보", value: "info" },
     { label: "워크 아웃", value: "workouts" },
@@ -29,28 +26,30 @@ const CoachDashboardPidPage = async ({
   }
 
   return (
-    <Tabs defaultValue="info" className="w-[400px]">
-      <TabsList>
+    <div className="container max-w-6xl py-8">
+      <Tabs defaultValue="info" className="w-full">
+        <TabsList className="">
+          {tabs.map((tab) => (
+            <TabsTrigger key={tab.value} value={tab.value}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
         {tabs.map((tab) => (
-          <TabsTrigger key={tab.value} value={tab.value}>
-            {tab.label}
-          </TabsTrigger>
+          <TabsContent key={tab.value} value={tab.value} className="mt-6">
+            {tab.label === "프로그램 정보" ? (
+              <ProgramInfoTab program={program} />
+            ) : tab.label === "워크 아웃" ? (
+              <WorkoutTab programId={pid} />
+            ) : tab.label === "구매 목록" ? (
+              <OrderListTab programId={pid} />
+            ) : tab.label === "설정" ? (
+              <SettingTab programId={pid} program={program} />
+            ) : null}
+          </TabsContent>
         ))}
-      </TabsList>
-      {tabs.map((tab) => (
-        <TabsContent key={tab.value} value={tab.value}>
-          {tab.label === "프로그램 정보" ? (
-            <ProgramInfoTab program={program} />
-          ) : tab.label === "워크 아웃" ? (
-            <WorkoutTab />
-          ) : tab.label === "구매 목록" ? (
-            <OrderListTab />
-          ) : tab.label === "설정" ? (
-            <SettingTab />
-          ) : null}
-        </TabsContent>
-      ))}
-    </Tabs>
+      </Tabs>
+    </div>
   );
 };
 

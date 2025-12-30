@@ -200,6 +200,17 @@ export const programsRelations = relations(programs, ({ one, many }) => ({
   enrollments: many(enrollments),
 }));
 
+export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
+  user: one(account, {
+    fields: [enrollments.userId],
+    references: [account.id],
+  }),
+  program: one(programs, {
+    fields: [enrollments.programId],
+    references: [programs.id],
+  }),
+}));
+
 export const programWeeksRelations = relations(
   programWeeks,
   ({ one, many }) => ({
