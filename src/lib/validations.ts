@@ -56,3 +56,27 @@ export const coachProfileSchema = z.object({
 });
 
 export type CoachProfileInput = z.infer<typeof coachProfileSchema>;
+
+// 회원가입 스키마
+export const signUpSchema = z
+  .object({
+    email: z.string().email("올바른 이메일 형식을 입력해주세요"),
+    password: z
+      .string()
+      .min(8, "비밀번호는 최소 8자 이상이어야 합니다")
+      .max(100, "비밀번호는 최대 100자 이하여야 합니다"),
+    confirmPassword: z.string(),
+    fullName: z
+      .string()
+      .min(2, "이름은 최소 2자 이상이어야 합니다")
+      .max(50, "이름은 최대 50자 이하여야 합니다"),
+    role: z.enum(["USER", "COACH"], {
+      message: "역할을 선택해주세요",
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "비밀번호가 일치하지 않습니다",
+    path: ["confirmPassword"],
+  });
+
+export type SignUpInput = z.infer<typeof signUpSchema>;

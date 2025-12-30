@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { db } from "@/db";
+import { account } from "@/db/schema";
 import {
   createCoachProfileQuery,
   getCoachProfileByAccountIdQuery,
@@ -59,6 +61,51 @@ export async function signOut() {
     return { error: error.message };
   }
   redirect("/");
+}
+
+/**
+ * 회원가입 액션
+ * Supabase Auth 사용자 생성 후 계정 정보 저장
+ */
+export async function signUpAction(data: {
+  email: string;
+  password: string;
+  fullName: string;
+  avatarUrl: string;
+  role: "USER" | "COACH";
+}) {
+  const supabase = await createClient();
+
+  // 1. Supabase Auth 사용자 생성
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: data.email,
+    password: data.password,
+    options: {
+      data: {
+        full_name: data.fullName,
+        role: data.role,
+        avatar_url: data.avatarUrl,
+      },
+    },
+  });
+
+  if (authError) {
+    return {
+      success: false,
+      message: authError.message,
+    };
+  }
+
+  if (!authData.user) {
+    return {
+      success: false,
+      message: "사용자 생성에 실패했습니다.",
+    };
+  }
+  return {
+    success: true,
+    message: "회원가입이 완료되었습니다. 이메일 인증 후 로그인 해주세요.",
+  };
 }
 
 // Get User ID

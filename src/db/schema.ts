@@ -24,6 +24,7 @@ export const account = pgTable("account", {
   email: text("email").notNull(),
   fullName: text("full_name"),
   role: text("role").default("USER").notNull(), // 'ADMIN', 'COACH', 'USER'
+  avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
