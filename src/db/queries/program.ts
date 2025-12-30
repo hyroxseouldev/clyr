@@ -1,4 +1,4 @@
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, asc, desc } from "drizzle-orm";
 import {
   programs,
   programWeeks,
@@ -7,6 +7,18 @@ import {
   enrollments,
 } from "@/db/schema";
 import { db } from "@/db"; // 설정된 db 인스턴스
+
+/**
+ * 특정 코치가 등록한 모든 프로그램 목록 조회
+ * @param coachId - 코치의 account ID
+ */
+export const getProgramsByCoachQuery = async (coachId: string) => {
+  return await db.query.programs.findMany({
+    where: eq(programs.coachId, coachId),
+    orderBy: [desc(programs.createdAt)],
+    // 필요하다면 수강생 수나 주차 정보 등 추가 관계(with)를 넣을 수 있습니다.
+  });
+};
 
 export const createProgramWithWeeksQuery = async (
   programData: any,
