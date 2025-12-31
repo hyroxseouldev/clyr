@@ -26,6 +26,7 @@ import { AsyncButton } from "@/components/common/async-button";
 import { useTransition } from "react";
 import { createProgramAction, updateProgramAction } from "@/actions";
 import { toast } from "sonner";
+import { ImageForm } from "@/components/form/image-form";
 
 /** 1. Schema 정의 - 검증 로직만 정의하고 default는 defaultValues에서 처리합니다 */
 const programFormSchema = z.object({
@@ -39,6 +40,7 @@ const programFormSchema = z.object({
   accessPeriodDays: z.number().nullable().optional(),
   shortDescription: z.string().nullable(),
   description: z.string().nullable(),
+  thumbnailUrl: z.string().nullable(),
   isPublic: z.boolean(),
   isForSale: z.boolean(),
 });
@@ -63,6 +65,7 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
       accessPeriodDays: initialData?.accessPeriodDays ?? null,
       shortDescription: initialData?.shortDescription ?? null,
       description: initialData?.description ?? null,
+      thumbnailUrl: initialData?.thumbnailUrl ?? null,
       isPublic: !!initialData?.isPublic,
       isForSale: !!initialData?.isForSale,
     },
@@ -102,6 +105,16 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
         onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-8 pb-10 p-4 rounded-lg border"
       >
+        {/* 썸네일 이미지 업로드 */}
+        <ImageForm
+          name="thumbnailUrl"
+          label="썸네일 이미지"
+          form={form}
+          bucketName="program-thumbnails"
+          path="thumbnails"
+          maxFileSize={5 * 1024 * 1024}
+        />
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border rounded-lg p-4">
           {/* 기본 정보 세션 */}
           <FormField

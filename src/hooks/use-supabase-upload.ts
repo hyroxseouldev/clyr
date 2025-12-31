@@ -8,6 +8,16 @@ import {
 
 const supabase = createClient();
 
+/**
+ * 파일명을 안전한 ASCII 문자로 변환 (한글 등 비ASCII 문자 처리)
+ */
+export const sanitizeFileName = (fileName: string): string => {
+  const timestamp = Date.now();
+  const extension = fileName.split(".").pop();
+  const randomString = Math.random().toString(36).substring(2, 10);
+  return `${timestamp}-${randomString}.${extension}`;
+};
+
 interface FileWithPreview extends File {
   preview?: string;
   errors: readonly FileError[];
@@ -107,7 +117,7 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
 
   const dropzoneProps = useDropzone({
     onDrop,
-    noClick: true,
+    noClick: false,
     accept: allowedMimeTypes.reduce(
       (acc, type) => ({ ...acc, [type]: [] }),
       {}
@@ -133,16 +143,20 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
 
     const responses = await Promise.all(
       filesToUpload.map(async (file) => {
+        // 한글 등 비ASCII 문자가 포함된 파일명 처리
+        const sanitizedFileName = sanitizeFileName(file.name);
+        const uploadPath = !!path ? `${path}/${sanitizedFileName}` : sanitizedFileName;
+
         const { error } = await supabase.storage
           .from(bucketName)
-          .upload(!!path ? `${path}/${file.name}` : file.name, file, {
+          .upload(uploadPath, file, {
             cacheControl: cacheControl.toString(),
             upsert,
           });
         if (error) {
           return { name: file.name, message: error.message };
         } else {
-          return { name: file.name, message: undefined };
+          return { name: file.name, message: undefined, uploadPath };
         }
       })
     );
@@ -157,7 +171,14 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
     );
     setSuccesses(newSuccesses);
 
+    // 업로드된 파일들의 경로 반환 (uploadPath가 있는 경우)
+    const uploadedPaths = responseSuccesses
+      .map((x: any) => x.uploadPath)
+      .filter(Boolean);
+
     setLoading(false);
+
+    return uploadedPaths;
   }, [files, path, bucketName, errors, successes]);
 
   useEffect(() => {
