@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   CheckCircleIcon,
@@ -38,7 +38,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  getProgramOrdersAndEnrollmentsAction,
   updateEnrollmentStatusByCoachAction,
 } from "@/actions/order";
 
@@ -59,6 +58,7 @@ type Enrollment = {
 
 type OrderListTabProps = {
   programId: string;
+  initialData?: Enrollment[];
 };
 
 const STATUS_LABELS = {
@@ -73,13 +73,21 @@ const STATUS_VARIANTS = {
   PAUSED: "outline" as const,
 };
 
-export default function OrderListTab({ programId }: OrderListTabProps) {
+export default function OrderListTab({ programId, initialData }: OrderListTabProps) {
+  const router = useRouter();
   const [, startTransition] = useTransition();
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>(initialData || []);
+  const [loading, setLoading] = useState(!initialData);
   const [filter, setFilter] = useState<"ALL" | "ACTIVE" | "EXPIRED" | "PAUSED">(
     "ALL"
   );
+
+  // initialData가 변경되면 상태 업데이트 (깊은 비교)
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => {
+    setEnrollments(initialData || []);
+    setLoading(false);
+  }, [JSON.stringify(initialData)]);
 
   // Status update dialog
   const [statusDialog, setStatusDialog] = useState<{
@@ -93,23 +101,6 @@ export default function OrderListTab({ programId }: OrderListTabProps) {
     currentStatus: "ACTIVE",
     newStatus: "ACTIVE",
   });
-
-  // Fetch data
-  const fetchEnrollments = useCallback(() => {
-    startTransition(async () => {
-      const result = await getProgramOrdersAndEnrollmentsAction(programId);
-      if (result.success && result.data) {
-        setEnrollments(result.data as Enrollment[]);
-      } else {
-        toast.error("로딩 실패", { description: result.message });
-      }
-      setLoading(false);
-    });
-  }, [programId]);
-
-  useEffect(() => {
-    fetchEnrollments();
-  }, [fetchEnrollments]);
 
   // Filter enrollments
   const filteredEnrollments = enrollments.filter((enrollment) => {
@@ -143,7 +134,7 @@ export default function OrderListTab({ programId }: OrderListTabProps) {
 
       if (result.success) {
         toast.success("상태가 변경되었습니다.");
-        fetchEnrollments();
+        router.refresh();
       } else {
         toast.error("상태 변경 실패", { description: result.message });
       }
