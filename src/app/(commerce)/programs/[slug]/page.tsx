@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Calendar, TrendingUp, CheckCircle2, User } from "lucide-react";
+import { Clock, Calendar, TrendingUp, CheckCircle2, User, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 /**
  * 프로그램 상세 및 구매 페이지
@@ -47,9 +48,35 @@ const PublicCommercePage = async ({
       <div className="container max-w-4xl mx-auto px-4 py-12">
         {/* 헤더 */}
         <div className="mb-8">
-          <Badge className="mb-4">
-            {program.type === "SINGLE" ? "단건 판매" : "구독형"}
-          </Badge>
+          <div className="flex items-center gap-2 mb-4">
+            <Badge>{program.type === "SINGLE" ? "단건 판매" : "구독형"}</Badge>
+            <Badge
+              variant={program.isPublic ? "default" : "secondary"}
+              className={cn(
+                "gap-1",
+                program.isPublic
+                  ? "bg-green-100 text-green-800 hover:bg-green-200"
+                  : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+              )}
+            >
+              {program.isPublic ? (
+                <>
+                  <Eye className="h-3 w-3" />
+                  공개
+                </>
+              ) : (
+                <>
+                  <EyeOff className="h-3 w-3" />
+                  비공개
+                </>
+              )}
+            </Badge>
+            {!program.isForSale && (
+              <Badge variant="outline" className="text-gray-500">
+                판매 중지
+              </Badge>
+            )}
+          </div>
           <h1 className="text-4xl font-bold mb-4">{program.title}</h1>
           <p className="text-xl text-gray-600">{program.shortDescription}</p>
         </div>
@@ -207,9 +234,17 @@ const PublicCommercePage = async ({
                   </div>
                 </div>
 
-                <Button className="w-full" size="lg">
-                  구매하기
-                </Button>
+                {program.isForSale ? (
+                  <Button asChild className="w-full" size="lg">
+                    <Link href={`/programs/payment/${slug}`}>
+                      구매하기
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button disabled className="w-full" size="lg">
+                    현재 판매하지 않습니다
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>

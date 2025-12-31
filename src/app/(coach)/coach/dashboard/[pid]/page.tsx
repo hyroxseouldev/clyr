@@ -1,4 +1,5 @@
 import { getProgramByIdAction } from "@/actions";
+import { getFullProgramContentAction } from "@/actions/workout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
@@ -15,6 +16,7 @@ const CoachDashboardPidPage = async ({
 }) => {
   const { pid } = await params;
   const { data: program } = await getProgramByIdAction(pid);
+  const workoutResult = await getFullProgramContentAction(pid);
 
   const tabs = [
     { label: "프로그램 정보", value: "info" },
@@ -51,7 +53,10 @@ const CoachDashboardPidPage = async ({
             {tab.label === "프로그램 정보" ? (
               <ProgramInfoTab program={program} />
             ) : tab.label === "워크 아웃" ? (
-              <WorkoutTab programId={pid} />
+              <WorkoutTab
+                programId={pid}
+                initialData={workoutResult.success && "data" in workoutResult ? workoutResult.data : []}
+              />
             ) : tab.label === "구매 목록" ? (
               <OrderListTab programId={pid} />
             ) : tab.label === "설정" ? (

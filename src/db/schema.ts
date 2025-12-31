@@ -115,6 +115,7 @@ export const workouts = pgTable("workouts", {
 
   dayNumber: integer("day_number").notNull(), // 1일차, 2일차...
   title: text("title").notNull(), // 예: "하체/코어 집중"
+  content: text("content"), // 일차별 상세 정보 (HTML)
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

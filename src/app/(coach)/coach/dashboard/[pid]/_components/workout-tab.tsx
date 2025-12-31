@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import {
   PlusIcon,
   PencilIcon,
   TrashIcon,
-  GripVerticalIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  GripVerticalIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,11 +20,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
@@ -55,6 +50,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
+import { TiptapForm } from "@/components/form";
 import {
   createWeekAction,
   updateWeekAction,
@@ -65,20 +61,18 @@ import {
   createSessionAction,
   updateSessionAction,
   deleteSessionAction,
-  reorderSessionsAction,
-  getFullProgramContentAction,
 } from "@/actions/workout";
 import { weekSchema, workoutSchema, sessionSchema } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Select } from "@/components/ui/select";
 import {
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 
 type Week = {
   id: string;
@@ -93,6 +87,7 @@ type Workout = {
   dayNumber: number;
   title: string;
   weekId: string;
+  content?: string | null;
   sessions: Session[];
 };
 
@@ -106,14 +101,22 @@ type Session = {
 
 type WorkoutTabProps = {
   programId: string;
+  initialData?: Week[];
 };
 
-export default function WorkoutTab({ programId }: WorkoutTabProps) {
+export default function WorkoutTab({
+  programId,
+  initialData = [],
+}: WorkoutTabProps) {
+  const router = useRouter();
   const [, startTransition] = useTransition();
-  const [weeks, setWeeks] = useState<Week[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [weeks, setWeeks] = useState<Week[]>(initialData);
   const [openWeeks, setOpenWeeks] = useState<Set<string>>(new Set());
-  const [openWorkouts, setOpenWorkouts] = useState<Set<string>>(new Set());
+
+  // initialData가 변경되면 상태 업데이트 (깊은 비교)
+  useEffect(() => {
+    setWeeks(initialData);
+  }, [JSON.stringify(initialData)]);
 
   // Dialog states
   const [weekDialog, setWeekDialog] = useState<{
@@ -143,52 +146,6 @@ export default function WorkoutTab({ programId }: WorkoutTabProps) {
     title: string;
   }>({ open: false, type: "week", id: "", title: "" });
 
-  // Fetch data
-  const fetchContent = useCallback(() => {
-    startTransition(async () => {
-      const result = await getFullProgramContentAction(programId);
-      if (result.success && "data" in result && result.data) {
-        setWeeks(result.data as Week[]);
-      } else {
-        toast.error("로딩 실패", {
-          description:
-            "message" in result
-              ? result.message
-              : "알 수 없는 오류가 발생했습니다.",
-        });
-      }
-      setLoading(false);
-    });
-  }, [programId]);
-
-  useEffect(() => {
-    fetchContent();
-  }, [fetchContent]);
-
-  const toggleWeek = (weekId: string) => {
-    setOpenWeeks((prev) => {
-      const next = new Set(prev);
-      if (next.has(weekId)) {
-        next.delete(weekId);
-      } else {
-        next.add(weekId);
-      }
-      return next;
-    });
-  };
-
-  const toggleWorkout = (workoutId: string) => {
-    setOpenWorkouts((prev) => {
-      const next = new Set(prev);
-      if (next.has(workoutId)) {
-        next.delete(workoutId);
-      } else {
-        next.add(workoutId);
-      }
-      return next;
-    });
-  };
-
   // Week CRUD handlers
   const handleCreateWeek = () => {
     setWeekDialog({ open: true, mode: "create" });
@@ -212,7 +169,7 @@ export default function WorkoutTab({ programId }: WorkoutTabProps) {
       const result = await deleteWeekAction(deleteDialog.id, programId);
       if (result.success) {
         toast.success("주차가 삭제되었습니다.");
-        fetchContent();
+        router.refresh();
       } else {
         toast.error("삭제 실패", {
           description:
@@ -248,7 +205,7 @@ export default function WorkoutTab({ programId }: WorkoutTabProps) {
       const result = await deleteWorkoutAction(deleteDialog.id, programId);
       if (result.success) {
         toast.success("일차가 삭제되었습니다.");
-        fetchContent();
+        router.refresh();
       } else {
         toast.error("삭제 실패", {
           description:
@@ -284,7 +241,7 @@ export default function WorkoutTab({ programId }: WorkoutTabProps) {
       const result = await deleteSessionAction(deleteDialog.id, programId);
       if (result.success) {
         toast.success("세션이 삭제되었습니다.");
-        fetchContent();
+        router.refresh();
       } else {
         toast.error("삭제 실패", {
           description:
@@ -297,50 +254,17 @@ export default function WorkoutTab({ programId }: WorkoutTabProps) {
     });
   };
 
-  // Session reorder
-  const moveSession = async (
-    sessionId: string,
-    direction: "up" | "down",
-    sessions: Session[]
-  ) => {
-    const currentIndex = sessions.findIndex((s) => s.id === sessionId);
-    if (
-      (direction === "up" && currentIndex === 0) ||
-      (direction === "down" && currentIndex === sessions.length - 1)
-    ) {
-      return;
-    }
-
-    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-    const updates = sessions.map((s, i) => {
-      if (i === currentIndex) return { id: s.id, orderIndex: s.orderIndex - 1 };
-      if (i === newIndex) return { id: s.id, orderIndex: s.orderIndex + 1 };
-      return { id: s.id, orderIndex: s.orderIndex };
-    });
-
-    startTransition(async () => {
-      const result = await reorderSessionsAction(programId, updates);
-      if (result.success) {
-        toast.success("순서가 변경되었습니다.");
-        fetchContent();
+  const toggleWeek = (weekId: string) => {
+    setOpenWeeks((prev) => {
+      const next = new Set(prev);
+      if (next.has(weekId)) {
+        next.delete(weekId);
       } else {
-        toast.error("순서 변경 실패", {
-          description:
-            "message" in result
-              ? result.message
-              : "알 수 없는 오류가 발생했습니다.",
-        });
+        next.add(weekId);
       }
+      return next;
     });
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Spinner className="size-8" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -385,12 +309,9 @@ export default function WorkoutTab({ programId }: WorkoutTabProps) {
             onCreateWorkout={() => handleCreateWorkout(week.id)}
             onEditWorkout={handleEditWorkout}
             onDeleteWorkout={handleDeleteWorkout}
-            openWorkouts={openWorkouts}
-            onToggleWorkout={toggleWorkout}
             onCreateSession={handleCreateSession}
             onEditSession={handleEditSession}
             onDeleteSession={handleDeleteSession}
-            onMoveSession={moveSession}
           />
         ))}
       </div>
@@ -398,35 +319,41 @@ export default function WorkoutTab({ programId }: WorkoutTabProps) {
       {/* Week Dialog */}
       <WeekFormDialog
         open={weekDialog.open}
-        onOpenChange={(open) => setWeekDialog((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) => {
+          setWeekDialog((prev) => ({ ...prev, open, week: undefined }));
+        }}
         week={weekDialog.week}
         mode={weekDialog.mode}
         programId={programId}
-        onSuccess={fetchContent}
+        onSuccess={() => router.refresh()}
       />
 
       {/* Workout Dialog */}
       <WorkoutFormDialog
         open={workoutDialog.open}
-        onOpenChange={(open) => setWorkoutDialog((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) => {
+          setWorkoutDialog((prev) => ({ ...prev, open, workout: undefined }));
+        }}
         workout={workoutDialog.workout}
         weekId={workoutDialog.weekId || ""}
         mode={workoutDialog.mode}
         programId={programId}
         weeks={weeks}
-        onSuccess={fetchContent}
+        onSuccess={() => router.refresh()}
       />
 
       {/* Session Dialog */}
       <SessionFormDialog
         open={sessionDialog.open}
-        onOpenChange={(open) => setSessionDialog((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) => {
+          setSessionDialog((prev) => ({ ...prev, open, session: undefined }));
+        }}
         session={sessionDialog.session}
         workoutId={sessionDialog.workoutId || ""}
         mode={sessionDialog.mode}
         programId={programId}
         weeks={weeks}
-        onSuccess={fetchContent}
+        onSuccess={() => router.refresh()}
       />
 
       {/* Delete Confirmation Dialog */}
@@ -473,7 +400,7 @@ export default function WorkoutTab({ programId }: WorkoutTabProps) {
   );
 }
 
-// Week Card Component
+// Week Card Component - 항상 펼쳐진 상태
 function WeekCard({
   week,
   isOpen,
@@ -483,12 +410,9 @@ function WeekCard({
   onCreateWorkout,
   onEditWorkout,
   onDeleteWorkout,
-  openWorkouts,
-  onToggleWorkout,
   onCreateSession,
   onEditSession,
   onDeleteSession,
-  onMoveSession,
 }: {
   week: Week;
   isOpen: boolean;
@@ -498,282 +422,200 @@ function WeekCard({
   onCreateWorkout: () => void;
   onEditWorkout: (workout: Workout) => void;
   onDeleteWorkout: (workout: Workout) => void;
-  openWorkouts: Set<string>;
-  onToggleWorkout: (id: string) => void;
   onCreateSession: (workoutId: string) => void;
   onEditSession: (session: Session) => void;
   onDeleteSession: (session: Session) => void;
-  onMoveSession: (
-    sessionId: string,
-    direction: "up" | "down",
-    sessions: Session[]
-  ) => void;
 }) {
   return (
-    <Collapsible open={isOpen} onOpenChange={onToggle}>
-      <Card>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {isOpen ? (
-                  <ChevronUpIcon className="size-5" />
-                ) : (
-                  <ChevronDownIcon className="size-5" />
-                )}
-                <div className="text-left">
-                  <CardTitle className="flex items-center gap-2">
-                    <Badge variant="outline">{week.weekNumber}주차</Badge>
-                    {week.title}
-                  </CardTitle>
-                  {week.description && (
-                    <CardDescription className="mt-1">
-                      {week.description}
-                    </CardDescription>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">{week.workouts.length}일차</Badge>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit();
-                  }}
-                >
-                  <PencilIcon className="size-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete();
-                  }}
-                >
-                  <TrashIcon className="size-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-        </CollapsibleTrigger>
-
-        <CollapsibleContent>
-          <CardContent className="pt-6 space-y-3">
-            {/* Workouts */}
-            {week.workouts.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground text-sm">
-                일차가 없습니다
-              </div>
+    <Card>
+      <CardHeader
+        className="cursor-pointer hover:bg-muted/50 transition-colors"
+        onClick={onToggle}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {isOpen ? (
+              <ChevronUpIcon className="size-5" />
             ) : (
-              week.workouts.map((workout) => (
-                <WorkoutCard
-                  key={workout.id}
-                  workout={workout}
-                  isOpen={openWorkouts.has(workout.id)}
-                  onToggle={() => onToggleWorkout(workout.id)}
-                  onEdit={() => onEditWorkout(workout)}
-                  onDelete={() => onDeleteWorkout(workout)}
-                  onCreateSession={() => onCreateSession(workout.id)}
-                  onEditSession={onEditSession}
-                  onDeleteSession={onDeleteSession}
-                  onMoveSession={(direction, sessions) =>
-                    onMoveSession(workout.id, direction, sessions)
-                  }
-                />
-              ))
+              <ChevronDownIcon className="size-5" />
             )}
-
-            {/* Add Workout Button */}
+            <div className="text-left">
+              <CardTitle className="flex items-center gap-2">
+                <Badge variant="outline">{week.weekNumber}주차</Badge>
+                {week.title}
+              </CardTitle>
+              {week.description && (
+                <CardDescription className="mt-1">
+                  {week.description}
+                </CardDescription>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">{week.workouts.length}일차</Badge>
             <Button
-              variant="outline"
-              className="w-full"
-              onClick={onCreateWorkout}
+              variant="ghost"
+              size="icon-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
             >
-              <PlusIcon className="mr-2 size-4" />
-              일차 추가
+              <PencilIcon className="size-4" />
             </Button>
-          </CardContent>
-        </CollapsibleContent>
-      </Card>
-    </Collapsible>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+            >
+              <TrashIcon className="size-4 text-destructive" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-6 space-y-3">
+        {/* Workouts - 항상 펼쳐진 상태 */}
+        {week.workouts.length === 0 ? (
+          <div className="text-center py-6 text-muted-foreground text-sm">
+            일차가 없습니다
+          </div>
+        ) : (
+          week.workouts.map((workout) => (
+            <WorkoutListItem
+              key={workout.id}
+              workout={workout}
+              onEdit={() => onEditWorkout(workout)}
+              onDelete={() => onDeleteWorkout(workout)}
+              onCreateSession={() => onCreateSession(workout.id)}
+              onEditSession={onEditSession}
+              onDeleteSession={onDeleteSession}
+            />
+          ))
+        )}
+
+        {/* Add Workout Button */}
+        <Button variant="outline" className="w-full" onClick={onCreateWorkout}>
+          <PlusIcon className="mr-2 size-4" />
+          일차 추가
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
-// Workout Card Component
-function WorkoutCard({
+// Workout List Item - 항상 펼쳐진 상태
+function WorkoutListItem({
   workout,
-  isOpen,
-  onToggle,
   onEdit,
   onDelete,
   onCreateSession,
   onEditSession,
   onDeleteSession,
-  onMoveSession,
 }: {
   workout: Workout;
-  isOpen: boolean;
-  onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onCreateSession: () => void;
   onEditSession: (session: Session) => void;
   onDeleteSession: (session: Session) => void;
-  onMoveSession: (direction: "up" | "down", sessions: Session[]) => void;
 }) {
   return (
-    <Collapsible open={isOpen} onOpenChange={onToggle}>
-      <Card className="border-l-4 border-l-primary/50">
-        <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {isOpen ? (
-                  <ChevronUpIcon className="size-4" />
-                ) : (
-                  <ChevronDownIcon className="size-4" />
-                )}
-                <div className="text-left">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {workout.dayNumber}일차
-                    </Badge>
-                    <span className="font-medium text-sm">{workout.title}</span>
-                  </div>
-                  <Badge variant="outline" className="mt-1 text-xs">
-                    {workout.sessions.length}세션
-                  </Badge>
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit();
-                  }}
-                >
-                  <PencilIcon className="size-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete();
-                  }}
-                >
-                  <TrashIcon className="size-3 text-destructive" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-        </CollapsibleTrigger>
-
-        <CollapsibleContent>
-          <CardContent className="pt-4 space-y-2">
-            {/* Sessions */}
-            {workout.sessions.length === 0 ? (
-              <div className="text-center py-4 text-muted-foreground text-xs">
-                세션이 없습니다
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {workout.sessions.map((session, index) => (
-                  <SessionItem
-                    key={session.id}
-                    session={session}
-                    index={index}
-                    total={workout.sessions.length}
-                    onEdit={() => onEditSession(session)}
-                    onDelete={() => onDeleteSession(session)}
-                    onMoveUp={() => onMoveSession("up", workout.sessions)}
-                    onMoveDown={() => onMoveSession("down", workout.sessions)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Add Session Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={onCreateSession}
-            >
-              <PlusIcon className="mr-2 size-3" />
-              세션 추가
+    <div className="flex items-start gap-3 p-4 border rounded-lg bg-muted/30">
+      <GripVerticalIcon className="size-4 text-muted-foreground mt-2" />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-xs">
+              {workout.dayNumber}일차
+            </Badge>
+            <span className="font-medium text-sm">{workout.title}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon-sm" onClick={onEdit}>
+              <PencilIcon className="size-3" />
             </Button>
-          </CardContent>
-        </CollapsibleContent>
-      </Card>
-    </Collapsible>
+            <Button variant="ghost" size="icon-sm" onClick={onDelete}>
+              <TrashIcon className="size-3 text-destructive" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Sessions - 칩 형태로 표시 */}
+        <div className="flex flex-wrap gap-2">
+          {workout.sessions.length === 0 ? (
+            <p className="text-xs text-muted-foreground">세션이 없습니다</p>
+          ) : (
+            workout.sessions.map((session, index) => (
+              <SessionBadge
+                key={session.id}
+                session={session}
+                index={index}
+                onEdit={() => onEditSession(session)}
+                onDelete={() => onDeleteSession(session)}
+              />
+            ))
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-xs"
+            onClick={onCreateSession}
+          >
+            <PlusIcon className="mr-1 h-3 w-3" />
+            세션 추가
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
-// Session Item Component
-function SessionItem({
+// Session Badge Component
+function SessionBadge({
   session,
   index,
-  total,
   onEdit,
   onDelete,
-  onMoveUp,
-  onMoveDown,
 }: {
   session: Session;
   index: number;
-  total: number;
   onEdit: () => void;
   onDelete: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
 }) {
   return (
-    <div className="flex items-start gap-2 p-3 rounded-lg border bg-card">
-      <GripVerticalIcon className="size-4 text-muted-foreground mt-0.5" />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-xs">
-            {index + 1}
-          </Badge>
-          <span className="font-medium text-sm truncate">{session.title}</span>
+    <Badge
+      variant="outline"
+      className="group cursor-pointer hover:bg-accent border-dashed"
+    >
+      <span className="flex items-center gap-1 text-xs">
+        <span className="text-muted-foreground">{index + 1}.</span>
+        <span>{session.title}</span>
+
+        {/* Hover 시 나타나는 액션 버튼 */}
+        <div className="hidden group-hover:flex items-center gap-0.5 ml-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="h-4 w-4 p-0"
+            onClick={onEdit}
+          >
+            <PencilIcon className="h-2.5 w-2.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="h-4 w-4 p-0"
+            onClick={onDelete}
+          >
+            <TrashIcon className="h-2.5 w-2.5 text-destructive" />
+          </Button>
         </div>
-        {session.content && (
-          <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-            {session.content}
-          </p>
-        )}
-      </div>
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={onMoveUp}
-          disabled={index === 0}
-        >
-          <ChevronUpIcon className="size-3" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={onMoveDown}
-          disabled={index === total - 1}
-        >
-          <ChevronDownIcon className="size-3" />
-        </Button>
-        <Button variant="ghost" size="icon-sm" onClick={onEdit}>
-          <PencilIcon className="size-3" />
-        </Button>
-        <Button variant="ghost" size="icon-sm" onClick={onDelete}>
-          <TrashIcon className="size-3 text-destructive" />
-        </Button>
-      </div>
-    </div>
+      </span>
+    </Badge>
   );
 }
 
@@ -803,6 +645,24 @@ function WeekFormDialog({
       description: week?.description || "",
     },
   });
+
+  // 수정 모드일 때 폼에 데이터 표시, 생성 모드일 때 폼 초기화
+  useEffect(() => {
+    if (week) {
+      form.reset({
+        weekNumber: week.weekNumber,
+        title: week.title,
+        description: week.description || "",
+      });
+    } else {
+      // 생성 모드: 폼 초기화
+      form.reset({
+        weekNumber: 1,
+        title: "",
+        description: "",
+      });
+    }
+  }, [week, form.reset]);
 
   const onSubmit = (values: z.infer<typeof weekSchema>) => {
     startTransition(async () => {
@@ -879,18 +739,13 @@ function WeekFormDialog({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
+            <TiptapForm
               name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>설명 (선택)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="주차별 가이드 설명" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="설명 (선택)"
+              form={form}
+              placeholder="주차별 가이드 설명"
+              minHeight="150px"
+              required={false}
             />
             <DialogFooter>
               <Button
@@ -940,8 +795,29 @@ function WorkoutFormDialog({
       weekId: workout?.weekId || weekId,
       dayNumber: workout?.dayNumber || 1,
       title: workout?.title || "",
+      content: workout?.content || undefined,
     },
   });
+
+  // 수정 모드일 때 폼에 데이터 표시, 생성 모드일 때 폼 초기화
+  useEffect(() => {
+    if (workout) {
+      form.reset({
+        weekId: workout.weekId,
+        dayNumber: workout.dayNumber,
+        title: workout.title,
+        content: workout.content || undefined,
+      });
+    } else {
+      // 생성 모드: 폼 초기화
+      form.reset({
+        weekId: weekId,
+        dayNumber: 1,
+        title: "",
+        content: undefined,
+      });
+    }
+  }, [workout, weekId, form.reset]);
 
   const onSubmit = (values: z.infer<typeof workoutSchema>) => {
     startTransition(async () => {
@@ -1037,6 +913,15 @@ function WorkoutFormDialog({
                 </FormItem>
               )}
             />
+            <TiptapForm
+              name="content"
+              label="상세 정보 (선택)"
+              form={form}
+              placeholder="일차별 상세 운동 가이드"
+              description="위지윅 에디터로 서식 있는 텍스트를 입력할 수 있습니다."
+              minHeight="200px"
+              required={false}
+            />
             <DialogFooter>
               <Button
                 type="button"
@@ -1093,6 +978,26 @@ function SessionFormDialog({
       orderIndex: session?.orderIndex || 0,
     },
   });
+
+  // 수정 모드일 때 폼에 데이터 표시, 생성 모드일 때 폼 초기화
+  useEffect(() => {
+    if (session) {
+      form.reset({
+        workoutId: session.workoutId,
+        title: session.title,
+        content: session.content || "",
+        orderIndex: session.orderIndex,
+      });
+    } else {
+      // 생성 모드: 폼 초기화
+      form.reset({
+        workoutId: workoutId,
+        title: "",
+        content: "",
+        orderIndex: 0,
+      });
+    }
+  }, [session, workoutId, form.reset]);
 
   const onSubmit = (values: SessionFormValues) => {
     startTransition(async () => {
@@ -1174,25 +1079,14 @@ function SessionFormDialog({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
+            <TiptapForm
               name="content"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>내용 (선택)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="상세 운동 가이드"
-                      className="min-h-[100px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    추후 위지윅 에디터로 확장될 예정입니다.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="내용 (선택)"
+              form={form}
+              placeholder="상세 운동 가이드"
+              description="위지윅 에디터로 서식 있는 텍스트를 입력할 수 있습니다."
+              minHeight="150px"
+              required={false}
             />
             <FormField
               control={form.control}

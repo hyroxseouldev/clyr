@@ -1,0 +1,58 @@
+import { initPurchaseAction } from "@/actions/payment";
+import { redirect } from "next/navigation";
+import PaymentClient from "./client-page";
+
+/**
+ * 프로그램 결제 페이지 (Server Component)
+ * 로그인 확인 후 결제 위젯 렌더링
+ */
+const PaymentPage = async ({
+  params,
+}: {
+  params: Promise<{ programId: string }>;
+}) => {
+  const { programId } = await params;
+
+  // 로그인 & 프로그램 확인
+  const result = await initPurchaseAction(programId);
+
+  if (!result.success && result.requiresAuth) {
+    redirect(result.redirectUrl);
+  }
+
+  if (!result.success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8 bg-white rounded-lg shadow-sm max-w-md">
+          <div className="text-red-500 text-4xl mb-4">⚠️</div>
+          <h1 className="text-xl font-bold mb-2">결제 페이지 오류</h1>
+          <p className="text-gray-600">{result.error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // result.success가 true일 때 program과 user는 항상 존재
+  if (!result.program || !result.user || !result.user.email) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8 bg-white rounded-lg shadow-sm max-w-md">
+          <div className="text-red-500 text-4xl mb-4">⚠️</div>
+          <h1 className="text-xl font-bold mb-2">결제 페이지 오류</h1>
+          <p className="text-gray-600">프로그램 정보를 불러올 수 없습니다.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { program, user } = result;
+
+  return (
+    <PaymentClient
+      program={program}
+      user={{ email: user.email, fullName: user.fullName }}
+    />
+  );
+};
+
+export default PaymentPage;

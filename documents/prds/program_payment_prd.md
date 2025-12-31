@@ -384,11 +384,13 @@ src/
 1. ✅ `createEnrollmentQuery` 구현
 2. ✅ 수강 기간 계산 로직
 3. ✅ 기존 수강생 체크
+4. ⏳ 결제 성공 시 order & enrollment 데이터 생성 구현
 
 ### Phase 4: 추가 기능
-1. 결제 내역 페이지
-2. 환불 처리
-3. 결제 알림
+1. ⏳ 결제 성공 페이지 UI 개선 (앱 안내 문구 추가)
+2. 결제 내역 페이지
+3. 환불 처리
+4. 결제 알림
 
 ---
 
@@ -454,7 +456,273 @@ src/
 
 ---
 
-## 12. 추후 확장 기능
+## 12. 결제 성공 후 데이터 처리
+
+### 12.1 결제 성공 페이지 개선
+
+**파일:** `src/app/(commerce)/programs/success/page.tsx`
+
+#### UI 개선 사항
+
+```
+┌─────────────────────────────────────────────┐
+│  ✅ 결제가 완료되었습니다                      │
+│                                             │
+│  수강 프로그램이 등록되었습니다.               │
+│                                             │
+│  [주문 정보]                                 │
+│  주문 번호: order-1234567890                │
+│                                             │
+│  ┌─────────────────────────────────────┐   │
+│  │  💡 앱에서 바로 시작하세요!          │   │
+│  │                                     │   │
+│  │  앱을 다운로드하고 구매 내역을       │   │
+│  │  확인한 후 프로그램을 시작하세요.    │   │
+│  │                                     │   │
+│  │  [앱 다운로드]  [내 수강 프로그램]   │   │
+│  └─────────────────────────────────────┘   │
+└─────────────────────────────────────────────┘
+```
+
+#### 추가할 텍스트 내용
+
+```typescript
+<Card className="bg-green-50 border-green-200">
+  <CardContent className="p-4">
+    <div className="flex gap-3">
+      <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+      <div className="text-sm text-green-800">
+        <p className="font-medium mb-1">앱에서 바로 시작하세요!</p>
+        <p className="text-green-700">
+          앱을 다운로드하고 구매 내역을 확인한 후 프로그램을 시작하세요.
+        </p>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+```
+
+### 12.2 결제 성공 후 데이터 처리 흐름
+
+```
+토스페이먼츠 결제 성공
+    ↓
+successUrl로 리다이렉트
+    ↓
+┌─────────────────────────────────────────┐
+│ 1. 쿼리 파라미터 추출                    │
+│    - paymentKey, orderId, amount        │
+└─────────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────────┐
+│ 2. Server Action: processPaymentSuccess │
+│    - 결제 승인 요청 (토스페이먼츠 API)   │
+│    - 결제 정보 검증                      │
+└─────────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────────┐
+│ 3. orders 테이블에 주문 생성             │
+│    - userId, programId, paymentKey     │
+│    - amount, status: "COMPLETED"       │
+└─────────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────────┐
+│ 4. enrollments 테이블에 등록 생성       │
+│    - userId, programId, orderId        │
+│    - status: "ACTIVE"                  │
+│    - enrolledAt, expiresAt 계산        │
+└─────────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────────┐
+│ 5. 캐시 무효화 및 리다이렉트            │
+│    - revalidatePath                     │
+│    - 내 수강 프로그램으로 이동          │
+└─────────────────────────────────────────┘
+```
+
+### 12.3 Server Action: processPaymentSuccess
+
+```typescript
+// src/actions/payment.ts
+
+export async function processPaymentSuccessAction(params: {
+  paymentKey: string;
+  orderId: string;
+  amount: number;
+}) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "인증되지 않은 사용자입니다" };
+  }
+
+  // 1. 결제 승인 요청
+  const secretKey = process.env.TOSS_PAYMENTS_SECRET_KEY;
+  const approvalResponse = await fetch(
+    `https://api.tosspayments.com/v1/payments/${params.paymentKey}`,
+    {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${Buffer.from(secretKey + ":").toString("base64")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        orderId: params.orderId,
+        amount: params.amount,
+      }),
+    }
+  );
+
+  if (!approvalResponse.ok) {
+    return { success: false, error: "결제 승인 실패" };
+  }
+
+  const paymentData = await approvalResponse.json();
+
+  // 2. 프로그램 정보 조회 (orderId에서 programId 추출)
+  const programId = extractProgramIdFromOrderId(params.orderId);
+  const program = await getProgramByIdQuery(programId);
+
+  // 3. 주문 생성
+  const order = await createOrderQuery({
+    userId: user.id,
+    programId: programId,
+    paymentKey: params.paymentKey,
+    amount: params.amount,
+    status: "COMPLETED",
+  });
+
+  // 4. 수강생 등록
+  const enrolledAt = new Date();
+  const expiresAt = program.accessPeriodDays
+    ? new Date(enrolledAt.getTime() + program.accessPeriodDays * 24 * 60 * 60 * 1000)
+    : null;
+
+  await createEnrollmentQuery({
+    userId: user.id,
+    programId: programId,
+    orderId: order.id,
+    status: "ACTIVE",
+    enrolledAt,
+    expiresAt,
+  });
+
+  // 5. 캐시 무효화
+  revalidatePath("/user/program");
+  revalidatePath(`/programs/${program.slug}`);
+
+  return {
+    success: true,
+    orderId: order.id,
+    programId: programId,
+    redirectUrl: "/user/program",
+  };
+}
+```
+
+### 12.4 파일 수정
+
+**결제 성공 페이지:**
+
+```typescript
+// src/app/(commerce)/programs/success/page.tsx
+
+const PaymentSuccessPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    paymentKey?: string;
+    orderId?: string;
+    amount?: string;
+  }>;
+}) => {
+  const params = await searchParams;
+  const { paymentKey, orderId, amount } = params;
+
+  // 필수 파라미터 확인
+  if (!paymentKey || !orderId || !amount) {
+    redirect("/programs");
+  }
+
+  // 결제 성공 처리
+  const result = await processPaymentSuccessAction({
+    paymentKey,
+    orderId,
+    amount: Number(amount),
+  });
+
+  if (!result.success) {
+    return <div>결제 처리 중 오류가 발생했습니다</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+      <Card className="max-w-md w-full">
+        <CardContent className="p-8 text-center">
+          {/* 성공 아이콘 */}
+          <div className="mb-6">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+              <CheckCircle2 className="h-10 w-10 text-green-600" />
+            </div>
+          </div>
+
+          {/* 메시지 */}
+          <h1 className="text-2xl font-bold mb-2">결제가 완료되었습니다</h1>
+          <p className="text-gray-600 mb-8">
+            수강 프로그램이 등록되었습니다.
+            <br />
+            지금 바로 수강을 시작하세요!
+          </p>
+
+          {/* 주문 정보 */}
+          {orderId && (
+            <div className="bg-gray-50 rounded-lg p-4 mb-8 text-left">
+              <div className="text-sm text-gray-600 mb-1">주문 번호</div>
+              <div className="font-mono text-sm font-medium">{orderId}</div>
+            </div>
+          )}
+
+          {/* 버튼 그룹 */}
+          <div className="space-y-3">
+            <Button asChild className="w-full" size="lg">
+              <Link href="/user/program">
+                <User className="h-4 w-4 mr-2" />
+                내 수강 프로그램으로 이동
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/programs">
+                <Home className="h-4 w-4 mr-2" />
+                프로그램 둘러보기
+              </Link>
+            </Button>
+          </div>
+
+          {/* 앱 안내 문구 */}
+          <Card className="bg-green-50 border-green-200 mt-6">
+            <CardContent className="p-4">
+              <div className="flex gap-3">
+                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                <div className="text-sm text-green-800 text-left">
+                  <p className="font-medium mb-1">앱에서 바로 시작하세요!</p>
+                  <p className="text-green-700">
+                    앱을 다운로드하고 구매 내역을 확인한 후 프로그램을 시작하세요.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+```
+
+---
+
+## 13. 추후 확장 기능
 
 1. **구독형 결제**: 매월 자동 결제
 2. **프로모션**: 할인코드 기능
