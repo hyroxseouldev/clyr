@@ -1,6 +1,8 @@
 import { getProgramByIdAction } from "@/actions";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
+import { ExternalLink } from "lucide-react";
 import ProgramInfoTab from "./_components/program-info-tab";
 import WorkoutTab from "./_components/workout-tab";
 import OrderListTab from "./_components/order-list-tab";
@@ -27,6 +29,15 @@ const CoachDashboardPidPage = async ({
 
   return (
     <div className="container max-w-6xl">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">{program.title}</h1>
+        <Button asChild variant="outline">
+          <a href={`/programs/${program.slug}`} target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="h-4 w-4 mr-2" />
+            공개 페이지 보기
+          </a>
+        </Button>
+      </div>
       <Tabs defaultValue="info" className="w-full">
         <TabsList className="">
           {tabs.map((tab) => (

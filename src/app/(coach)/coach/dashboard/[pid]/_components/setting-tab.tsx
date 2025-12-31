@@ -178,32 +178,6 @@ export default function SettingTab({ programId, program }: SettingTabProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Additional Settings (Future) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>추가 설정 (준비 중)</CardTitle>
-          <CardDescription>추후 업데이트 예정인 기능들입니다.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm text-muted-foreground">
-          <div className="flex items-center justify-between py-2 border-b">
-            <span>프로그램 공개/비공개 설정</span>
-            <span className="text-xs">준비 중</span>
-          </div>
-          <div className="flex items-center justify-between py-2 border-b">
-            <span>프로그램 판매 중지/재개</span>
-            <span className="text-xs">준비 중</span>
-          </div>
-          <div className="flex items-center justify-between py-2 border-b">
-            <span>프로그램 복제</span>
-            <span className="text-xs">준비 중</span>
-          </div>
-          <div className="flex items-center justify-between py-2">
-            <span>프로그램 통계 보기</span>
-            <span className="text-xs">준비 중</span>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

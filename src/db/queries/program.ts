@@ -74,3 +74,21 @@ export const deleteProgramQuery = async (programId: string) => {
     .where(eq(programs.id, programId))
     .returning();
 };
+
+// 프로그램 slug 로 프로그램 정보 가져오기
+// 프로그램의 주차 정보도 함께 가져옵니다.
+export const getProgramWithWeeksBySlugQuery = async (slug: string) => {
+  return await db.query.programs.findFirst({
+    where: eq(programs.slug, slug),
+    with: {
+      weeks: {
+        orderBy: [asc(programWeeks.weekNumber)],
+        with: {
+          workouts: {
+            orderBy: [asc(workouts.dayNumber)],
+          },
+        },
+      },
+    },
+  });
+};

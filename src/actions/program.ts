@@ -7,6 +7,7 @@ import {
   deleteProgramQuery,
   getProgramsByCoachQuery,
   getProgramFullCurriculumQuery,
+  getProgramWithWeeksBySlugQuery,
 } from "@/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { getUserId } from "@/actions/auth";
@@ -104,6 +105,25 @@ export async function getProgramByIdAction(programId: string) {
     };
   } catch (error) {
     console.error("GET_PROGRAM_BY_ID_ERROR", error);
+    return {
+      success: false,
+      message: "프로그램 정보를 불러오는데 실패했습니다.",
+    };
+  }
+}
+
+// 프로그램 slug 로 프로그램 정보 가져오기
+export async function getProgramBySlugAction(slug: string) {
+  try {
+    const program = await getProgramWithWeeksBySlugQuery(slug);
+
+    if (!program) {
+      return { success: false, message: "프로그램을 찾을 수 없습니다." };
+    }
+
+    return { success: true, data: program };
+  } catch (error) {
+    console.error("GET_PROGRAM_BY_SLUG_ERROR", error);
     return {
       success: false,
       message: "프로그램 정보를 불러오는데 실패했습니다.",
