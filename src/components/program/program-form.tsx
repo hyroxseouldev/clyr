@@ -26,7 +26,7 @@ import { AsyncButton } from "@/components/common/async-button";
 import { useTransition } from "react";
 import { createProgramAction, updateProgramAction } from "@/actions";
 import { toast } from "sonner";
-import { ImageForm } from "@/components/form/image-form";
+import { ImageForm, TiptapForm } from "@/components/form";
 
 /** 1. Schema 정의 - 검증 로직만 정의하고 default는 defaultValues에서 처리합니다 */
 const programFormSchema = z.object({
@@ -115,7 +115,7 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
           maxFileSize={5 * 1024 * 1024}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border rounded-lg p-4">
+        <div className="space-y-6 border rounded-lg p-4">
           {/* 기본 정보 세션 */}
           <FormField
             control={form.control}
@@ -264,29 +264,24 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
               <FormItem>
                 <FormLabel>요약 설명</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value ?? ""} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>상세 설명</FormLabel>
-                <FormControl>
                   <Textarea
                     {...field}
                     value={field.value ?? ""}
-                    rows={5}
+                    rows={3}
                     onChange={(e) => field.onChange(e.target.value || null)}
                   />
                 </FormControl>
               </FormItem>
             )}
           />
+
+          <TiptapForm
+              name="description"
+              label="상세 설명"
+              form={form}
+              placeholder="프로그램에 대한 상세 설명을 입력하세요..."
+              minHeight="200px"
+            />
 
           <div className="flex gap-6 border p-4 rounded-lg bg-slate-50">
             <FormField
@@ -322,11 +317,7 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
           </div>
         </div>
 
-        <AsyncButton
-          type="submit"
-          className="w-full h-12 text-lg mt-4"
-          isLoading={isLoading}
-        >
+        <AsyncButton type="submit" className="w-full" isLoading={isLoading}>
           {isLoading ? "프로그램 정보 저장중..." : "프로그램 정보 저장하기"}
         </AsyncButton>
       </form>

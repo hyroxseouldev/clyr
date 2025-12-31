@@ -38,6 +38,7 @@ export function TiptapEditor({
     extensions: getTiptapExtensions(),
     content,
     editable,
+    immediatelyRender: false,
     editorProps: {
       attributes: {
         class: cn(

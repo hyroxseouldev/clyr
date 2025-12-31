@@ -56,6 +56,7 @@ const ToolbarButton = ({
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={onClick}
@@ -121,7 +122,7 @@ export function Toolbar({ editor }: ToolbarProps) {
       <div className="flex gap-1 pr-2 border-r border-input">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 px-2">
+            <Button type="button" variant="ghost" size="sm" className="h-8 px-2">
               헤딩
             </Button>
           </DropdownMenuTrigger>
