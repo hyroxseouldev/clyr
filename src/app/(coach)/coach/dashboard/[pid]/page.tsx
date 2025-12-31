@@ -26,7 +26,7 @@ const CoachDashboardPidPage = async ({
   }
 
   return (
-    <div className="container max-w-6xl py-8">
+    <div className="container max-w-6xl">
       <Tabs defaultValue="info" className="w-full">
         <TabsList className="">
           {tabs.map((tab) => (
