@@ -114,6 +114,21 @@ export const updateEnrollmentStatusQuery = async (
 };
 
 /**
+ * 수강권 시작일 업데이트
+ */
+export const updateEnrollmentStartDateQuery = async (
+  enrollmentId: string,
+  startDate: Date | null
+) => {
+  const [updatedEnrollment] = await db
+    .update(enrollments)
+    .set({ startDate })
+    .where(eq(enrollments.id, enrollmentId))
+    .returning();
+  return updatedEnrollment;
+};
+
+/**
  * 사용자의 활성 수강 프로그램 조회
  */
 export const getActiveEnrollmentsByUserIdQuery = async (userId: string) => {

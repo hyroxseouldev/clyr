@@ -10,6 +10,7 @@ import {
   createEnrollmentQuery,
   getEnrollmentByIdQuery,
   updateEnrollmentStatusQuery,
+  updateEnrollmentStartDateQuery,
   getActiveEnrollmentsByUserIdQuery,
   getEnrollmentsByUserIdQuery,
   checkUserEnrollmentQuery,
@@ -401,6 +402,48 @@ export async function updateEnrollmentStatusByCoachAction(
     return {
       success: false,
       message: "수강 권한 상태 변경에 실패했습니다.",
+    };
+  }
+}
+
+// 코치용 수강권 시작일 변경 액션
+export async function updateEnrollmentStartDateByCoachAction(
+  enrollmentId: string,
+  programId: string,
+  startDate: string | null
+) {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // 프로그램 소유자 확인
+    const program = await getProgramFullCurriculumQuery(programId);
+    if (!program) {
+      return { success: false, message: "프로그램을 찾을 수 없습니다." };
+    }
+
+    if (program.coachId !== userId) {
+      return { success: false, message: "권한이 없습니다." };
+    }
+
+    const updatedEnrollment = await updateEnrollmentStartDateQuery(
+      enrollmentId,
+      startDate ? new Date(startDate) : null
+    );
+
+    revalidatePath(`/coach/dashboard/${programId}`);
+    return {
+      success: true,
+      data: updatedEnrollment,
+    };
+  } catch (error) {
+    console.error("UPDATE_ENROLLMENT_START_DATE_BY_COACH_ERROR", error);
+    return {
+      success: false,
+      message: "시작일 변경에 실패했습니다.",
     };
   }
 }

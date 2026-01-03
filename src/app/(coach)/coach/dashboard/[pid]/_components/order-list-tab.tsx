@@ -9,6 +9,7 @@ import {
   PauseCircleIcon,
   UserIcon,
   CalendarIcon,
+  PencilIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,7 +39,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
   updateEnrollmentStatusByCoachAction,
+  updateEnrollmentStartDateByCoachAction,
 } from "@/actions/order";
 
 type Enrollment = {
@@ -46,7 +58,7 @@ type Enrollment = {
   userId: string;
   programId: string;
   status: "ACTIVE" | "EXPIRED" | "PAUSED";
-  startDate: Date;
+  startDate: Date | null;
   endDate: Date | null;
   createdAt: Date;
   user: {
@@ -102,6 +114,19 @@ export default function OrderListTab({ programId, initialData }: OrderListTabPro
     newStatus: "ACTIVE",
   });
 
+  // Start date edit dialog
+  const [startDateDialog, setStartDateDialog] = useState<{
+    open: boolean;
+    enrollmentId: string;
+    currentStartDate: Date | null;
+    selectedDate: Date | undefined;
+  }>({
+    open: false,
+    enrollmentId: "",
+    currentStartDate: null,
+    selectedDate: undefined,
+  });
+
   // Filter enrollments
   const filteredEnrollments = enrollments.filter((enrollment) => {
     if (filter === "ALL") return true;
@@ -148,8 +173,45 @@ export default function OrderListTab({ programId, initialData }: OrderListTabPro
     });
   };
 
+  // Start date update handlers
+  const handleStartDateEdit = (enrollmentId: string) => {
+    const enrollment = enrollments.find((e) => e.id === enrollmentId);
+    if (!enrollment) return;
+
+    setStartDateDialog({
+      open: true,
+      enrollmentId,
+      currentStartDate: enrollment.startDate,
+      selectedDate: enrollment.startDate ? new Date(enrollment.startDate) : undefined,
+    });
+  };
+
+  const confirmStartDateChange = () => {
+    startTransition(async () => {
+      const result = await updateEnrollmentStartDateByCoachAction(
+        startDateDialog.enrollmentId,
+        programId,
+        startDateDialog.selectedDate?.toISOString() ?? null
+      );
+
+      if (result.success) {
+        toast.success("시작일이 변경되었습니다.");
+        router.refresh();
+      } else {
+        toast.error("시작일 변경 실패", { description: result.message });
+      }
+
+      setStartDateDialog({
+        open: false,
+        enrollmentId: "",
+        currentStartDate: null,
+        selectedDate: undefined,
+      });
+    });
+  };
+
   const formatDate = (date: Date | null) => {
-    if (!date) return "무기한";
+    if (!date) return "미지정";
     return new Date(date).toLocaleDateString("ko-KR");
   };
 
@@ -208,6 +270,7 @@ export default function OrderListTab({ programId, initialData }: OrderListTabPro
             key={enrollment.id}
             enrollment={enrollment}
             onStatusChange={handleStatusChange}
+            onStartDateEdit={handleStartDateEdit}
             formatDate={formatDate}
           />
         ))}
@@ -239,6 +302,66 @@ export default function OrderListTab({ programId, initialData }: OrderListTabPro
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Start Date Edit Dialog */}
+      <Dialog
+        open={startDateDialog.open}
+        onOpenChange={(open) => setStartDateDialog((prev) => ({ ...prev, open }))}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>수강 시작일 변경</DialogTitle>
+            <DialogDescription>
+              현재: <strong>{formatDate(startDateDialog.currentStartDate)}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center py-4">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={`w-[280px] justify-start text-left font-normal ${
+                    !startDateDialog.selectedDate && "text-muted-foreground"
+                  }`}
+                >
+                  <CalendarIcon className="mr-2 size-4" />
+                  {startDateDialog.selectedDate ? (
+                    formatDate(startDateDialog.selectedDate)
+                  ) : (
+                    <span>날짜 선택</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDateDialog.selectedDate}
+                  onSelect={(date) =>
+                    setStartDateDialog((prev) => ({ ...prev, selectedDate: date }))
+                  }
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setStartDateDialog({
+                  open: false,
+                  enrollmentId: "",
+                  currentStartDate: null,
+                  selectedDate: undefined,
+                })
+              }
+            >
+              취소
+            </Button>
+            <Button onClick={confirmStartDateChange}>변경</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -247,10 +370,12 @@ export default function OrderListTab({ programId, initialData }: OrderListTabPro
 function EnrollmentCard({
   enrollment,
   onStatusChange,
+  onStartDateEdit,
   formatDate,
 }: {
   enrollment: Enrollment;
   onStatusChange: (id: string, status: "ACTIVE" | "EXPIRED" | "PAUSED") => void;
+  onStartDateEdit: (id: string) => void;
   formatDate: (date: Date | null) => string;
 }) {
   return (
@@ -274,7 +399,15 @@ function EnrollmentCard({
         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
           <div className="flex items-center gap-1">
             <CalendarIcon className="size-4" />
-            <span>수강 시작: {formatDate(new Date(enrollment.startDate))}</span>
+            <span>수강 시작: {formatDate(enrollment.startDate)}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 ml-1"
+              onClick={() => onStartDateEdit(enrollment.id)}
+            >
+              <PencilIcon className="size-3" />
+            </Button>
           </div>
           <div className="flex items-center gap-1">
             <CalendarIcon className="size-4" />

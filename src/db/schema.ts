@@ -50,6 +50,28 @@ export const coachProfile = pgTable("coach_profile", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// [UserProfile] 일반 사용자용 프로필 (앱 사용)
+export const userProfile = pgTable("user_profile", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  accountId: uuid("account_id")
+    .references(() => account.id, { onDelete: "cascade" })
+    .unique()
+    .notNull(),
+
+  nickname: text("nickname"), // 사용자 별명
+  bio: text("bio"), // 자기소개
+  profileImageUrl: text("profile_image_url"), // 프로필 이미지 URL
+  phoneNumber: text("phone_number"), // 연락처
+
+  // 운동 관련 메타데이터
+  fitnessGoals: jsonb("fitness_goals")
+    .default([])
+    .$type<string[]>(), // 운동 목표 (예: ["체중감량", "근력증가"])
+  fitnessLevel: text("fitness_level").$type<"BEGINNER" | "INTERMEDIATE" | "ADVANCED">(), // 운동 수준
+
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // ==========================================
 // 2. 프로그램 본체 (Product & Policy)
 // ==========================================
@@ -168,7 +190,7 @@ export const enrollments = pgTable("enrollments", {
     .notNull(),
   orderId: uuid("order_id").references(() => orders.id),
 
-  startDate: timestamp("start_date").defaultNow().notNull(),
+  startDate: timestamp("start_date"), // 앱에서 지정 (null 가능)
   endDate: timestamp("end_date"), // 수강 만료일 (현재시간 + accessPeriodDays)
   status: text("status")
     .default("ACTIVE")
@@ -186,12 +208,23 @@ export const accountRelations = relations(account, ({ one, many }) => ({
     fields: [account.id],
     references: [coachProfile.accountId],
   }),
+  userProfile: one(userProfile, {
+    fields: [account.id],
+    references: [userProfile.accountId],
+  }),
   programs: many(programs),
 }));
 
 export const coachProfileRelations = relations(coachProfile, ({ one }) => ({
   account: one(account, {
     fields: [coachProfile.accountId],
+    references: [account.id],
+  }),
+}));
+
+export const userProfileRelations = relations(userProfile, ({ one }) => ({
+  account: one(account, {
+    fields: [userProfile.accountId],
     references: [account.id],
   }),
 }));
@@ -249,6 +282,7 @@ export const workoutSessionsRelations = relations(
 // 조회용 타입
 export type Account = InferSelectModel<typeof account>;
 export type CoachProfile = InferSelectModel<typeof coachProfile>;
+export type UserProfile = InferSelectModel<typeof userProfile>;
 export type Program = InferSelectModel<typeof programs>;
 export type ProgramWeek = InferSelectModel<typeof programWeeks>;
 export type Workout = InferSelectModel<typeof workouts>;
@@ -259,6 +293,7 @@ export type Enrollment = InferSelectModel<typeof enrollments>;
 // 생성/수정용 타입
 export type NewAccount = InferInsertModel<typeof account>;
 export type NewCoachProfile = InferInsertModel<typeof coachProfile>;
+export type NewUserProfile = InferInsertModel<typeof userProfile>;
 export type NewProgram = InferInsertModel<typeof programs>;
 export type NewProgramWeek = InferInsertModel<typeof programWeeks>;
 export type NewWorkout = InferInsertModel<typeof workouts>;
