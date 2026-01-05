@@ -1,10 +1,10 @@
-import { ProgramForm } from "@/components/program/program-form";
+import { ProgramEditForm } from "@/components/program/program-edit-form";
 import { Program } from "@/db/schema";
 
 const ProgramInfoTab = ({ program }: { program: Program }) => {
   return (
     <>
-      <ProgramForm initialData={program} />
+      <ProgramEditForm initialData={program} />
     </>
   );
 };

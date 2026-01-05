@@ -3,7 +3,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
 import {
   Form,
   FormControl,
@@ -24,12 +23,12 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { AsyncButton } from "@/components/common/async-button";
 import { useTransition } from "react";
-import { createProgramAction, updateProgramAction } from "@/actions";
+import { updateProgramAction } from "@/actions";
 import { toast } from "sonner";
 import { ImageForm, TiptapForm } from "@/components/form";
 
-/** 1. Schema 정의 - 검증 로직만 정의하고 default는 defaultValues에서 처리합니다 */
-const programFormSchema = z.object({
+/** 수정용 Schema - 전체 정보 */
+const programEditSchema = z.object({
   title: z.string().min(1, "제목을 입력하세요"),
   slug: z.string().min(1, "슬러그를 입력하세요"),
   type: z.enum(["SINGLE", "SUBSCRIPTION"]),
@@ -45,15 +44,13 @@ const programFormSchema = z.object({
   isForSale: z.boolean(),
 });
 
-/** 2. Zod 추론 타입을 FormValues로 사용 (resolver 에러 해결 핵심) */
-type FormValues = z.infer<typeof programFormSchema>;
+type FormValues = z.infer<typeof programEditSchema>;
 
-export function ProgramForm({ initialData }: { initialData?: any }) {
+export function ProgramEditForm({ initialData }: { initialData: any }) {
   const [isLoading, startTransition] = useTransition();
-  const router = useRouter();
-  /** 3. Form 초기화 */
+
   const form = useForm<FormValues>({
-    resolver: zodResolver(programFormSchema),
+    resolver: zodResolver(programEditSchema),
     defaultValues: {
       title: initialData?.title ?? "",
       slug: initialData?.slug ?? "",
@@ -71,33 +68,20 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
     },
   });
 
-  /** 4. Submit 핸들러 */
   const onSubmit = async (values: FormValues) => {
-    // 수정 삭제 분기점 나눠야지 해야함.
-
     startTransition(async () => {
-      if (initialData) {
-        const result = await updateProgramAction(initialData.id, values);
-        if (result && "error" in result) {
-          toast.error(result.error as string);
-          return;
-        }
-        if (result && "success" in result && result.success) {
-          toast.success("프로그램 수정 성공");
-        }
-      } else {
-        const result = await createProgramAction(values, []);
-        if (result && "error" in result) {
-          toast.error(result.error as string);
-          return;
-        }
-        if (result && "success" in result && result.success) {
-          toast.success("프로그램 생성 성공");
-          router.push(`/coach/dashboard/${result.id}`);
-        }
+      const result = await updateProgramAction(initialData.id, values);
+      if (result && "error" in result) {
+        toast.error(result.error as string);
+        return;
+      }
+      if (result && "success" in result && result.success) {
+        toast.success("프로그램 수정 성공");
       }
     });
   };
+
+  const typeLabel = form.watch("type") === "SINGLE" ? "단건 판매" : "구독형";
 
   return (
     <Form {...form}>
@@ -144,6 +128,7 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
             )}
           />
 
+          {/* 판매 방식 - 읽기 전용 (disabled) */}
           <FormField
             control={form.control}
             name="type"
@@ -153,9 +138,10 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  disabled
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-muted">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -164,9 +150,14 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
                     <SelectItem value="SUBSCRIPTION">구독형</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  판매 방식은 생성 시에만 설정할 수 있습니다 ({typeLabel})
+                </p>
+                <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="price"
@@ -176,6 +167,7 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
                 <FormControl>
                   <Input type="number" {...field} />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -201,6 +193,7 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
                     <SelectItem value="ADVANCED">고급</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -217,6 +210,7 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -234,6 +228,7 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -254,6 +249,7 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
                     }
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -271,6 +267,7 @@ export function ProgramForm({ initialData }: { initialData?: any }) {
                     onChange={(e) => field.onChange(e.target.value || null)}
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
