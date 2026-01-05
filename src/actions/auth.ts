@@ -64,6 +64,81 @@ export async function signOut() {
 }
 
 /**
+ * 비밀번호 재설정 요청 (이메일 발송)
+ */
+export async function requestPasswordResetAction(email: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`,
+  });
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+
+  return { success: true, message: "비밀번호 재설정 링크가 발송되었습니다." };
+}
+
+/**
+ * 비밀번호 재설정 (이메일 링크 통해)
+ */
+export async function resetPasswordAction(data: { password: string }) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.updateUser({
+    password: data.password,
+  });
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+
+  return { success: true, message: "비밀번호가 변경되었습니다." };
+}
+
+/**
+ * 비밀번호 변경
+ */
+export async function changePasswordAction(data: {
+  currentPassword: string;
+  newPassword: string;
+}) {
+  const supabase = await createClient();
+
+  // 1. 현재 사용자 확인
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  // 2. 현재 비밀번호 확인을 위해 재로그인 시도
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email!,
+    password: data.currentPassword,
+  });
+
+  if (signInError) {
+    return { success: false, message: "현재 비밀번호가 올바르지 않습니다." };
+  }
+
+  // 3. 새 비밀번호로 변경
+  const { error: updateError } = await supabase.auth.updateUser({
+    password: data.newPassword,
+  });
+
+  if (updateError) {
+    return { success: false, message: updateError.message };
+  }
+
+  return { success: true, message: "비밀번호가 변경되었습니다." };
+}
+
+/**
  * 회원가입 액션
  * Supabase Auth 사용자 생성 후 계정 정보 저장
  */

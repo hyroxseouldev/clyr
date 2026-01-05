@@ -25,10 +25,12 @@ import {
   LogOutIcon,
   UserCircleIcon,
   TrashIcon,
+  KeyIcon,
 } from "lucide-react";
 import { signOut } from "@/actions/auth";
 import { AccountForm } from "@/components/auth/account-form";
 import { CoachProfileForm } from "@/components/auth/coach-profile-form";
+import { PasswordChangeForm } from "@/components/auth/password-change-form";
 import { deleteAccountAction } from "@/actions/account";
 
 const DashboardHeader = ({
@@ -40,6 +42,7 @@ const DashboardHeader = ({
 
   const [accountDialogOpen, setAccountDialogOpen] = useState(false);
   const [coachProfileDialogOpen, setCoachProfileDialogOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -104,6 +107,10 @@ const DashboardHeader = ({
               <UserCircleIcon className="mr-2 size-4" />
               계정 정보 수정
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setPasswordDialogOpen(true)}>
+              <KeyIcon className="mr-2 size-4" />
+              비밀번호 변경
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setCoachProfileDialogOpen(true)}>
               <UserIcon className="mr-2 size-4" />
               코치 프로필 수정
@@ -140,6 +147,21 @@ const DashboardHeader = ({
               avatarUrl: user.avatarUrl || "",
             }}
             onSuccess={() => setAccountDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Password Change Dialog */}
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>비밀번호 변경</DialogTitle>
+            <DialogDescription>
+              새 비밀번호를 입력해주세요.
+            </DialogDescription>
+          </DialogHeader>
+          <PasswordChangeForm
+            onSuccess={() => setPasswordDialogOpen(false)}
           />
         </DialogContent>
       </Dialog>

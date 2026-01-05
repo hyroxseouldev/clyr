@@ -103,7 +103,15 @@ export function LoginForm({
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>비밀번호</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>비밀번호</FormLabel>
+                      <Link
+                        href="/forgot-password"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        비밀번호 찾기
+                      </Link>
+                    </div>
                     <FormControl>
                       <Input
                         placeholder="••••••••"

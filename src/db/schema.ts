@@ -188,7 +188,7 @@ export const enrollments = pgTable("enrollments", {
   programId: uuid("program_id")
     .references(() => programs.id, { onDelete: "cascade" })
     .notNull(),
-  orderId: uuid("order_id").references(() => orders.id),
+  orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
 
   startDate: timestamp("start_date"), // 앱에서 지정 (null 가능)
   endDate: timestamp("end_date"), // 수강 만료일 (현재시간 + accessPeriodDays)
