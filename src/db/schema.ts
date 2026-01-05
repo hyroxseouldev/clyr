@@ -157,6 +157,24 @@ export const workoutSessions = pgTable("workout_sessions", {
 // 4. 상거래 및 수강 권한 (Commerce & Access)
 // ==========================================
 
+// [WorkoutLogs] 사용자 운동 기록 (User & Coach)
+export const workoutLogs = pgTable("workout_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .references(() => account.id, { onDelete: "cascade" })
+    .notNull(),
+
+  title: text("title").notNull(), // 운동 일지 제목
+  logDate: timestamp("log_date").notNull(), // 운동 날짜
+  content: jsonb("content")
+    .default({})
+    .$type<Record<string, unknown>>(), // 운동 기록 상세 내용 (JSON)
+  intensity: text("intensity")
+    .$type<"LOW" | "MEDIUM" | "HIGH">(), // 운동 강도
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // [Orders] 결제 내역 (판매 영수증)
 export const orders = pgTable("orders", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -213,6 +231,7 @@ export const accountRelations = relations(account, ({ one, many }) => ({
     references: [userProfile.accountId],
   }),
   programs: many(programs),
+  workoutLogs: many(workoutLogs),
 }));
 
 export const coachProfileRelations = relations(coachProfile, ({ one }) => ({
@@ -275,6 +294,13 @@ export const workoutSessionsRelations = relations(
   })
 );
 
+export const workoutLogsRelations = relations(workoutLogs, ({ one }) => ({
+  user: one(account, {
+    fields: [workoutLogs.userId],
+    references: [account.id],
+  }),
+}));
+
 // ==========================================
 // 6. Type Exports (타입 추출)
 // ==========================================
@@ -287,6 +313,7 @@ export type Program = InferSelectModel<typeof programs>;
 export type ProgramWeek = InferSelectModel<typeof programWeeks>;
 export type Workout = InferSelectModel<typeof workouts>;
 export type WorkoutSession = InferSelectModel<typeof workoutSessions>;
+export type WorkoutLog = InferSelectModel<typeof workoutLogs>;
 export type Order = InferSelectModel<typeof orders>;
 export type Enrollment = InferSelectModel<typeof enrollments>;
 
@@ -298,5 +325,6 @@ export type NewProgram = InferInsertModel<typeof programs>;
 export type NewProgramWeek = InferInsertModel<typeof programWeeks>;
 export type NewWorkout = InferInsertModel<typeof workouts>;
 export type NewWorkoutSession = InferInsertModel<typeof workoutSessions>;
+export type NewWorkoutLog = InferInsertModel<typeof workoutLogs>;
 export type NewOrder = InferInsertModel<typeof orders>;
 export type NewEnrollment = InferInsertModel<typeof enrollments>;
