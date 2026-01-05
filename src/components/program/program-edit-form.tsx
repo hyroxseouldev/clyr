@@ -94,8 +94,8 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
           name="thumbnailUrl"
           label="썸네일 이미지"
           form={form}
-          bucketName="program-thumbnails"
-          path="thumbnails"
+          bucketName="public-assets"
+          path="program/thumbnails"
           maxFileSize={5 * 1024 * 1024}
         />
 

@@ -44,8 +44,8 @@ interface ImageFormProps<
  *   name="thumbnailUrl"
  *   label="썸네일"
  *   form={form}
- *   bucketName="program-thumbnails"
- *   path="thumbnails"
+ *   bucketName="public-assets"
+ *   path="program/thumbnails"
  *   maxFileSize={5 * 1024 * 1024} // 5MB
  * />
  * ```

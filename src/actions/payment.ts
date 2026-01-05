@@ -32,7 +32,7 @@ export async function initPurchaseAction(programSlug: string) {
     return {
       success: false,
       requiresAuth: true,
-      redirectUrl: `/signin?redirectTo=/programs/payment/${programSlug}`,
+      redirectUrl: `/signin?redirectTo=/programs/${programSlug}`,
     };
   }
 

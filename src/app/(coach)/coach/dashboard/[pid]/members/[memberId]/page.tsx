@@ -17,7 +17,10 @@ const INTENSITY_LABELS = {
   HIGH: "높음",
 };
 
-const INTENSITY_VARIANTS: Record<"LOW" | "MEDIUM" | "HIGH", "default" | "secondary" | "outline"> = {
+const INTENSITY_VARIANTS: Record<
+  "LOW" | "MEDIUM" | "HIGH",
+  "default" | "secondary" | "outline"
+> = {
   LOW: "secondary",
   MEDIUM: "default",
   HIGH: "outline",
@@ -111,8 +114,18 @@ export default async function MemberWorkoutLogsPage({ params }: PageProps) {
                         <CalendarIcon className="size-4" />
                         {formatDate(log.logDate)}
                       </div>
-                      <Badge variant={INTENSITY_VARIANTS[log.intensity]}>
-                        {INTENSITY_LABELS[log.intensity]}
+                      <Badge
+                        variant={
+                          INTENSITY_VARIANTS[
+                            log.intensity as "LOW" | "MEDIUM" | "HIGH"
+                          ]
+                        }
+                      >
+                        {
+                          INTENSITY_LABELS[
+                            log.intensity as "LOW" | "MEDIUM" | "HIGH"
+                          ]
+                        }
                       </Badge>
                     </div>
                   </div>
@@ -133,7 +146,8 @@ export default async function MemberWorkoutLogsPage({ params }: PageProps) {
                   {/* 메타데이터 */}
                   <div className="text-xs text-muted-foreground">
                     작성일: {formatDate(log.createdAt)}
-                    {new Date(log.updatedAt).getTime() !== new Date(log.createdAt).getTime() && (
+                    {new Date(log.updatedAt).getTime() !==
+                      new Date(log.createdAt).getTime() && (
                       <span> | 수정일: {formatDate(log.updatedAt)}</span>
                     )}
                   </div>

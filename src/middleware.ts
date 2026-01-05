@@ -39,7 +39,10 @@ export async function middleware(request: NextRequest) {
 
   // 3. 로그인 된 유저가 로그인 페이지 가려고 할 때 (역 리다이렉트)
   if (user && (pathname === "/signin" || pathname === "/signup")) {
-    const dest = userRole === "COACH" ? "/coach/dashboard" : "/user/program";
+    // redirectTo 파라미터가 있으면 해당 페이지로, 없으면 기본 대시보드로
+    const redirectTo = request.nextUrl.searchParams.get("redirectTo");
+    const defaultDest = userRole === "COACH" ? "/coach/dashboard" : "/user/program";
+    const dest = redirectTo || defaultDest;
     return NextResponse.redirect(new URL(dest, request.url));
   }
 
