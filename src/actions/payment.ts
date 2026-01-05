@@ -1,9 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import {
-  getProgramWithWeeksBySlugQuery,
-} from "@/db/queries";
+import { getProgramWithWeeksBySlugQuery } from "@/db/queries";
 import {
   createOrderQuery,
   completeOrderAndCreateEnrollmentQuery,
@@ -25,14 +23,16 @@ import { getUserId } from "@/actions/auth";
  */
 export async function initPurchaseAction(programSlug: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // 1. 로그인 확인
   if (!user) {
     return {
       success: false,
       requiresAuth: true,
-      redirectUrl: `/signin?redirectTo=/programs/${programSlug}`,
+      redirectUrl: `/signin?redirectTo=/programs/payment/${programSlug}`,
     };
   }
 
@@ -127,12 +127,19 @@ export async function createPaymentAction({
     }
 
     // 4. 결제 승인 (토스페이먼츠 API)
-    const approvalResult = await approvePayment(paymentKey, finalOrderId, amount);
+    const approvalResult = await approvePayment(
+      paymentKey,
+      finalOrderId,
+      amount
+    );
 
     if (!approvalResult.success) {
       // 결제 실패 시 주문 상태 업데이트
       await updateOrderStatusQuery(finalOrderId, "CANCELLED");
-      return { success: false, error: approvalResult.error || "결제 승인 실패" };
+      return {
+        success: false,
+        error: approvalResult.error || "결제 승인 실패",
+      };
     }
 
     // 5. 수강 만료일 계산
@@ -141,7 +148,11 @@ export async function createPaymentAction({
       : undefined;
 
     // 6. 주문 완료 및 수강권 생성
-    await completeOrderAndCreateEnrollmentQuery(finalOrderId, paymentKey, endDate);
+    await completeOrderAndCreateEnrollmentQuery(
+      finalOrderId,
+      paymentKey,
+      endDate
+    );
 
     revalidatePath(`/programs/payment/${programId}`);
     revalidatePath("/user/orders");
@@ -183,7 +194,9 @@ async function approvePayment(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Basic ${Buffer.from(secretKey + ":").toString("base64")}`,
+          Authorization: `Basic ${Buffer.from(secretKey + ":").toString(
+            "base64"
+          )}`,
         },
         body: JSON.stringify({
           orderId: orderId,
