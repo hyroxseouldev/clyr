@@ -8,6 +8,7 @@ import { ExternalLink } from "lucide-react";
 import ProgramInfoTab from "./_components/program-info-tab";
 import WorkoutTab from "./_components/workout-tab";
 import OrderListTab from "./_components/order-list-tab";
+import MembersListTab from "./_components/members-list-tab";
 import SettingTab from "./_components/setting-tab";
 
 const CoachDashboardPidPage = async ({
@@ -24,6 +25,7 @@ const CoachDashboardPidPage = async ({
     { label: "프로그램 정보", value: "info" },
     { label: "워크 아웃", value: "workouts" },
     { label: "구매 목록", value: "purchases" },
+    { label: "회원 목록", value: "members" },
     { label: "설정", value: "settings" },
   ];
 
@@ -61,6 +63,11 @@ const CoachDashboardPidPage = async ({
               />
             ) : tab.label === "구매 목록" ? (
               <OrderListTab
+                programId={pid}
+                initialData={enrollmentResult.success && enrollmentResult.data ? enrollmentResult.data : []}
+              />
+            ) : tab.label === "회원 목록" ? (
+              <MembersListTab
                 programId={pid}
                 initialData={enrollmentResult.success && enrollmentResult.data ? enrollmentResult.data : []}
               />

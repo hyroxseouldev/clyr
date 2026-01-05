@@ -1,0 +1,298 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import {
+  createWorkoutLogQuery,
+  getWorkoutLogByIdQuery,
+  getWorkoutLogsByUserIdQuery,
+  updateWorkoutLogQuery,
+  deleteWorkoutLogQuery,
+} from "@/db/queries/workoutLog";
+import { getEnrollmentsByUserIdQuery } from "@/db/queries/order";
+import { getProgramFullCurriculumQuery } from "@/db/queries/program";
+import { getUserId } from "@/actions/auth";
+
+/**
+ * ==========================================
+ * USER ACTIONS (사용자)
+ * ==========================================
+ */
+
+/**
+ * 운동 일지 생성
+ */
+export async function createWorkoutLogAction(data: {
+  title: string;
+  logDate: Date;
+  content: Record<string, unknown>;
+  intensity: "LOW" | "MEDIUM" | "HIGH";
+}) {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    const newLog = await createWorkoutLogQuery({
+      userId: userId,
+      title: data.title,
+      logDate: data.logDate,
+      content: data.content,
+      intensity: data.intensity,
+    });
+
+    revalidatePath("/user/workout-logs");
+    return {
+      success: true,
+      data: newLog,
+    };
+  } catch (error) {
+    console.error("CREATE_WORKOUT_LOG_ERROR", error);
+    return { success: false, message: "운동 일지 생성에 실패했습니다." };
+  }
+}
+
+/**
+ * 내 운동 일지 목록 조회
+ */
+export async function getMyWorkoutLogsAction() {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    const logs = await getWorkoutLogsByUserIdQuery(userId);
+
+    return {
+      success: true,
+      data: logs,
+    };
+  } catch (error) {
+    console.error("GET_MY_WORKOUT_LOGS_ERROR", error);
+    return { success: false, message: "운동 일지를 불러오는데 실패했습니다." };
+  }
+}
+
+/**
+ * 운동 일지 상세 조회
+ */
+export async function getWorkoutLogDetailAction(logId: string) {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    const log = await getWorkoutLogByIdQuery(logId);
+
+    if (!log) {
+      return { success: false, message: "운동 일지를 찾을 수 없습니다." };
+    }
+
+    // 본인의 일지만 조회 가능
+    if (log.userId !== userId) {
+      return { success: false, message: "권한이 없습니다." };
+    }
+
+    return {
+      success: true,
+      data: log,
+    };
+  } catch (error) {
+    console.error("GET_WORKOUT_LOG_DETAIL_ERROR", error);
+    return { success: false, message: "운동 일지를 불러오는데 실패했습니다." };
+  }
+}
+
+/**
+ * 운동 일지 수정
+ */
+export async function updateWorkoutLogAction(
+  logId: string,
+  data: {
+    title?: string;
+    logDate?: Date;
+    content?: Record<string, unknown>;
+    intensity?: "LOW" | "MEDIUM" | "HIGH";
+  }
+) {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // 일지 소유자 확인
+    const log = await getWorkoutLogByIdQuery(logId);
+
+    if (!log) {
+      return { success: false, message: "운동 일지를 찾을 수 없습니다." };
+    }
+
+    if (log.userId !== userId) {
+      return { success: false, message: "권한이 없습니다." };
+    }
+
+    const updatedLog = await updateWorkoutLogQuery(logId, data);
+
+    revalidatePath("/user/workout-logs");
+    return {
+      success: true,
+      data: updatedLog,
+    };
+  } catch (error) {
+    console.error("UPDATE_WORKOUT_LOG_ERROR", error);
+    return { success: false, message: "운동 일지 수정에 실패했습니다." };
+  }
+}
+
+/**
+ * 운동 일지 삭제
+ */
+export async function deleteWorkoutLogAction(logId: string) {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // 일지 소유자 확인
+    const log = await getWorkoutLogByIdQuery(logId);
+
+    if (!log) {
+      return { success: false, message: "운동 일지를 찾을 수 없습니다." };
+    }
+
+    if (log.userId !== userId) {
+      return { success: false, message: "권한이 없습니다." };
+    }
+
+    await deleteWorkoutLogQuery(logId);
+
+    revalidatePath("/user/workout-logs");
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error("DELETE_WORKOUT_LOG_ERROR", error);
+    return { success: false, message: "운동 일지 삭제에 실패했습니다." };
+  }
+}
+
+/**
+ * ==========================================
+ * COACH ACTIONS (코치 전용)
+ * ==========================================
+ */
+
+/**
+ * 코치용: 회원의 운동 일지 조회
+ * (코치의 프로그램에 수강 중인 회원의 일지만 조회 가능)
+ */
+export async function getMemberWorkoutLogsByCoachAction(memberUserId: string) {
+  const coachId = await getUserId();
+
+  if (!coachId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // 코치의 프로그램 목록 조회
+    // 회원이 수강 중인 프로그램이 코치의 프로그램인지 확인
+
+    // 회원의 수강 프로그램 목록 조회
+    const enrollments = await getEnrollmentsByUserIdQuery(memberUserId);
+
+    if (enrollments.length === 0) {
+      return {
+        success: true,
+        data: [], // 수강 중인 프로그램 없음
+      };
+    }
+
+    // 코치의 프로그램 ID 목록 확인을 위해
+    // 각 enrollment의 program을 조회해서 coachId 확인
+    const coachProgramIds: string[] = [];
+
+    for (const enrollment of enrollments) {
+      const program = await getProgramFullCurriculumQuery(enrollment.programId);
+      if (program && program.coachId === coachId) {
+        coachProgramIds.push(enrollment.programId);
+      }
+    }
+
+    // 코치의 프로그램에 수강 중인 회원이 아니면 접근 거부
+    if (coachProgramIds.length === 0) {
+      return { success: false, message: "권한이 없습니다." };
+    }
+
+    // 회원의 운동 일지 조회
+    const logs = await getWorkoutLogsByUserIdQuery(memberUserId);
+
+    return {
+      success: true,
+      data: logs,
+    };
+  } catch (error) {
+    console.error("GET_MEMBER_WORKOUT_LOGS_BY_COACH_ERROR", error);
+    return { success: false, message: "회원 운동 일지를 불러오는데 실패했습니다." };
+  }
+}
+
+/**
+ * 코치용: 회원 운동 일지 페이지 데이터 조회 (통합)
+ * (프로그램 소유자 확인, 회원 확인, 운동 일지 조회를 한번에 처리)
+ */
+export async function getMemberWorkoutLogsPageDataAction(programId: string, memberUserId: string) {
+  const coachId = await getUserId();
+
+  if (!coachId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // 1. 프로그램 소유자 확인
+    const program = await getProgramFullCurriculumQuery(programId);
+
+    if (!program) {
+      return { success: false, message: "프로그램을 찾을 수 없습니다." };
+    }
+
+    if (program.coachId !== coachId) {
+      return { success: false, message: "권한이 없습니다." };
+    }
+
+    // 2. 회원이 해당 프로그램에 수강 중인지 확인
+    const enrollments = await getEnrollmentsByUserIdQuery(memberUserId);
+    const memberEnrollment = enrollments.find((e) => e.programId === programId);
+
+    if (!memberEnrollment) {
+      return { success: false, message: "수강생을 찾을 수 없습니다." };
+    }
+
+    // 3. 회원의 운동 일지 조회
+    const logs = await getWorkoutLogsByUserIdQuery(memberUserId);
+
+    return {
+      success: true,
+      data: {
+        member: {
+          id: memberEnrollment.user.id,
+          email: memberEnrollment.user.email,
+          fullName: memberEnrollment.user.fullName,
+          avatarUrl: memberEnrollment.user.avatarUrl,
+        },
+        logs,
+      },
+    };
+  } catch (error) {
+    console.error("GET_MEMBER_WORKOUT_LOGS_PAGE_DATA_ERROR", error);
+    return { success: false, message: "데이터를 불러오는데 실패했습니다." };
+  }
+}

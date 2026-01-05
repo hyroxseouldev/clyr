@@ -151,7 +151,8 @@ export const getEnrollmentsByUserIdQuery = async (userId: string) => {
   return await db.query.enrollments.findMany({
     where: eq(enrollments.userId, userId),
     with: {
-      // program 정보 포함
+      user: true,
+      program: true,
     },
     orderBy: [desc(enrollments.createdAt)],
   });
