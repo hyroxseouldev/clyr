@@ -1,15 +1,8 @@
 import { getProgramByIdAction } from "@/actions";
-import { getFullProgramContentAction } from "@/actions/workout";
-import { getProgramOrdersAndEnrollmentsAction } from "@/actions/order";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
 import { ExternalLink } from "lucide-react";
-import ProgramInfoTab from "./_components/program-info-tab";
-import WorkoutTab from "./_components/workout-tab";
-import OrderListTab from "./_components/order-list-tab";
-import MembersListTab from "./_components/members-list-tab";
-import SettingTab from "./_components/setting-tab";
+import { ProgramEditForm } from "@/components/program/program-edit-form";
 
 const CoachDashboardPidPage = async ({
   params,
@@ -18,65 +11,27 @@ const CoachDashboardPidPage = async ({
 }) => {
   const { pid } = await params;
   const { data: program } = await getProgramByIdAction(pid);
-  const workoutResult = await getFullProgramContentAction(pid);
-  const enrollmentResult = await getProgramOrdersAndEnrollmentsAction(pid);
-
-  const tabs = [
-    { label: "프로그램 정보", value: "info" },
-    { label: "워크 아웃", value: "workouts" },
-    { label: "구매 목록", value: "purchases" },
-    { label: "회원 목록", value: "members" },
-    { label: "설정", value: "settings" },
-  ];
 
   if (!program) {
     redirect("/coach/dashboard");
   }
 
   return (
-    <div className="container max-w-6xl">
+    <div className="container max-w-4xl">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">{program.title}</h1>
-        <Button asChild variant="outline">
+        <div>
+          <h1 className="text-2xl font-bold">프로그램 정보</h1>
+          <p className="text-muted-foreground">{program.title}</p>
+        </div>
+        <Button asChild variant="outline" size="sm">
           <a href={`/programs/${program.slug}`} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="h-4 w-4 mr-2" />
             공개 페이지 보기
           </a>
         </Button>
       </div>
-      <Tabs defaultValue="info" className="w-full">
-        <TabsList className="">
-          {tabs.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value}>
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        {tabs.map((tab) => (
-          <TabsContent key={tab.value} value={tab.value} className="mt-6">
-            {tab.label === "프로그램 정보" ? (
-              <ProgramInfoTab program={program} />
-            ) : tab.label === "워크 아웃" ? (
-              <WorkoutTab
-                programId={pid}
-                initialData={workoutResult.success && "data" in workoutResult ? workoutResult.data : []}
-              />
-            ) : tab.label === "구매 목록" ? (
-              <OrderListTab
-                programId={pid}
-                initialData={enrollmentResult.success && enrollmentResult.data ? enrollmentResult.data : []}
-              />
-            ) : tab.label === "회원 목록" ? (
-              <MembersListTab
-                programId={pid}
-                initialData={enrollmentResult.success && enrollmentResult.data ? enrollmentResult.data : []}
-              />
-            ) : tab.label === "설정" ? (
-              <SettingTab programId={pid} program={program} />
-            ) : null}
-          </TabsContent>
-        ))}
-      </Tabs>
+
+      <ProgramEditForm initialData={program} />
     </div>
   );
 };

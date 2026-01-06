@@ -1,42 +1,47 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import Link from "next/link";
 import {
   DropdownMenu,
+  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  UserCircleIcon,
+  KeyIcon,
+  UserIcon,
+  TrashIcon,
+  LogOutIcon,
+} from "lucide-react";
+import { AccountForm } from "@/components/auth/account-form";
+import { PasswordChangeForm } from "@/components/auth/password-change-form";
+import { CoachProfileForm } from "@/components/auth/coach-profile-form";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import {
-  UserIcon,
-  LogOutIcon,
-  UserCircleIcon,
-  TrashIcon,
-  KeyIcon,
-} from "lucide-react";
+import { useTransition } from "react";
 import { signOut } from "@/actions/auth";
-import { AccountForm } from "@/components/auth/account-form";
-import { CoachProfileForm } from "@/components/auth/coach-profile-form";
-import { PasswordChangeForm } from "@/components/auth/password-change-form";
-import { deleteAccountAction } from "@/actions/account";
+import { deleteAccountAction, getMyAccountAction } from "@/actions/account";
+import { toast } from "sonner";
 
-const DashboardHeader = ({
+const UserAvatarDropdown = ({
   user,
 }: {
-  user: { id: string; email: string; fullName?: string | null; avatarUrl?: string | null };
+  user: {
+    id: string;
+    email: string;
+    fullName?: string | null;
+    avatarUrl?: string | null;
+  };
 }) => {
   const [, startTransition] = useTransition();
 
@@ -74,63 +79,52 @@ const DashboardHeader = ({
         .toUpperCase()
         .slice(0, 2)
     : user.email.slice(0, 2).toUpperCase();
-
   return (
     <>
-      <div className="flex flex-row justify-between items-center px-4 py-2 w-full">
-        <Link href="/coach/dashboard">
-          <h1 className="text-2xl font-bold">CLYR LOGO</h1>
-        </Link>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 focus:outline-none">
-              <Avatar className="cursor-pointer hover:ring-2 hover:ring-primary transition-all">
-                {user.avatarUrl ? (
-                  <AvatarImage src={user.avatarUrl} />
-                ) : null}
-                <AvatarFallback>{initials}</AvatarFallback>
-              </Avatar>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">
-                  {user.fullName || "사용자"}
-                </p>
-                <p className="text-xs text-muted-foreground">{user.email}</p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setAccountDialogOpen(true)}>
-              <UserCircleIcon className="mr-2 size-4" />
-              계정 정보 수정
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setPasswordDialogOpen(true)}>
-              <KeyIcon className="mr-2 size-4" />
-              비밀번호 변경
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setCoachProfileDialogOpen(true)}>
-              <UserIcon className="mr-2 size-4" />
-              코치 프로필 수정
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setDeleteDialogOpen(true)}
-              className="text-destructive focus:text-destructive"
-            >
-              <TrashIcon className="mr-2 size-4" />
-              계정 삭제
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut}>
-              <LogOutIcon className="mr-2 size-4" />
-              로그아웃
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="flex items-center gap-2 focus:outline-none">
+            <Avatar className="cursor-pointer hover:ring-2 hover:ring-primary transition-all">
+              {user.avatarUrl ? <AvatarImage src={user.avatarUrl} /> : null}
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel>
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium">{user.fullName || "사용자"}</p>
+              <p className="text-xs text-muted-foreground">{user.email}</p>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setAccountDialogOpen(true)}>
+            <UserCircleIcon className="mr-2 size-4" />
+            계정 정보 수정
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setPasswordDialogOpen(true)}>
+            <KeyIcon className="mr-2 size-4" />
+            비밀번호 변경
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setCoachProfileDialogOpen(true)}>
+            <UserIcon className="mr-2 size-4" />
+            코치 프로필 수정
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => setDeleteDialogOpen(true)}
+            className="text-destructive focus:text-destructive"
+          >
+            <TrashIcon className="mr-2 size-4" />
+            계정 삭제
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleSignOut}>
+            <LogOutIcon className="mr-2 size-4" />
+            로그아웃
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* Account Dialog */}
       <Dialog open={accountDialogOpen} onOpenChange={setAccountDialogOpen}>
@@ -156,18 +150,17 @@ const DashboardHeader = ({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>비밀번호 변경</DialogTitle>
-            <DialogDescription>
-              새 비밀번호를 입력해주세요.
-            </DialogDescription>
+            <DialogDescription>새 비밀번호를 입력해주세요.</DialogDescription>
           </DialogHeader>
-          <PasswordChangeForm
-            onSuccess={() => setPasswordDialogOpen(false)}
-          />
+          <PasswordChangeForm onSuccess={() => setPasswordDialogOpen(false)} />
         </DialogContent>
       </Dialog>
 
       {/* Coach Profile Dialog */}
-      <Dialog open={coachProfileDialogOpen} onOpenChange={setCoachProfileDialogOpen}>
+      <Dialog
+        open={coachProfileDialogOpen}
+        onOpenChange={setCoachProfileDialogOpen}
+      >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>코치 프로필</DialogTitle>
@@ -175,7 +168,9 @@ const DashboardHeader = ({
               코치님의 프로필 정보를 입력해주세요.
             </DialogDescription>
           </DialogHeader>
-          <CoachProfileForm onSuccess={() => setCoachProfileDialogOpen(false)} />
+          <CoachProfileForm
+            onSuccess={() => setCoachProfileDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
 
@@ -185,8 +180,8 @@ const DashboardHeader = ({
           <DialogHeader>
             <DialogTitle>계정 삭제</DialogTitle>
             <DialogDescription>
-              계정을 삭제하면 모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.
-              정말 삭제하시겠습니까?
+              계정을 삭제하면 모든 데이터가 영구적으로 삭제되며 복구할 수
+              없습니다. 정말 삭제하시겠습니까?
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2 mt-4">
@@ -206,4 +201,4 @@ const DashboardHeader = ({
   );
 };
 
-export default DashboardHeader;
+export default UserAvatarDropdown;

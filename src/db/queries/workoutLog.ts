@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { workoutLogs } from "@/db/schema";
 import { db } from "@/db";
 
@@ -26,6 +26,7 @@ export const getWorkoutLogByIdQuery = async (logId: string) => {
     where: eq(workoutLogs.id, logId),
     with: {
       user: true,
+      program: true,
     },
   });
 };
@@ -39,26 +40,43 @@ export const getWorkoutLogsByUserIdQuery = async (userId: string) => {
     orderBy: [desc(workoutLogs.logDate)],
     with: {
       user: true,
+      program: true,
     },
   });
 };
 
 /**
- * 코치의 프로그램에 수강 중인 회원의 운동 일지 조회
- * (특정 프로그램 수강생들의 로그만 조회)
+ * 사용자의 특정 프로그램 운동 일지 조회
  */
-export const getWorkoutLogsByProgramIdQuery = async (programId: string) => {
-  // enrollments와 join해서 해당 프로그램 수강생들의 로그만 조회
-  const result = await db.query.workoutLogs.findMany({
+export const getWorkoutLogsByUserIdAndProgramIdQuery = async (
+  userId: string,
+  programId: string
+) => {
+  return await db.query.workoutLogs.findMany({
+    where: and(
+      eq(workoutLogs.userId, userId),
+      eq(workoutLogs.programId, programId)
+    ),
     orderBy: [desc(workoutLogs.logDate)],
     with: {
       user: true,
+      program: true,
     },
   });
+};
 
-  // 여기서 program 관련 필터링은 application layer에서 처리
-  // (user가 해당 program에 enrolled되어 있는지 확인)
-  return result;
+/**
+ * 특정 프로그램의 모든 운동 일지 조회
+ */
+export const getWorkoutLogsByProgramIdQuery = async (programId: string) => {
+  return await db.query.workoutLogs.findMany({
+    where: eq(workoutLogs.programId, programId),
+    orderBy: [desc(workoutLogs.logDate)],
+    with: {
+      user: true,
+      program: true,
+    },
+  });
 };
 
 /**

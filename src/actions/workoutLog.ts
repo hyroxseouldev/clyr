@@ -5,6 +5,7 @@ import {
   createWorkoutLogQuery,
   getWorkoutLogByIdQuery,
   getWorkoutLogsByUserIdQuery,
+  getWorkoutLogsByUserIdAndProgramIdQuery,
   updateWorkoutLogQuery,
   deleteWorkoutLogQuery,
 } from "@/db/queries/workoutLog";
@@ -22,6 +23,7 @@ import { getUserId } from "@/actions/auth";
  * 운동 일지 생성
  */
 export async function createWorkoutLogAction(data: {
+  programId: string;
   title: string;
   logDate: Date;
   content: Record<string, unknown>;
@@ -36,6 +38,7 @@ export async function createWorkoutLogAction(data: {
   try {
     const newLog = await createWorkoutLogQuery({
       userId: userId,
+      programId: data.programId,
       title: data.title,
       logDate: data.logDate,
       content: data.content,
@@ -276,8 +279,8 @@ export async function getMemberWorkoutLogsPageDataAction(programId: string, memb
       return { success: false, message: "수강생을 찾을 수 없습니다." };
     }
 
-    // 3. 회원의 운동 일지 조회
-    const logs = await getWorkoutLogsByUserIdQuery(memberUserId);
+    // 3. 회원의 해당 프로그램 운동 일지 조회
+    const logs = await getWorkoutLogsByUserIdAndProgramIdQuery(memberUserId, programId);
 
     return {
       success: true,

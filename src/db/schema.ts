@@ -163,6 +163,9 @@ export const workoutLogs = pgTable("workout_logs", {
   userId: uuid("user_id")
     .references(() => account.id, { onDelete: "cascade" })
     .notNull(),
+  programId: uuid("program_id")
+    .references(() => programs.id, { onDelete: "cascade" })
+    .notNull(),
 
   title: text("title").notNull(), // 운동 일지 제목
   logDate: timestamp("log_date").notNull(), // 운동 날짜
@@ -252,6 +255,7 @@ export const programsRelations = relations(programs, ({ one, many }) => ({
   coach: one(account, { fields: [programs.coachId], references: [account.id] }),
   weeks: many(programWeeks),
   enrollments: many(enrollments),
+  workoutLogs: many(workoutLogs),
 }));
 
 export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
@@ -298,6 +302,10 @@ export const workoutLogsRelations = relations(workoutLogs, ({ one }) => ({
   user: one(account, {
     fields: [workoutLogs.userId],
     references: [account.id],
+  }),
+  program: one(programs, {
+    fields: [workoutLogs.programId],
+    references: [programs.id],
   }),
 }));
 

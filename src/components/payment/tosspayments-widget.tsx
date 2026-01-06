@@ -25,7 +25,7 @@ export function TossPaymentsWidget({ amount }: TossPaymentsWidgetProps) {
     const initWidget = async () => {
       try {
         // 결제 위젯 로드
-        const tossPayments = await loadTossPayments(clientKey, ANONYMOUS);
+        const tossPayments = await loadTossPayments(clientKey);
         const widgets = tossPayments.widgets({ customerKey: ANONYMOUS });
 
         // 금액 설정
