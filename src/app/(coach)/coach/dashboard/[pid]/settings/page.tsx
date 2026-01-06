@@ -1,6 +1,18 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings2Icon, PencilIcon, TrashIcon, DollarSignIcon } from "lucide-react";
-
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Settings2Icon,
+  PencilIcon,
+  TrashIcon,
+  DollarSignIcon,
+} from "lucide-react";
+import SettingTab from "@/app/(coach)/coach/dashboard/[pid]/_components/setting-tab";
+import { getProgramByIdAction } from "@/actions";
 /**
  * 프로그램 설정 페이지
  * 프로그램의 기본 정보, 가격, 공개 여부 등을 설정할 수 있습니다.
@@ -11,6 +23,8 @@ export default async function ProgramSettingsPage({
   params: Promise<{ pid: string }>;
 }) {
   const { pid } = await params;
+
+  const { data: program } = await getProgramByIdAction(pid);
 
   return (
     <div className="space-y-6">
@@ -69,10 +83,13 @@ export default async function ProgramSettingsPage({
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            기본 정보 수정, 가격 설정, 공개 여부 관리 등의 기능이 곧 추가될 예정입니다.
+            기본 정보 수정, 가격 설정, 공개 여부 관리 등의 기능이 곧 추가될
+            예정입니다.
           </p>
         </CardContent>
       </Card>
+
+      {program && <SettingTab programId={pid} program={program} />}
     </div>
   );
 }

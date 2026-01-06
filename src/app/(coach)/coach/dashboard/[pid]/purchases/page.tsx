@@ -1,5 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingCartIcon } from "lucide-react";
+import OrderListTab from "@/app/(coach)/coach/dashboard/[pid]/_components/order-list-tab";
 
 /**
  * 프로그램 구매 목록 페이지
@@ -22,25 +21,7 @@ export default async function ProgramPurchasesPage({
         </p>
       </div>
 
-      {/* 구매 목록 카드 */}
-      <Card>
-        <CardHeader>
-          <ShoppingCartIcon className="size-8 mb-2 text-muted-foreground" />
-          <CardTitle>구매 내역</CardTitle>
-          <CardDescription>
-            이 프로그램의 모든 구매 내역을 확인할 수 있습니다.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <ShoppingCartIcon className="size-16 text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">구매 목록 준비 중</h3>
-            <p className="text-muted-foreground max-w-md">
-              구매 내역 관리 기능을 준비 중입니다. 곧 다양한 구매 관리 기능을 제공할 예정입니다.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <OrderListTab programId={pid} />
     </div>
   );
 }

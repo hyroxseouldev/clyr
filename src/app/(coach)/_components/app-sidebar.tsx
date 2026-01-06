@@ -24,7 +24,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import UserAvatarDropdown from "@/components/auth/user-avatar-dropdown";
+import { getProgramByIdAction } from "@/actions";
 
 // Icon mapping for serializable string names
 const iconMap: Record<string, LucideIcon> = {
@@ -53,10 +55,24 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
+  const [programTitle, setProgramTitle] = useState<string | null>(null);
 
   // 경로에서 프로그램 ID 추출
   const programIdMatch = pathname.match(/^\/coach\/dashboard\/([^/]+)/);
   const programId = programIdMatch ? programIdMatch[1] : null;
+
+  // 프로그램 정보 가져오기
+  useEffect(() => {
+    if (programId) {
+      getProgramByIdAction(programId).then((result) => {
+        if (result.success && result.data) {
+          setProgramTitle(result.data.title);
+        }
+      });
+    } else {
+      setProgramTitle(null);
+    }
+  }, [programId]);
 
   // 메뉴 아이템 결정
   let menuItems: MenuItem[] = [];
@@ -66,7 +82,7 @@ export default function AppSidebar({ user }: AppSidebarProps) {
 
   if (programId) {
     // 프로그램 상세 페이지
-    title = "프로그램";
+    title = programTitle || "프로그램";
     subtitle = "관리";
     backUrl = "/coach/dashboard";
     menuItems = [
