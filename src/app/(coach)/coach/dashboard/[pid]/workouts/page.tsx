@@ -1,4 +1,5 @@
 import WorkoutTab from "@/app/(coach)/coach/dashboard/[pid]/_components/workout-tab";
+import { getFullProgramContentAction } from "@/actions/workout";
 
 /**
  * 프로그램 워크아웃 관리 페이지
@@ -11,6 +12,10 @@ export default async function ProgramWorkoutsPage({
 }) {
   const { pid } = await params;
 
+  // 데이터 페칭
+  const result = await getFullProgramContentAction(pid);
+  const initialData = result.success && "data" in result && result.data ? result.data : [];
+
   return (
     <div className="space-y-6">
       {/* 헤더 섹션 */}
@@ -21,7 +26,7 @@ export default async function ProgramWorkoutsPage({
         </p>
       </div>
 
-      <WorkoutTab programId={pid} />
+      <WorkoutTab programId={pid} initialData={initialData} />
     </div>
   );
 }

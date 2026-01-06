@@ -5,6 +5,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import AppSidebar from "./_components/app-sidebar";
+import { getProgramByIdAction } from "@/actions";
 
 export default async function CoachLayout({
   children,

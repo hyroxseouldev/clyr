@@ -47,7 +47,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   updateEnrollmentStatusByCoachAction,
   updateEnrollmentStartDateByCoachAction,
@@ -85,10 +89,15 @@ const STATUS_VARIANTS = {
   PAUSED: "outline" as const,
 };
 
-export default function OrderListTab({ programId, initialData }: OrderListTabProps) {
+export default function OrderListTab({
+  programId,
+  initialData,
+}: OrderListTabProps) {
   const router = useRouter();
   const [, startTransition] = useTransition();
-  const [enrollments, setEnrollments] = useState<Enrollment[]>(initialData || []);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>(
+    initialData || []
+  );
   const [loading, setLoading] = useState(!initialData);
   const [filter, setFilter] = useState<"ALL" | "ACTIVE" | "EXPIRED" | "PAUSED">(
     "ALL"
@@ -182,7 +191,9 @@ export default function OrderListTab({ programId, initialData }: OrderListTabPro
       open: true,
       enrollmentId,
       currentStartDate: enrollment.startDate,
-      selectedDate: enrollment.startDate ? new Date(enrollment.startDate) : undefined,
+      selectedDate: enrollment.startDate
+        ? new Date(enrollment.startDate)
+        : undefined,
     });
   };
 
@@ -226,13 +237,7 @@ export default function OrderListTab({ programId, initialData }: OrderListTabPro
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">구매 목록</h3>
-          <p className="text-sm text-muted-foreground">
-            총 {enrollments.length}명의 수강생이 있습니다
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <Select
           value={filter}
           onValueChange={(value) => setFilter(value as typeof filter)}
@@ -306,13 +311,16 @@ export default function OrderListTab({ programId, initialData }: OrderListTabPro
       {/* Start Date Edit Dialog */}
       <Dialog
         open={startDateDialog.open}
-        onOpenChange={(open) => setStartDateDialog((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) =>
+          setStartDateDialog((prev) => ({ ...prev, open }))
+        }
       >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>수강 시작일 변경</DialogTitle>
             <DialogDescription>
-              현재: <strong>{formatDate(startDateDialog.currentStartDate)}</strong>
+              현재:{" "}
+              <strong>{formatDate(startDateDialog.currentStartDate)}</strong>
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center py-4">
@@ -337,7 +345,10 @@ export default function OrderListTab({ programId, initialData }: OrderListTabPro
                   mode="single"
                   selected={startDateDialog.selectedDate}
                   onSelect={(date) =>
-                    setStartDateDialog((prev) => ({ ...prev, selectedDate: date }))
+                    setStartDateDialog((prev) => ({
+                      ...prev,
+                      selectedDate: date,
+                    }))
                   }
                   initialFocus
                 />

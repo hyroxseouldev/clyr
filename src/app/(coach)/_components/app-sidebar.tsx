@@ -55,13 +55,19 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
+
   const [programTitle, setProgramTitle] = useState<string | null>(null);
 
   // 경로에서 프로그램 ID 추출
   const programIdMatch = pathname.match(/^\/coach\/dashboard\/([^/]+)/);
   const programId = programIdMatch ? programIdMatch[1] : null;
 
-  // 프로그램 정보 가져오기
+  // 메뉴 아이템 결정
+  let menuItems: MenuItem[] = [];
+  let title = "Clyr Coach";
+  let subtitle: string | undefined;
+  let backUrl: string | undefined;
+
   useEffect(() => {
     if (programId) {
       getProgramByIdAction(programId).then((result) => {
@@ -69,16 +75,8 @@ export default function AppSidebar({ user }: AppSidebarProps) {
           setProgramTitle(result.data.title);
         }
       });
-    } else {
-      setProgramTitle(null);
     }
   }, [programId]);
-
-  // 메뉴 아이템 결정
-  let menuItems: MenuItem[] = [];
-  let title = "Clyr Coach";
-  let subtitle: string | undefined;
-  let backUrl: string | undefined;
 
   if (programId) {
     // 프로그램 상세 페이지
@@ -142,15 +140,22 @@ export default function AppSidebar({ user }: AppSidebarProps) {
               href={backUrl}
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              ← <span className="group-data-[collapsible=icon]:hidden">뒤로가기</span>
+              ←{" "}
+              <span className="group-data-[collapsible=icon]:hidden">
+                뒤로가기
+              </span>
             </Link>
           )}
           <div className="flex items-center gap-2">
             <DumbbellIcon className="size-6" />
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <span className="font-semibold text-lg leading-tight">{title}</span>
+              <span className="font-semibold text-lg leading-tight">
+                {title}
+              </span>
               {subtitle && (
-                <span className="text-xs text-muted-foreground">{subtitle}</span>
+                <span className="text-xs text-muted-foreground">
+                  {subtitle}
+                </span>
               )}
             </div>
           </div>

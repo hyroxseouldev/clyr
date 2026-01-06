@@ -17,14 +17,18 @@ const CoachDashboardPidPage = async ({
   }
 
   return (
-    <div className="container max-w-4xl">
+    <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">프로그램 정보</h1>
           <p className="text-muted-foreground">{program.title}</p>
         </div>
         <Button asChild variant="outline" size="sm">
-          <a href={`/programs/${program.slug}`} target="_blank" rel="noopener noreferrer">
+          <a
+            href={`/programs/${program.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <ExternalLink className="h-4 w-4 mr-2" />
             공개 페이지 보기
           </a>
