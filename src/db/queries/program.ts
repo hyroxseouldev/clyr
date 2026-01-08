@@ -20,6 +20,16 @@ export const getProgramsByCoachQuery = async (coachId: string) => {
   });
 };
 
+/**
+ * ID로 프로그램 조회
+ * @param programId - 프로그램 ID
+ */
+export const getProgramByIdQuery = async (programId: string) => {
+  return await db.query.programs.findFirst({
+    where: eq(programs.id, programId),
+  });
+};
+
 export const createProgramWithWeeksQuery = async (
   programData: any,
   weeksData: any[]

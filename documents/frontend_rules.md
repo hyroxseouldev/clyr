@@ -15,6 +15,7 @@
    - 참고 링크: https://supabase.com/docs/guides/auth/server-side/creating-a-client?queryGroups=package-manager&package-manager=pnpm&queryGroups=framework&framework=nextjs
 10. View 레이어 에서는 Drizzle의 생성 Type 을 직접적으로 쓰지 않습니다. 이유는 Schema(도메인 타입) 변경 시에 충돌 가능성이 생기기 때문입니다.
 11. 상수는 src/lib/constants 에서 관리한다.
+12. 다크모드 설정되어있습니다. 개발시 유의하ㅔㅅ요
 
 # 아키텍쳐 및 구조
 

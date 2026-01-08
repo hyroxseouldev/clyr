@@ -16,7 +16,6 @@ import {
 import {
   DumbbellIcon,
   InfoIcon,
-  ShoppingCartIcon,
   Settings2Icon,
   UsersIcon,
   LayoutDashboardIcon,
@@ -24,6 +23,11 @@ import {
   HomeIcon,
   ArrowLeftIcon,
   ChevronLeftIcon,
+  ClipboardListIcon,
+  BookOpenIcon,
+  ClipboardCheckIcon,
+  TrendingUpIcon,
+  UserCircleIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { getProgramByIdAction } from "@/actions";
@@ -45,11 +49,15 @@ const CoachSidebar = ({ programId }: { programId: string }) => {
   const iconMap = {
     Info: InfoIcon,
     Dumbbell: DumbbellIcon,
-    ShoppingCart: ShoppingCartIcon,
     Users: UsersIcon,
     Settings2: Settings2Icon,
     Calendar: CalendarIcon,
     Home: HomeIcon,
+    ClipboardList: ClipboardListIcon,
+    BookOpen: BookOpenIcon,
+    ClipboardCheck: ClipboardCheckIcon,
+    TrendingUp: TrendingUpIcon,
+    UserCircle: UserCircleIcon,
   };
   useEffect(() => {
     if (programId) {
@@ -74,7 +82,7 @@ const CoachSidebar = ({ programId }: { programId: string }) => {
     {
       title: "프로필 편집",
       url: `/coach/dashboard/${programId}/profile`,
-      iconName: "Users",
+      iconName: "UserCircle",
     },
     {
       title: "운동 플랜 관리",
@@ -84,27 +92,22 @@ const CoachSidebar = ({ programId }: { programId: string }) => {
     {
       title: "운동 루틴 관리",
       url: `/coach/dashboard/${programId}/workout-routine`,
-      iconName: "Calendar",
+      iconName: "ClipboardList",
     },
     {
       title: "운동 라이브러리",
       url: `/coach/dashboard/${programId}/workout-library`,
-      iconName: "Dumbbell",
-    },
-    {
-      title: "워크아웃",
-      url: `/coach/dashboard/${programId}/workouts`,
-      iconName: "Dumbbell",
+      iconName: "BookOpen",
     },
     {
       title: "숙제 관리",
       url: `/coach/dashboard/${programId}/homework`,
-      iconName: "ShoppingCart",
+      iconName: "ClipboardCheck",
     },
     {
       title: "판매 현황",
       url: `/coach/dashboard/${programId}/purchases`,
-      iconName: "ShoppingCart",
+      iconName: "TrendingUp",
     },
     {
       title: "회원 관리",

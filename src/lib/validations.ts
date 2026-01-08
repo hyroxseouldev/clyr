@@ -82,3 +82,24 @@ export const signUpSchema = z
   });
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
+
+// 프로그램 블루프린트 스키마
+export const programBlueprintSchema = z.object({
+  programId: z.string().min(1, "프로그램 ID를 입력해주세요"),
+  phaseNumber: z.number().min(1, "페이즈 번호를 입력해주세요"),
+  dayNumber: z.number().min(1, "일차 번호를 입력해주세요"),
+  dayTitle: z.string().optional(),
+  routineBlockId: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export type ProgramBlueprintInput = z.infer<typeof programBlueprintSchema>;
+
+// 페이즈 생성 스키마
+export const phaseSchema = z.object({
+  programId: z.string().min(1, "프로그램 ID를 입력해주세요"),
+  phaseNumber: z.number().min(1, "페이즈 번호를 입력해주세요"),
+  dayCount: z.number().min(1, "일일 최소 1일 이상이어야 합니다"),
+});
+
+export type PhaseInput = z.infer<typeof phaseSchema>;
