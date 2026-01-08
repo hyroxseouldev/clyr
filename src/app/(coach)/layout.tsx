@@ -5,6 +5,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/layout/app-sidebar";
+import { ModeToggle } from "@/components/theme/mode-toggle";
 
 export default async function CoachLayout({
   children,
@@ -31,9 +32,10 @@ export default async function CoachLayout({
       />
       <SidebarInset>
         {/* Header */}
-        <header className="h-16 shrink-0 border-b bg-white px-4 md:px-6">
-          <div className="flex h-full items-center gap-4">
+        <header className="h-16 shrink-0 border-b bg-background dark:bg-background px-4 md:px-6">
+          <div className="flex h-full items-center justify-between gap-4">
             <SidebarTrigger />
+            <ModeToggle />
           </div>
         </header>
 
