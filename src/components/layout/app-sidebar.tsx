@@ -13,6 +13,7 @@ import { usePathname } from "next/navigation";
 import UserAvatarDropdown from "@/components/auth/user-avatar-dropdown";
 import CoachSidebar from "@/components/layout/coach-sidebar";
 import DashboardSidebar from "@/components/layout/dashboard-sidebar";
+import { ModeToggle } from "@/components/theme/mode-toggle";
 
 interface AppSidebarProps {
   user?: {

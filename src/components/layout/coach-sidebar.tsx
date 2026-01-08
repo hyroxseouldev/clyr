@@ -11,6 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import {
   DumbbellIcon,
@@ -21,6 +22,8 @@ import {
   LayoutDashboardIcon,
   CalendarIcon,
   HomeIcon,
+  ArrowLeftIcon,
+  ChevronLeftIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { getProgramByIdAction } from "@/actions";
@@ -120,12 +123,9 @@ const CoachSidebar = ({ programId }: { programId: string }) => {
         <div className="flex flex-col gap-2 px-2 py-2">
           <Link
             href={backUrl}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2"
           >
-            ←{" "}
-            <span className="group-data-[collapsible=icon]:hidden">
-              뒤로가기
-            </span>
+            <ChevronLeftIcon className="size-4" />
           </Link>
           <div className="flex items-center gap-2">
             <DumbbellIcon className="size-6" />
