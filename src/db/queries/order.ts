@@ -1,4 +1,4 @@
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte } from "drizzle-orm";
 import { orders, enrollments, programs } from "@/db/schema";
 import { db } from "@/db";
 
@@ -226,5 +226,134 @@ export const completeOrderAndCreateEnrollmentQuery = async (
       .returning();
 
     return { order, enrollment };
+  });
+};
+
+/**
+ * ==========================================
+ * SALES & ANALYTICS QUERIES
+ * ==========================================
+ */
+
+/**
+ * 프로그램별 월간 매출 집계 (최근 12개월)
+ */
+export const getProgramMonthlySalesQuery = async (programId: string) => {
+  // 최근 12개월 데이터 조회
+  const twelveMonthsAgo = new Date();
+  twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+
+  const monthlySales = await db
+    .select({
+      year: sql<number>`EXTRACT(YEAR FROM ${orders.createdAt})`,
+      month: sql<number>`EXTRACT(MONTH FROM ${orders.createdAt})`,
+      totalAmount: sql<number>`CAST(SUM(CAST(${orders.amount} AS NUMERIC)) AS BIGINT)`,
+      orderCount: sql<number>`COUNT(*)`,
+    })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.programId, programId),
+        eq(orders.status, "COMPLETED"),
+        gte(orders.createdAt, twelveMonthsAgo)
+      )
+    )
+    .groupBy(
+      sql`EXTRACT(YEAR FROM ${orders.createdAt})`,
+      sql`EXTRACT(MONTH FROM ${orders.createdAt})`
+    )
+    .orderBy(
+      sql`EXTRACT(YEAR FROM ${orders.createdAt})`,
+      sql`EXTRACT(MONTH FROM ${orders.createdAt})`
+    );
+
+  return monthlySales.map((item) => ({
+    year: Number(item.year),
+    month: Number(item.month),
+    totalAmount: Number(item.totalAmount) || 0,
+    orderCount: Number(item.orderCount) || 0,
+  }));
+};
+
+/**
+ * 프로그램별 주문 목록 (페이지네이션)
+ */
+export const getProgramOrdersWithPaginationQuery = async (
+  programId: string,
+  page: number = 1,
+  pageSize: number = 20
+) => {
+  const offset = (page - 1) * pageSize;
+
+  const [ordersData, totalCount] = await Promise.all([
+    db.query.orders.findMany({
+      where: eq(orders.programId, programId),
+      orderBy: [desc(orders.createdAt)],
+      limit: pageSize,
+      offset,
+      with: {
+        buyer: {
+          columns: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
+        program: {
+          columns: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    }),
+    db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(orders)
+      .where(eq(orders.programId, programId)),
+  ]);
+
+  return {
+    orders: ordersData,
+    pagination: {
+      page,
+      pageSize,
+      total: Number(totalCount[0]?.count || 0),
+      totalPages: Math.ceil(Number(totalCount[0]?.count || 0) / pageSize),
+    },
+  };
+};
+
+/**
+ * 주문 상세 조회 (관계 포함)
+ */
+export const getOrderDetailByIdQuery = async (orderId: string) => {
+  return await db.query.orders.findFirst({
+    where: eq(orders.id, orderId),
+    with: {
+      buyer: {
+        columns: {
+          id: true,
+          email: true,
+          fullName: true,
+        },
+      },
+      coach: {
+        columns: {
+          id: true,
+          email: true,
+          fullName: true,
+        },
+      },
+      program: {
+        columns: {
+          id: true,
+          title: true,
+          description: true,
+          price: true,
+        },
+      },
+      enrollments: true,
+    },
   });
 };

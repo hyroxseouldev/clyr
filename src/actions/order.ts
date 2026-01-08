@@ -16,6 +16,9 @@ import {
   checkUserEnrollmentQuery,
   getEnrollmentsByProgramIdQuery,
   completeOrderAndCreateEnrollmentQuery,
+  getProgramMonthlySalesQuery,
+  getProgramOrdersWithPaginationQuery,
+  getOrderDetailByIdQuery,
 } from "@/db/queries/order";
 import { getProgramFullCurriculumQuery } from "@/db/queries/program";
 import { getUserId } from "@/actions/auth";
@@ -444,6 +447,126 @@ export async function updateEnrollmentStartDateByCoachAction(
     return {
       success: false,
       message: "시작일 변경에 실패했습니다.",
+    };
+  }
+}
+
+/**
+ * ==========================================
+ * COACH SALES & ANALYTICS ACTIONS
+ * ==========================================
+ */
+
+/**
+ * 프로그램 월별 매출 조회 액션
+ */
+export async function getProgramMonthlySalesAction(programId: string) {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // 프로그램 소유자 확인
+    const program = await getProgramFullCurriculumQuery(programId);
+    if (!program) {
+      return { success: false, message: "프로그램을 찾을 수 없습니다." };
+    }
+
+    if (program.coachId !== userId) {
+      return { success: false, message: "권한이 없습니다." };
+    }
+
+    const monthlySales = await getProgramMonthlySalesQuery(programId);
+
+    return {
+      success: true,
+      data: monthlySales,
+    };
+  } catch (error) {
+    console.error("GET_PROGRAM_MONTHLY_SALES_ERROR", error);
+    return {
+      success: false,
+      message: "매출 데이터를 불러오는데 실패했습니다.",
+    };
+  }
+}
+
+/**
+ * 프로그램 주문 목록 조회 액션 (페이지네이션)
+ */
+export async function getProgramOrdersWithPaginationAction(
+  programId: string,
+  page: number = 1
+) {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // 프로그램 소유자 확인
+    const program = await getProgramFullCurriculumQuery(programId);
+    if (!program) {
+      return { success: false, message: "프로그램을 찾을 수 없습니다." };
+    }
+
+    if (program.coachId !== userId) {
+      return { success: false, message: "권한이 없습니다." };
+    }
+
+    const result = await getProgramOrdersWithPaginationQuery(
+      programId,
+      page,
+      20
+    );
+
+    return {
+      success: true,
+      data: result,
+    };
+  } catch (error) {
+    console.error("GET_PROGRAM_ORDERS_WITH_PAGINATION_ERROR", error);
+    return {
+      success: false,
+      message: "주문 목록을 불러오는데 실패했습니다.",
+    };
+  }
+}
+
+/**
+ * 주문 상세 조회 액션 (코치용)
+ */
+export async function getOrderDetailByCoachAction(orderId: string) {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    const order = await getOrderDetailByIdQuery(orderId);
+
+    if (!order) {
+      return { success: false, message: "주문을 찾을 수 없습니다." };
+    }
+
+    // 코치 권한 확인 (주문의 코치ID와 현재 사용자 일치 여부)
+    if (order.coachId !== userId) {
+      return { success: false, message: "권한이 없습니다." };
+    }
+
+    return {
+      success: true,
+      data: order,
+    };
+  } catch (error) {
+    console.error("GET_ORDER_DETAIL_BY_COACH_ERROR", error);
+    return {
+      success: false,
+      message: "주문 상세 정보를 불러오는데 실패했습니다.",
     };
   }
 }

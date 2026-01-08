@@ -2,49 +2,17 @@
 
 import {
   Sidebar,
-  SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import {
-  LayoutDashboardIcon,
-  UsersIcon,
-  Settings2Icon,
-  LogOutIcon,
-  DumbbellIcon,
-  InfoIcon,
-  ShoppingCartIcon,
-  type LucideIcon,
-} from "lucide-react";
+import { LogOutIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import UserAvatarDropdown from "@/components/auth/user-avatar-dropdown";
-import { getProgramByIdAction } from "@/actions";
 import CoachSidebar from "@/components/layout/coach-sidebar";
 import DashboardSidebar from "@/components/layout/dashboard-sidebar";
-
-// Icon mapping for serializable string names
-const iconMap: Record<string, LucideIcon> = {
-  LayoutDashboard: LayoutDashboardIcon,
-  Users: UsersIcon,
-  Settings2: Settings2Icon,
-  Dumbbell: DumbbellIcon,
-  Info: InfoIcon,
-  ShoppingCart: ShoppingCartIcon,
-};
-
-interface MenuItem {
-  title: string;
-  url: string;
-  iconName: string;
-}
 
 interface AppSidebarProps {
   user?: {
@@ -57,81 +25,9 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
-
-  const [programTitle, setProgramTitle] = useState<string | null>(null);
-
   // 경로에서 프로그램 ID 추출
   const programIdMatch = pathname.match(/^\/coach\/dashboard\/([^/]+)/);
   const programId = programIdMatch ? programIdMatch[1] : null;
-
-  // 메뉴 아이템 결정
-  let menuItems: MenuItem[] = [];
-  let title = "Clyr Coach";
-  let subtitle: string | undefined;
-  let backUrl: string | undefined;
-
-  useEffect(() => {
-    if (programId) {
-      getProgramByIdAction(programId).then((result) => {
-        if (result.success && result.data) {
-          setProgramTitle(result.data.title);
-        }
-      });
-    }
-  }, [programId]);
-
-  if (programId) {
-    // 프로그램 상세 페이지
-    title = programTitle || "프로그램";
-    subtitle = "관리";
-    backUrl = "/coach/dashboard";
-    menuItems = [
-      {
-        title: "프로그램 정보",
-        url: `/coach/dashboard/${programId}`,
-        iconName: "Info",
-      },
-      {
-        title: "워크아웃",
-        url: `/coach/dashboard/${programId}/workouts`,
-        iconName: "Dumbbell",
-      },
-      {
-        title: "구매 목록",
-        url: `/coach/dashboard/${programId}/purchases`,
-        iconName: "ShoppingCart",
-      },
-      {
-        title: "회원 목록",
-        url: `/coach/dashboard/${programId}/members`,
-        iconName: "Users",
-      },
-      {
-        title: "설정",
-        url: `/coach/dashboard/${programId}/settings`,
-        iconName: "Settings2",
-      },
-    ];
-  } else {
-    // 메인 대시보드
-    menuItems = [
-      {
-        title: "대시보드",
-        url: "/coach/dashboard",
-        iconName: "LayoutDashboard",
-      },
-      {
-        title: "회원 관리",
-        url: "/coach/members",
-        iconName: "Users",
-      },
-      {
-        title: "설정",
-        url: "/coach/settings",
-        iconName: "Settings2",
-      },
-    ];
-  }
 
   return (
     <Sidebar collapsible="icon">

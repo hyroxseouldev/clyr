@@ -23,8 +23,8 @@ import { getUserId } from "@/actions/auth";
  * 운동 일지 생성
  */
 export async function createWorkoutLogAction(data: {
-  programId: string;
-  title: string;
+  libraryId: string;
+  blueprintId?: string | null;
   logDate: Date;
   content: Record<string, unknown>;
   intensity: "LOW" | "MEDIUM" | "HIGH";
@@ -38,8 +38,8 @@ export async function createWorkoutLogAction(data: {
   try {
     const newLog = await createWorkoutLogQuery({
       userId: userId,
-      programId: data.programId,
-      title: data.title,
+      libraryId: data.libraryId,
+      blueprintId: data.blueprintId,
       logDate: data.logDate,
       content: data.content,
       intensity: data.intensity,
