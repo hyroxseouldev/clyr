@@ -209,6 +209,7 @@ export async function getUserId() {
  * 코치 프로필 생성
  */
 export async function createCoachProfileAction(data: {
+  profileImageUrl?: string | null;
   nickname?: string | null;
   introduction?: string | null;
   experience?: string | null;
@@ -238,6 +239,7 @@ export async function createCoachProfileAction(data: {
 
     const profile = await createCoachProfileQuery({
       accountId: userId,
+      profileImageUrl: data.profileImageUrl ?? null,
       nickname: data.nickname ?? null,
       introduction: data.introduction ?? null,
       experience: data.experience ?? null,
@@ -297,6 +299,7 @@ export async function getMyCoachProfileAction() {
  * 코치 프로필 수정
  */
 export async function updateCoachProfileAction(data: {
+  profileImageUrl?: string | null;
   nickname?: string | null;
   introduction?: string | null;
   experience?: string | null;
@@ -325,6 +328,7 @@ export async function updateCoachProfileAction(data: {
     }
 
     const updatedProfile = await updateCoachProfileQuery(userId, {
+      profileImageUrl: data.profileImageUrl,
       nickname: data.nickname,
       introduction: data.introduction,
       experience: data.experience,

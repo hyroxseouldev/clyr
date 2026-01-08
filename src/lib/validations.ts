@@ -38,6 +38,7 @@ export const sessionSchema = z.object({
 
 // 코치 프로필 스키마
 export const coachProfileSchema = z.object({
+  profileImageUrl: z.string().optional(),
   nickname: z.string().optional(),
   introduction: z
     .string()

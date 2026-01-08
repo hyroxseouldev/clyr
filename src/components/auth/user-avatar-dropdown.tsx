@@ -46,7 +46,6 @@ const UserAvatarDropdown = ({
   const [, startTransition] = useTransition();
 
   const [accountDialogOpen, setAccountDialogOpen] = useState(false);
-  const [coachProfileDialogOpen, setCoachProfileDialogOpen] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -106,10 +105,7 @@ const UserAvatarDropdown = ({
             <KeyIcon className="mr-2 size-4" />
             비밀번호 변경
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setCoachProfileDialogOpen(true)}>
-            <UserIcon className="mr-2 size-4" />
-            코치 프로필 수정
-          </DropdownMenuItem>
+
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => setDeleteDialogOpen(true)}
@@ -153,24 +149,6 @@ const UserAvatarDropdown = ({
             <DialogDescription>새 비밀번호를 입력해주세요.</DialogDescription>
           </DialogHeader>
           <PasswordChangeForm onSuccess={() => setPasswordDialogOpen(false)} />
-        </DialogContent>
-      </Dialog>
-
-      {/* Coach Profile Dialog */}
-      <Dialog
-        open={coachProfileDialogOpen}
-        onOpenChange={setCoachProfileDialogOpen}
-      >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>코치 프로필</DialogTitle>
-            <DialogDescription>
-              코치님의 프로필 정보를 입력해주세요.
-            </DialogDescription>
-          </DialogHeader>
-          <CoachProfileForm
-            onSuccess={() => setCoachProfileDialogOpen(false)}
-          />
         </DialogContent>
       </Dialog>
 

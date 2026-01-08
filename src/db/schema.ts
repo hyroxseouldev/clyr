@@ -14,9 +14,9 @@ import {
   type InferInsertModel,
 } from "drizzle-orm";
 
-// ==========================================
-// 1. 사용자 및 코치 프로필 (Identity)
-// ==========================================
+// =============================================================
+// 1. IDENTITY & PROFILES (누가 사용하는가)
+// =============================================================
 
 // [Account] 기본 계정 정보
 export const account = pgTable("account", {
@@ -35,7 +35,7 @@ export const coachProfile = pgTable("coach_profile", {
     .references(() => account.id, { onDelete: "cascade" })
     .unique()
     .notNull(),
-
+  profileImageUrl: text("profile_image_url"),
   nickname: text("nickname"), // 코치 별명
   introduction: text("introduction"), // 한줄 소개
   experience: text("experience"), // 코칭 경력 (상세 텍스트)
@@ -64,10 +64,10 @@ export const userProfile = pgTable("user_profile", {
   phoneNumber: text("phone_number"), // 연락처
 
   // 운동 관련 메타데이터
-  fitnessGoals: jsonb("fitness_goals")
-    .default([])
-    .$type<string[]>(), // 운동 목표 (예: ["체중감량", "근력증가"])
-  fitnessLevel: text("fitness_level").$type<"BEGINNER" | "INTERMEDIATE" | "ADVANCED">(), // 운동 수준
+  fitnessGoals: jsonb("fitness_goals").default([]).$type<string[]>(), // 운동 목표 (예: ["체중감량", "근력증가"])
+  fitnessLevel: text("fitness_level").$type<
+    "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
+  >(), // 운동 수준
 
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -169,11 +169,8 @@ export const workoutLogs = pgTable("workout_logs", {
 
   title: text("title").notNull(), // 운동 일지 제목
   logDate: timestamp("log_date").notNull(), // 운동 날짜
-  content: jsonb("content")
-    .default({})
-    .$type<Record<string, unknown>>(), // 운동 기록 상세 내용 (JSON)
-  intensity: text("intensity")
-    .$type<"LOW" | "MEDIUM" | "HIGH">(), // 운동 강도
+  content: jsonb("content").default({}).$type<Record<string, unknown>>(), // 운동 기록 상세 내용 (JSON)
+  intensity: text("intensity").$type<"LOW" | "MEDIUM" | "HIGH">(), // 운동 강도
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -209,7 +206,9 @@ export const enrollments = pgTable("enrollments", {
   programId: uuid("program_id")
     .references(() => programs.id, { onDelete: "cascade" })
     .notNull(),
-  orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
+  orderId: uuid("order_id").references(() => orders.id, {
+    onDelete: "cascade",
+  }),
 
   startDate: timestamp("start_date"), // 앱에서 지정 (null 가능)
   endDate: timestamp("end_date"), // 수강 만료일 (현재시간 + accessPeriodDays)

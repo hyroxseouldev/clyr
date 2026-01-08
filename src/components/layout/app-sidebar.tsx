@@ -27,6 +27,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import UserAvatarDropdown from "@/components/auth/user-avatar-dropdown";
 import { getProgramByIdAction } from "@/actions";
+import CoachSidebar from "@/components/layout/coach-sidebar";
+import DashboardSidebar from "@/components/layout/dashboard-sidebar";
 
 // Icon mapping for serializable string names
 const iconMap: Record<string, LucideIcon> = {
@@ -133,60 +135,11 @@ export default function AppSidebar({ user }: AppSidebarProps) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
-        <div className="flex flex-col gap-2 px-2 py-2">
-          {backUrl && (
-            <Link
-              href={backUrl}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ←{" "}
-              <span className="group-data-[collapsible=icon]:hidden">
-                뒤로가기
-              </span>
-            </Link>
-          )}
-          <div className="flex items-center gap-2">
-            <DumbbellIcon className="size-6" />
-            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <span className="font-semibold text-lg leading-tight">
-                {title}
-              </span>
-              {subtitle && (
-                <span className="text-xs text-muted-foreground">
-                  {subtitle}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>메뉴</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => {
-                const IconComponent = iconMap[item.iconName] || DumbbellIcon;
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={pathname === item.url}
-                      tooltip={item.title}
-                    >
-                      <Link href={item.url}>
-                        <IconComponent />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
+      {programId ? (
+        <CoachSidebar programId={programId} />
+      ) : (
+        <DashboardSidebar />
+      )}
       <SidebarFooter>
         <SidebarMenu>
           {user && (
