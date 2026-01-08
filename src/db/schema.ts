@@ -89,9 +89,39 @@ export const workoutLibrary = pgTable("workout_library", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// ==========================================
-// 2. 프로그램 본체 (Product & Policy)
-// ==========================================
+// =============================================================
+// 3. PROGRAM & ROUTINE (어떻게 설계하는가 - 리더보드 핵심)
+// =============================================================
+
+export const routineBlocks = pgTable("routine_blocks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  coachId: uuid("coach_id")
+    .references(() => account.id, { onDelete: "cascade" })
+    .notNull(),
+  name: text("name").notNull(),
+  /**
+   * [핵심] 리더보드 정렬 기준
+   * STRENGTH (중량), FOR_TIME (빠른순), AMRAP (회수순), EMOM (성공여부)
+   */
+  workoutFormat: text("workout_format").default("STRENGTH").notNull(),
+  targetValue: text("target_value"), // "20min", "5 rounds" 등 기준값
+  isLeaderboardEnabled: boolean("is_leaderboard_enabled").default(false), // 경쟁 활성화 여부
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const routineItems = pgTable("routine_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  blockId: uuid("block_id").references(() => routineBlocks.id, {
+    onDelete: "cascade",
+  }),
+  libraryId: uuid("library_id").references(() => workoutLibrary.id),
+  orderIndex: integer("order_index").notNull(),
+  recommendation: jsonb("recommendation"), // 코치의 가이드
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
 
 // [Programs] 운동 프로그램 (판매 상품 정보)
 export const programs = pgTable("programs", {
@@ -99,38 +129,120 @@ export const programs = pgTable("programs", {
   coachId: uuid("coach_id")
     .references(() => account.id, { onDelete: "cascade" })
     .notNull(),
-
   title: text("title").notNull(), // 프로그램 제목
   slug: text("slug").unique().notNull(), // URL 경로로 사용될 슬러그
   type: text("type").notNull().$type<"SINGLE" | "SUBSCRIPTION">(), // 단건판매 vs 구독형
-
   thumbnailUrl: text("thumbnail_url"),
   shortDescription: text("short_description"), // 리스트에 보여줄 요약
   description: text("description"), // 상세 페이지용 설명 (HTML/MD)
-
   // 가시성 및 판매 설정
   isPublic: boolean("is_public").default(false).notNull(), // 공개/비공개 설정
   isForSale: boolean("is_for_sale").default(false).notNull(), // 판매 중/판매 중지
-
   // 가격 및 수강 기간
   price: numeric("price", { precision: 12, scale: 0 }).default("0").notNull(),
   accessPeriodDays: integer("access_period_days"), // 수강 유효 기간 (일), null이면 평생소장
-
   // 프로그램 메타데이터
   difficulty: text("difficulty")
     .notNull()
     .$type<"BEGINNER" | "INTERMEDIATE" | "ADVANCED">(),
   durationWeeks: integer("duration_weeks").notNull(), // 총 주차수
   daysPerWeek: integer("days_per_week").notNull(), // 주당 운동 일수
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
 
+export const programBlueprints = pgTable("program_blueprints", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  programId: uuid("program_id")
+    .references(() => programs.id, { onDelete: "cascade" })
+    .notNull(),
+  phaseNumber: integer("phase_number").notNull(),
+  dayNumber: integer("day_number").notNull(),
+  dayTitle: text("day_title"),
+  routineBlockId: uuid("routine_block_id").references(() => routineBlocks.id),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // ==========================================
-// 3. 커리큘럼 계층 (Hierarchy: Week > Workout > Session)
+// 4. 상거래 및 수강 권한 (Commerce & Access)
 // ==========================================
 
+// [WorkoutLogs] 사용자 운동 기록 (User & Coach)
+export const workoutLogs = pgTable("workout_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .references(() => account.id, { onDelete: "cascade" })
+    .notNull(),
+  libraryId: uuid("library_id")
+    .references(() => workoutLibrary.id)
+    .notNull(),
+  blueprintId: uuid("blueprint_id").references(() => programBlueprints.id),
+  logDate: timestamp("log_date").notNull(), // 운동 날짜
+  content: jsonb("content").default({}).$type<Record<string, unknown>>(), // 운동 기록 상세 내용 (JSON)
+  intensity: text("intensity").$type<"LOW" | "MEDIUM" | "HIGH">(), // 운동 강도
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+
+  // 리더보드 랭킹 산출용 요약 필드
+  maxWeight: numeric("max_weight").default("0"),
+  totalVolume: numeric("total_volume").default("0"), // AMRAP의 경우 총 횟수 저장 가능
+  totalDuration: integer("total_duration"), // FOR_TIME 기록 (초 단위)
+
+  coachComment: text("coach_comment"),
+  isCheckedByCoach: boolean("is_checked_by_coach").default(false),
+});
+
+// [Orders] 결제 내역 (판매 영수증)
+export const orders = pgTable("orders", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  buyerId: uuid("buyer_id")
+    .references(() => account.id)
+    .notNull(),
+  programId: uuid("program_id")
+    .references(() => programs.id)
+    .notNull(),
+  coachId: uuid("coach_id")
+    .references(() => account.id)
+    .notNull(), // 정산용
+
+  amount: numeric("amount").notNull(),
+  status: text("status")
+    .default("PENDING")
+    .notNull()
+    .$type<"PENDING" | "COMPLETED" | "CANCELLED">(),
+  paymentKey: text("payment_key").unique(), // 외부 결제사(Toss 등) 고유 키
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// [Enrollments] 실제 수강 권한 (권한 여부 판단의 핵심)
+export const enrollments = pgTable("enrollments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .references(() => account.id, { onDelete: "cascade" })
+    .notNull(),
+  programId: uuid("program_id")
+    .references(() => programs.id, { onDelete: "cascade" })
+    .notNull(),
+  orderId: uuid("order_id").references(() => orders.id, {
+    onDelete: "cascade",
+  }),
+
+  startDate: timestamp("start_date"), // 앱에서 지정 (null 가능)
+  endDate: timestamp("end_date"), // 수강 만료일 (현재시간 + accessPeriodDays)
+  status: text("status")
+    .default("ACTIVE")
+    .notNull()
+    .$type<"ACTIVE" | "EXPIRED" | "PAUSED">(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// ==========================================
+// 5. 삭제 할것
+// ==========================================
 // [ProgramWeeks] 주차별 주제 (Section 단위)
 export const programWeeks = pgTable("program_weeks", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -171,73 +283,7 @@ export const workoutSessions = pgTable("workout_sessions", {
 });
 
 // ==========================================
-// 4. 상거래 및 수강 권한 (Commerce & Access)
-// ==========================================
-
-// [WorkoutLogs] 사용자 운동 기록 (User & Coach)
-export const workoutLogs = pgTable("workout_logs", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .references(() => account.id, { onDelete: "cascade" })
-    .notNull(),
-  programId: uuid("program_id")
-    .references(() => programs.id, { onDelete: "cascade" })
-    .notNull(),
-
-  title: text("title").notNull(), // 운동 일지 제목
-  logDate: timestamp("log_date").notNull(), // 운동 날짜
-  content: jsonb("content").default({}).$type<Record<string, unknown>>(), // 운동 기록 상세 내용 (JSON)
-  intensity: text("intensity").$type<"LOW" | "MEDIUM" | "HIGH">(), // 운동 강도
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// [Orders] 결제 내역 (판매 영수증)
-export const orders = pgTable("orders", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  buyerId: uuid("buyer_id")
-    .references(() => account.id)
-    .notNull(),
-  programId: uuid("program_id")
-    .references(() => programs.id)
-    .notNull(),
-  coachId: uuid("coach_id")
-    .references(() => account.id)
-    .notNull(), // 정산용
-
-  amount: numeric("amount").notNull(),
-  status: text("status")
-    .default("PENDING")
-    .notNull()
-    .$type<"PENDING" | "COMPLETED" | "CANCELLED">(),
-  paymentKey: text("payment_key").unique(), // 외부 결제사(Toss 등) 고유 키
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// [Enrollments] 실제 수강 권한 (권한 여부 판단의 핵심)
-export const enrollments = pgTable("enrollments", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .references(() => account.id, { onDelete: "cascade" })
-    .notNull(),
-  programId: uuid("program_id")
-    .references(() => programs.id, { onDelete: "cascade" })
-    .notNull(),
-  orderId: uuid("order_id").references(() => orders.id, {
-    onDelete: "cascade",
-  }),
-
-  startDate: timestamp("start_date"), // 앱에서 지정 (null 가능)
-  endDate: timestamp("end_date"), // 수강 만료일 (현재시간 + accessPeriodDays)
-  status: text("status")
-    .default("ACTIVE")
-    .notNull()
-    .$type<"ACTIVE" | "EXPIRED" | "PAUSED">(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// ==========================================
-// 5. 관계 정의 (Relations)
+// 6. 관계 정의 (Relations)
 // ==========================================
 
 export const accountRelations = relations(account, ({ one, many }) => ({
@@ -251,6 +297,10 @@ export const accountRelations = relations(account, ({ one, many }) => ({
   }),
   programs: many(programs),
   workoutLogs: many(workoutLogs),
+  workoutLibrary: many(workoutLibrary),
+  routineBlocks: many(routineBlocks),
+  ordersAsBuyer: many(orders, { relationName: "buyer" }),
+  ordersAsCoach: many(orders, { relationName: "coach" }),
 }));
 
 export const coachProfileRelations = relations(coachProfile, ({ one }) => ({
@@ -272,6 +322,8 @@ export const programsRelations = relations(programs, ({ one, many }) => ({
   weeks: many(programWeeks),
   enrollments: many(enrollments),
   workoutLogs: many(workoutLogs),
+  blueprints: many(programBlueprints),
+  orders: many(orders),
 }));
 
 export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
@@ -282,6 +334,10 @@ export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
   program: one(programs, {
     fields: [enrollments.programId],
     references: [programs.id],
+  }),
+  order: one(orders, {
+    fields: [enrollments.orderId],
+    references: [orders.id],
   }),
 }));
 
@@ -314,14 +370,91 @@ export const workoutSessionsRelations = relations(
   })
 );
 
+// workoutLibrary 관계
+export const workoutLibraryRelations = relations(
+  workoutLibrary,
+  ({ one, many }) => ({
+    coach: one(account, {
+      fields: [workoutLibrary.coachId],
+      references: [account.id],
+    }),
+    routineItems: many(routineItems),
+    workoutLogs: many(workoutLogs),
+  })
+);
+
+// routineBlocks 관계
+export const routineBlocksRelations = relations(
+  routineBlocks,
+  ({ one, many }) => ({
+    coach: one(account, {
+      fields: [routineBlocks.coachId],
+      references: [account.id],
+    }),
+    items: many(routineItems),
+    blueprints: many(programBlueprints),
+  })
+);
+
+// routineItems 관계
+export const routineItemsRelations = relations(routineItems, ({ one }) => ({
+  block: one(routineBlocks, {
+    fields: [routineItems.blockId],
+    references: [routineBlocks.id],
+  }),
+  library: one(workoutLibrary, {
+    fields: [routineItems.libraryId],
+    references: [workoutLibrary.id],
+  }),
+}));
+
+// programBlueprints 관계
+export const programBlueprintsRelations = relations(
+  programBlueprints,
+  ({ one, many }) => ({
+    program: one(programs, {
+      fields: [programBlueprints.programId],
+      references: [programs.id],
+    }),
+    routineBlock: one(routineBlocks, {
+      fields: [programBlueprints.routineBlockId],
+      references: [routineBlocks.id],
+    }),
+    workoutLogs: many(workoutLogs),
+  })
+);
+
+// orders 관계
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  buyer: one(account, {
+    fields: [orders.buyerId],
+    references: [account.id],
+    relationName: "buyer",
+  }),
+  coach: one(account, {
+    fields: [orders.coachId],
+    references: [account.id],
+    relationName: "coach",
+  }),
+  program: one(programs, {
+    fields: [orders.programId],
+    references: [programs.id],
+  }),
+  enrollments: many(enrollments),
+}));
+
 export const workoutLogsRelations = relations(workoutLogs, ({ one }) => ({
   user: one(account, {
     fields: [workoutLogs.userId],
     references: [account.id],
   }),
-  program: one(programs, {
-    fields: [workoutLogs.programId],
-    references: [programs.id],
+  library: one(workoutLibrary, {
+    fields: [workoutLogs.libraryId],
+    references: [workoutLibrary.id],
+  }),
+  blueprint: one(programBlueprints, {
+    fields: [workoutLogs.blueprintId],
+    references: [programBlueprints.id],
   }),
 }));
 
@@ -333,7 +466,11 @@ export const workoutLogsRelations = relations(workoutLogs, ({ one }) => ({
 export type Account = InferSelectModel<typeof account>;
 export type CoachProfile = InferSelectModel<typeof coachProfile>;
 export type UserProfile = InferSelectModel<typeof userProfile>;
+export type WorkoutLibrary = InferSelectModel<typeof workoutLibrary>;
+export type RoutineBlock = InferSelectModel<typeof routineBlocks>;
+export type RoutineItem = InferSelectModel<typeof routineItems>;
 export type Program = InferSelectModel<typeof programs>;
+export type ProgramBlueprint = InferSelectModel<typeof programBlueprints>;
 export type ProgramWeek = InferSelectModel<typeof programWeeks>;
 export type Workout = InferSelectModel<typeof workouts>;
 export type WorkoutSession = InferSelectModel<typeof workoutSessions>;
@@ -345,7 +482,11 @@ export type Enrollment = InferSelectModel<typeof enrollments>;
 export type NewAccount = InferInsertModel<typeof account>;
 export type NewCoachProfile = InferInsertModel<typeof coachProfile>;
 export type NewUserProfile = InferInsertModel<typeof userProfile>;
+export type NewWorkoutLibrary = InferInsertModel<typeof workoutLibrary>;
+export type NewRoutineBlock = InferInsertModel<typeof routineBlocks>;
+export type NewRoutineItem = InferInsertModel<typeof routineItems>;
 export type NewProgram = InferInsertModel<typeof programs>;
+export type NewProgramBlueprint = InferInsertModel<typeof programBlueprints>;
 export type NewProgramWeek = InferInsertModel<typeof programWeeks>;
 export type NewWorkout = InferInsertModel<typeof workouts>;
 export type NewWorkoutSession = InferInsertModel<typeof workoutSessions>;
