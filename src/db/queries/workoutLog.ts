@@ -26,7 +26,8 @@ export const getWorkoutLogByIdQuery = async (logId: string) => {
     where: eq(workoutLogs.id, logId),
     with: {
       user: true,
-      program: true,
+      library: true,
+      blueprint: true,
     },
   });
 };
@@ -40,43 +41,33 @@ export const getWorkoutLogsByUserIdQuery = async (userId: string) => {
     orderBy: [desc(workoutLogs.logDate)],
     with: {
       user: true,
-      program: true,
+      library: true,
+      blueprint: true,
     },
   });
 };
 
 /**
  * 사용자의 특정 프로그램 운동 일지 조회
+ * (blueprint를 통해 program 필터링)
  */
 export const getWorkoutLogsByUserIdAndProgramIdQuery = async (
   userId: string,
   programId: string
 ) => {
   return await db.query.workoutLogs.findMany({
-    where: and(
-      eq(workoutLogs.userId, userId),
-      eq(workoutLogs.programId, programId)
-    ),
+    where: eq(workoutLogs.userId, userId),
     orderBy: [desc(workoutLogs.logDate)],
     with: {
       user: true,
-      program: true,
+      library: true,
+      blueprint: {
+        with: {
+          program: true,
+        },
+      },
     },
-  });
-};
-
-/**
- * 특정 프로그램의 모든 운동 일지 조회
- */
-export const getWorkoutLogsByProgramIdQuery = async (programId: string) => {
-  return await db.query.workoutLogs.findMany({
-    where: eq(workoutLogs.programId, programId),
-    orderBy: [desc(workoutLogs.logDate)],
-    with: {
-      user: true,
-      program: true,
-    },
-  });
+  }).then(logs => logs.filter(log => log.blueprint?.programId === programId));
 };
 
 /**

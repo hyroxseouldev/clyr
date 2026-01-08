@@ -1,5 +1,5 @@
 import { getRoutineBlocksAction } from "@/actions/routineBlock";
-import { WorkoutRoutineClient } from "./_components/workout-routine-client";
+import { RoutineBlockList } from "./_components/routine-block-list";
 
 const PAGE_SIZE = 20;
 
@@ -7,24 +7,24 @@ const WorkoutRoutinePage = async ({
   params,
   searchParams,
 }: {
-  params: { pid: string };
-  searchParams: { page?: string; search?: string; format?: string };
+  params: Promise<{ pid: string }>;
+  searchParams: Promise<{ page?: string; search?: string; format?: string }>;
 }) => {
-  const page = parseInt(searchParams.page || "1", 10);
-  const search = searchParams.search;
-  const format = searchParams.format === "all" ? undefined : searchParams.format;
+  const { page, search, format } = await searchParams;
+  const newPage = parseInt(page || "1", 10);
+  const newFormat = format === "all" ? undefined : format;
 
   const result = await getRoutineBlocksAction({
-    page,
+    page: newPage,
     pageSize: PAGE_SIZE,
     search,
-    format,
+    format: newFormat,
   });
 
   const initialData = result.success && result.data ? result.data : null;
 
   return (
-    <WorkoutRoutineClient
+    <RoutineBlockList
       initialData={initialData}
       pageSize={PAGE_SIZE}
     />

@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { routineBlocks, routineItems, workoutLibrary } from "@/db/schema";
-import { desc, eq, sql, ilike, or, asc } from "drizzle-orm";
+import { desc, eq, sql, ilike, or, and, asc } from "drizzle-orm";
 
 /**
  * ==========================================
@@ -91,7 +91,6 @@ export async function getRoutineBlocksQuery({
       targetValue: routineBlocks.targetValue,
       isLeaderboardEnabled: routineBlocks.isLeaderboardEnabled,
       description: routineBlocks.description,
-      itemCount: sql<number>`(SELECT COUNT(*) FROM ${routineItems} WHERE ${routineItems.blockId} = ${routineBlocks.id})`,
       createdAt: routineBlocks.createdAt,
       updatedAt: routineBlocks.updatedAt,
     })
@@ -101,9 +100,24 @@ export async function getRoutineBlocksQuery({
     .limit(pageSize)
     .offset(offset);
 
+  // 각 블록의 itemCount 계산
+  const itemsWithCounts = await Promise.all(
+    blocks.map(async (block) => {
+      const countResult = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(routineItems)
+        .where(eq(routineItems.blockId, block.id));
+
+      return {
+        ...block,
+        itemCount: Number(countResult[0]?.count || 0),
+      };
+    })
+  );
+
   // 각 블록의 아이템 조회
   const itemsWithItems = await Promise.all(
-    blocks.map(async (block) => {
+    itemsWithCounts.map(async (block) => {
       const items = await db
         .select({
           id: routineItems.id,
@@ -258,11 +272,4 @@ export async function updateRoutineItemQuery(
  */
 export async function deleteRoutineItemQuery(id: string) {
   await db.delete(routineItems).where(eq(routineItems.id, id));
-}
-
-// Helper function for 'and' condition
-function and(...conditions: any[]) {
-  if (conditions.length === 0) return undefined;
-  if (conditions.length === 1) return conditions[0];
-  return sql`${conditions[0]} AND ${conditions.slice(1).join(" AND ")}`;
 }

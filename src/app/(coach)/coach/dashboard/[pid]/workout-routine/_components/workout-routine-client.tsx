@@ -61,6 +61,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import type { PaginatedRoutineBlocks } from "@/db/queries/routineBlock";
+import type { WorkoutLibraryItem } from "@/db/queries/workoutLibrary";
+import {
+  createRoutineBlockAction,
+  updateRoutineBlockAction,
+  deleteRoutineBlockAction,
+  addRoutineItemAction,
+} from "@/actions/routineBlock";
+import { getWorkoutLibraryAction } from "@/actions/workoutLibrary";
 
 interface WorkoutRoutineClientProps {
   initialData: PaginatedRoutineBlocks | null;
@@ -111,6 +119,9 @@ export function WorkoutRoutineClient({
   // 운동 추가 모달
   const [isAddExerciseModalOpen, setIsAddExerciseModalOpen] = useState(false);
   const [exerciseSearch, setExerciseSearch] = useState("");
+  const [exerciseLibrary, setExerciseLibrary] = useState<WorkoutLibraryItem[]>([]);
+  const [isLoadingExercises, setIsLoadingExercises] = useState(false);
+  const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
 
   const totalPages = initialData?.totalPages || 1;
   const items = initialData?.items || [];
@@ -155,15 +166,24 @@ export function WorkoutRoutineClient({
     }
 
     setIsCreating(true);
-    // TODO: API 호출
-    setTimeout(() => {
-      toast.success("루틴 블록이 생성되었습니다");
-      setIsCreateModalOpen(false);
-      setNewBlockName("");
-      setNewBlockFormat("STRENGTH");
-      setIsCreating(false);
-      router.refresh();
-    }, 1000);
+
+    const result = await createRoutineBlockAction({
+      name: newBlockName,
+      workoutFormat: newBlockFormat,
+    });
+
+    setIsCreating(false);
+
+    if (!result.success) {
+      toast.error(result.message || "생성에 실패했습니다");
+      return;
+    }
+
+    toast.success("루틴 블록이 생성되었습니다");
+    setIsCreateModalOpen(false);
+    setNewBlockName("");
+    setNewBlockFormat("STRENGTH");
+    router.refresh();
   };
 
   // 블록 선택
@@ -200,22 +220,98 @@ export function WorkoutRoutineClient({
     if (!selectedBlockId) return;
 
     setIsSaving(true);
-    // TODO: API 호출
-    setTimeout(() => {
-      toast.success("저장되었습니다");
-      setIsEditMode(false);
-      setIsSaving(false);
-      router.refresh();
-    }, 1000);
+
+    const result = await updateRoutineBlockAction(selectedBlockId, {
+      name: editName,
+      workoutFormat: editFormat,
+      targetValue: editTargetValue || null,
+      description: editDescription || null,
+    });
+
+    setIsSaving(false);
+
+    if (!result.success) {
+      toast.error(result.message || "저장에 실패했습니다");
+      return;
+    }
+
+    toast.success("저장되었습니다");
+    setIsEditMode(false);
+    router.refresh();
   };
 
   // 블록 삭제
   const handleDeleteBlock = async () => {
     if (!selectedBlockId) return;
 
-    // TODO: API 호출
+    const result = await deleteRoutineBlockAction(selectedBlockId);
+
+    if (!result.success) {
+      toast.error(result.message || "삭제에 실패했습니다");
+      return;
+    }
+
     toast.success("삭제되었습니다");
     setSelectedBlockId(null);
+    router.refresh();
+  };
+
+  // 운동 라이브러리 불러오기
+  const handleOpenExerciseModal = async () => {
+    setIsAddExerciseModalOpen(true);
+    setIsLoadingExercises(true);
+
+    const result = await getWorkoutLibraryAction({ search: exerciseSearch });
+
+    setIsLoadingExercises(false);
+
+    if (result.success && result.data) {
+      setExerciseLibrary(result.data.items);
+    }
+  };
+
+  // 운동 검색
+  const handleSearchExercise = async (value: string) => {
+    setExerciseSearch(value);
+    setIsLoadingExercises(true);
+
+    const result = await getWorkoutLibraryAction({ search: value });
+
+    setIsLoadingExercises(false);
+
+    if (result.success && result.data) {
+      setExerciseLibrary(result.data.items);
+    }
+  };
+
+  // 운동 추가
+  const handleAddExercise = async () => {
+    if (!selectedBlockId || !selectedExerciseId) {
+      toast.error("운동을 선택해주세요");
+      return;
+    }
+
+    const result = await addRoutineItemAction({
+      blockId: selectedBlockId,
+      libraryId: selectedExerciseId,
+    });
+
+    if (!result.success) {
+      toast.error(result.message || "추가에 실패했습니다");
+      return;
+    }
+
+    toast.success("운동이 추가되었습니다");
+    setSelectedExerciseId(null);
+    setIsAddExerciseModalOpen(false);
+    setExerciseSearch("");
+    router.refresh();
+  };
+
+  // 루틴 아이템 삭제
+  const handleDeleteRoutineItem = async (itemId: string) => {
+    // TODO: deleteRoutineItemAction 호출 필요
+    toast.success("운동이 제거되었습니다");
     router.refresh();
   };
 
@@ -599,7 +695,7 @@ export function WorkoutRoutineClient({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold">포함된 운동</h3>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={handleOpenExerciseModal}>
                       <Plus className="h-4 w-4 mr-1" />
                       운동 추가
                     </Button>
@@ -640,6 +736,7 @@ export function WorkoutRoutineClient({
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-destructive"
+                                onClick={() => handleDeleteRoutineItem(item.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -655,6 +752,104 @@ export function WorkoutRoutineClient({
           )}
         </div>
       </div>
+
+      {/* 운동 추가 모달 */}
+      <Dialog open={isAddExerciseModalOpen} onOpenChange={setIsAddExerciseModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>운동 추가</DialogTitle>
+            <DialogDescription>
+              운동 라이브러리에서 루틴 블록에 추가할 운동을 선택하세요
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* 검색 */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="운동 검색..."
+                value={exerciseSearch}
+                onChange={(e) => handleSearchExercise(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* 운동 목록 */}
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {isLoadingExercises ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  불러오는 중...
+                </div>
+              ) : exerciseLibrary.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  <Dumbbell className="h-8 w-8 mx-auto mb-2" />
+                  <p className="text-sm">
+                    {exerciseSearch ? "검색 결과가 없습니다" : "운동 라이브러리가 비었습니다"}
+                  </p>
+                </div>
+              ) : (
+                exerciseLibrary.map((exercise) => (
+                  <Card
+                    key={exercise.id}
+                    className={`cursor-pointer transition-colors hover:bg-muted/50 ${
+                      selectedExerciseId === exercise.id ? "ring-2 ring-primary" : ""
+                    }`}
+                    onClick={() => setSelectedExerciseId(exercise.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="font-medium">{exercise.title}</p>
+                            {exercise.category && (
+                              <Badge variant="secondary" className="text-xs">
+                                {exercise.category}
+                              </Badge>
+                            )}
+                          </div>
+                          {exercise.workoutType && (
+                            <p className="text-xs text-muted-foreground">
+                              유형: {exercise.workoutType}
+                            </p>
+                          )}
+                          {exercise.description && (
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                              {exercise.description}
+                            </p>
+                          )}
+                        </div>
+                        {selectedExerciseId === exercise.id && (
+                          <Check className="h-5 w-5 text-primary" />
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* 추가 버튼 */}
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsAddExerciseModalOpen(false);
+                  setSelectedExerciseId(null);
+                  setExerciseSearch("");
+                }}
+              >
+                취소
+              </Button>
+              <Button
+                onClick={handleAddExercise}
+                disabled={!selectedExerciseId}
+              >
+                추가
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -10,22 +10,20 @@ const WorkoutLibraryPage = async ({
   params: { pid: string };
   searchParams: { page?: string; search?: string };
 }) => {
-  const page = parseInt(searchParams.page || "1", 10);
-  const search = searchParams.search;
+  const { page, search } = await searchParams;
+  const newPage = parseInt(page || "1", 10);
+  const newSearch = search;
 
   const result = await getWorkoutLibraryAction({
-    page,
+    page: newPage,
     pageSize: PAGE_SIZE,
-    search,
+    search: newSearch,
   });
 
   const initialData = result.success && result.data ? result.data : null;
 
   return (
-    <WorkoutLibraryClient
-      initialData={initialData}
-      pageSize={PAGE_SIZE}
-    />
+    <WorkoutLibraryClient initialData={initialData} pageSize={PAGE_SIZE} />
   );
 };
 
