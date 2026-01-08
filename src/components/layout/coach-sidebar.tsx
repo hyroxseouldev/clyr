@@ -74,13 +74,18 @@ const CoachSidebar = ({ programId }: { programId: string }) => {
       iconName: "Users",
     },
     {
-      title: "플랜",
+      title: "운동 플랜 관리",
       url: `/coach/dashboard/${programId}/plan`,
       iconName: "Calendar",
     },
     {
-      title: "운동",
-      url: `/coach/dashboard/${programId}/workout`,
+      title: "운동 루틴 관리",
+      url: `/coach/dashboard/${programId}/workout-routine`,
+      iconName: "Calendar",
+    },
+    {
+      title: "운동 라이브러리",
+      url: `/coach/dashboard/${programId}/workout-library`,
       iconName: "Dumbbell",
     },
     {
@@ -89,12 +94,17 @@ const CoachSidebar = ({ programId }: { programId: string }) => {
       iconName: "Dumbbell",
     },
     {
-      title: "구매 목록",
+      title: "숙제 관리",
+      url: `/coach/dashboard/${programId}/homework`,
+      iconName: "ShoppingCart",
+    },
+    {
+      title: "판매 현황",
       url: `/coach/dashboard/${programId}/purchases`,
       iconName: "ShoppingCart",
     },
     {
-      title: "회원 목록",
+      title: "회원 관리",
       url: `/coach/dashboard/${programId}/members`,
       iconName: "Users",
     },

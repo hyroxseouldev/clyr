@@ -72,6 +72,23 @@ export const userProfile = pgTable("user_profile", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// =============================================================
+// 2. WORKOUT ASSETS (무엇을 운동하는가)
+// =============================================================
+
+export const workoutLibrary = pgTable("workout_library", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  coachId: uuid("coach_id").references(() => account.id),
+  title: text("title").notNull(),
+  category: text("category"), // 가슴, 등, 하체 등
+  workoutType: text("workout_type").default("WEIGHT_REPS").notNull(), // WEIGHT, TIME, DISTANCE 등
+  videoUrl: text("video_url"),
+  description: text("description"),
+  isSystem: boolean("is_system").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // ==========================================
 // 2. 프로그램 본체 (Product & Policy)
 // ==========================================
