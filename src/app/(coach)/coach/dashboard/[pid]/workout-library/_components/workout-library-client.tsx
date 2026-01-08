@@ -94,7 +94,7 @@ export function WorkoutLibraryClient({
   const getWorkoutTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       WEIGHT_REPS: "무게/횟수",
-      TIME: "시간",
+      DURATION: "시간",
       DISTANCE: "거리",
     };
     return labels[type] || type;
@@ -133,9 +133,7 @@ export function WorkoutLibraryClient({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {initialData.totalCount}
-              </div>
+              <div className="text-2xl font-bold">{initialData.totalCount}</div>
             </CardContent>
           </Card>
 
@@ -192,9 +190,7 @@ export function WorkoutLibraryClient({
                       <Badge variant="outline">
                         {getWorkoutTypeLabel(item.workoutType)}
                       </Badge>
-                      {item.isSystem && (
-                        <Badge variant="default">시스템</Badge>
-                      )}
+                      {item.isSystem && <Badge variant="default">시스템</Badge>}
                     </div>
                     <CardTitle className="text-lg line-clamp-2">
                       {item.title}
@@ -240,7 +236,9 @@ export function WorkoutLibraryClient({
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                onClick={() =>
+                  currentPage > 1 && handlePageChange(currentPage - 1)
+                }
                 className={
                   currentPage === 1
                     ? "pointer-events-none opacity-50"

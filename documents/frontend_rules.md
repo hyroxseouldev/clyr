@@ -14,6 +14,7 @@
 9. 인증 시스템은 Mvp 개발로 완성이 우선이기에 supabase 에서 제공하는 패키지을 적극 활용합니다
    - 참고 링크: https://supabase.com/docs/guides/auth/server-side/creating-a-client?queryGroups=package-manager&package-manager=pnpm&queryGroups=framework&framework=nextjs
 10. View 레이어 에서는 Drizzle의 생성 Type 을 직접적으로 쓰지 않습니다. 이유는 Schema(도메인 타입) 변경 시에 충돌 가능성이 생기기 때문입니다.
+11. 상수는 src/lib/constants 에서 관리한다.
 
 # 아키텍쳐 및 구조
 

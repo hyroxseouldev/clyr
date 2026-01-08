@@ -19,11 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Search,
-  Plus,
-  Dumbbell,
-} from "lucide-react";
+import { Search, Plus, Dumbbell } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -87,7 +83,8 @@ export function RoutineBlockList({
     setSearch(value);
     const params = new URLSearchParams();
     if (value) params.set("search", value);
-    if (formatFilter && formatFilter !== "all") params.set("format", formatFilter);
+    if (formatFilter && formatFilter !== "all")
+      params.set("format", formatFilter);
     params.set("page", "1");
     router.push(`?${params.toString()}`);
     setCurrentPage(1);
@@ -106,7 +103,8 @@ export function RoutineBlockList({
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
-    if (formatFilter && formatFilter !== "all") params.set("format", formatFilter);
+    if (formatFilter && formatFilter !== "all")
+      params.set("format", formatFilter);
     params.set("page", page.toString());
     router.push(`?${params.toString()}`);
     setCurrentPage(page);
@@ -178,8 +176,7 @@ export function RoutineBlockList({
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              새 블록 만들기
+              <Plus className="h-4 w-4 mr-2" />새 블록 만들기
             </Button>
           </DialogTrigger>
           <DialogContent>

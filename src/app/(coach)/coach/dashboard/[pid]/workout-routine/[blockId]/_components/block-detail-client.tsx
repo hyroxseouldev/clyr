@@ -2,12 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +45,13 @@ import {
   deleteRoutineItemAction,
 } from "@/actions/routineBlock";
 import { getWorkoutLibraryAction } from "@/actions/workoutLibrary";
+import {
+  getWorkoutTypeLabel,
+  RECOMMENDATION_FIELD_LABELS,
+  RECOMMENDATION_FIELD_PLACEHOLDERS,
+  RECOMMENDATION_TEMPLATES,
+  type RecommendationData,
+} from "@/lib/constants/workout";
 
 interface BlockDetailClientProps {
   block: RoutineBlockWithItems;
@@ -63,29 +65,37 @@ const WORKOUT_FORMATS = [
   { value: "CUSTOM", label: "Custom" },
 ];
 
-export function BlockDetailClient({
-  block,
-}: BlockDetailClientProps) {
+export function BlockDetailClient({ block }: BlockDetailClientProps) {
   const router = useRouter();
   const [isEditMode, setIsEditMode] = useState(false);
   const [editName, setEditName] = useState(block.name);
   const [editFormat, setEditFormat] = useState(block.workoutFormat);
-  const [editTargetValue, setEditTargetValue] = useState(block.targetValue || "");
-  const [editDescription, setEditDescription] = useState(block.description || "");
+  const [editTargetValue, setEditTargetValue] = useState(
+    block.targetValue || ""
+  );
+  const [editDescription, setEditDescription] = useState(
+    block.description || ""
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   // 운동 라이브러리 검색
   const [exerciseSearch, setExerciseSearch] = useState("");
-  const [exerciseLibrary, setExerciseLibrary] = useState<WorkoutLibraryItem[]>([]);
+  const [exerciseLibrary, setExerciseLibrary] = useState<WorkoutLibraryItem[]>(
+    []
+  );
   const [isLoadingLibrary, setIsLoadingLibrary] = useState(false);
 
   // 드래그 앤 드롭
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [draggedExerciseTitle, setDraggedExerciseTitle] = useState<string>("");
-  const [recommendationDialogOpen, setRecommendationDialogOpen] = useState(false);
+  const [draggedExerciseType, setDraggedExerciseType] = useState<string>("");
+  const [recommendationDialogOpen, setRecommendationDialogOpen] =
+    useState(false);
   const [pendingLibraryId, setPendingLibraryId] = useState<string | null>(null);
   const [pendingExerciseTitle, setPendingExerciseTitle] = useState("");
-  const [recommendationInput, setRecommendationInput] = useState("");
+  const [pendingExerciseType, setPendingExerciseType] = useState<string>("");
+  const [recommendationData, setRecommendationData] =
+    useState<RecommendationData>({});
 
   // 초기 로딩 시 운동 라이브러리 가져오기
   useEffect(() => {
@@ -178,11 +188,23 @@ export function BlockDetailClient({
   };
 
   // 운동 추가 (드래그 앤 드롭)
-  const handleAddExercise = async (libraryId: string, recommendation?: string) => {
+  const handleAddExercise = async (
+    libraryId: string,
+    recommendation?: RecommendationData
+  ) => {
+    // 빈 값 필터링
+    const cleanRecommendation = recommendation
+      ? Object.fromEntries(
+          Object.entries(recommendation).filter(
+            ([_, value]) => value !== "" && value !== undefined
+          )
+        )
+      : undefined;
+
     const result = await addRoutineItemAction({
       blockId: block.id,
       libraryId,
-      recommendation: recommendation ? JSON.parse(recommendation) : undefined,
+      recommendation: cleanRecommendation,
     });
 
     if (!result.success) {
@@ -195,10 +217,21 @@ export function BlockDetailClient({
   };
 
   // 드롭 처리에서 Dialog 띄우기
-  const handleDropWithDialog = async (libraryId: string, exerciseTitle: string) => {
+  const handleDropWithDialog = async (
+    libraryId: string,
+    exerciseTitle: string,
+    exerciseType: string
+  ) => {
     setPendingLibraryId(libraryId);
     setPendingExerciseTitle(exerciseTitle);
-    setRecommendationInput("");
+    setPendingExerciseType(exerciseType);
+
+    // workoutType별 기본 템플릿 설정
+    const template =
+      RECOMMENDATION_TEMPLATES[
+        exerciseType as keyof typeof RECOMMENDATION_TEMPLATES
+      ] || {};
+    setRecommendationData({ ...template });
     setRecommendationDialogOpen(true);
     setDraggedItem(null);
   };
@@ -207,11 +240,12 @@ export function BlockDetailClient({
   const handleConfirmRecommendation = async () => {
     if (!pendingLibraryId) return;
 
-    await handleAddExercise(pendingLibraryId, recommendationInput);
+    await handleAddExercise(pendingLibraryId, recommendationData);
     setRecommendationDialogOpen(false);
     setPendingLibraryId(null);
     setPendingExerciseTitle("");
-    setRecommendationInput("");
+    setPendingExerciseType("");
+    setRecommendationData({});
   };
 
   // recommendation 취소 핸들러
@@ -219,14 +253,29 @@ export function BlockDetailClient({
     setRecommendationDialogOpen(false);
     setPendingLibraryId(null);
     setPendingExerciseTitle("");
-    setRecommendationInput("");
+    setPendingExerciseType("");
+    setRecommendationData({});
+  };
+
+  // recommendation 필드 변경 핸들러
+  const handleRecommendationChange = (
+    field: keyof RecommendationData,
+    value: string
+  ) => {
+    setRecommendationData((prev) => ({ ...prev, [field]: value }));
   };
 
   // 드래그 시작
-  const handleDragStart = (itemId: string, isLibraryItem: boolean = false, title?: string) => {
+  const handleDragStart = (
+    itemId: string,
+    isLibraryItem: boolean = false,
+    title?: string,
+    workoutType?: string
+  ) => {
     // library item인 경우 접두사 추가
     setDraggedItem(isLibraryItem ? `library-${itemId}` : itemId);
     if (title) setDraggedExerciseTitle(title);
+    if (workoutType) setDraggedExerciseType(workoutType);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -243,7 +292,11 @@ export function BlockDetailClient({
     if (draggedItem.startsWith("library-")) {
       const libraryId = draggedItem.replace("library-", "");
       // Dialog 띄우기
-      await handleDropWithDialog(libraryId, draggedExerciseTitle);
+      await handleDropWithDialog(
+        libraryId,
+        draggedExerciseTitle,
+        draggedExerciseType
+      );
       return;
     }
 
@@ -343,7 +396,11 @@ export function BlockDetailClient({
                 <Edit className="h-4 w-4 mr-1" />
                 편집
               </Button>
-              <Button variant="destructive" size="sm" onClick={handleDeleteBlock}>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteBlock}
+              >
                 <Trash2 className="h-4 w-4 mr-1" />
                 삭제
               </Button>
@@ -532,15 +589,15 @@ export function BlockDetailClient({
                 {isLoadingLibrary ? (
                   <div className="py-8 text-center text-muted-foreground">
                     <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin" />
-                    <p className="text-sm">
-                      검색 중...
-                    </p>
+                    <p className="text-sm">검색 중...</p>
                   </div>
                 ) : exerciseLibrary.length === 0 ? (
                   <div className="py-8 text-center text-muted-foreground">
                     <Dumbbell className="h-8 w-8 mx-auto mb-2" />
                     <p className="text-sm">
-                      {exerciseSearch ? "검색 결과가 없습니다" : "운동이 없습니다"}
+                      {exerciseSearch
+                        ? "검색 결과가 없습니다"
+                        : "운동이 없습니다"}
                     </p>
                   </div>
                 ) : (
@@ -548,7 +605,14 @@ export function BlockDetailClient({
                     <Card
                       key={exercise.id}
                       draggable
-                      onDragStart={() => handleDragStart(exercise.id, true, exercise.title)}
+                      onDragStart={() =>
+                        handleDragStart(
+                          exercise.id,
+                          true,
+                          exercise.title,
+                          exercise.workoutType
+                        )
+                      }
                       className="cursor-grab transition-all hover:shadow-md hover:border-primary"
                     >
                       <CardContent className="p-3">
@@ -557,13 +621,23 @@ export function BlockDetailClient({
                             <p className="text-sm font-medium truncate">
                               {exercise.title}
                             </p>
-                            {exercise.category && (
-                              <Badge variant="secondary" className="text-xs mt-1">
-                                {exercise.category}
+                            <div className="flex items-center gap-1 flex-wrap mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                {getWorkoutTypeLabel(exercise.workoutType)}
                               </Badge>
-                            )}
+                              {exercise.category && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {exercise.category}
+                                </Badge>
+                              )}
+                              {exercise.isSystem && (
+                                <Badge variant="default" className="text-xs">
+                                  시스템
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
                         </div>
                       </CardContent>
                     </Card>
@@ -576,8 +650,11 @@ export function BlockDetailClient({
       </div>
 
       {/* Recommendation Dialog */}
-      <Dialog open={recommendationDialogOpen} onOpenChange={setRecommendationDialogOpen}>
-        <DialogContent>
+      <Dialog
+        open={recommendationDialogOpen}
+        onOpenChange={setRecommendationDialogOpen}
+      >
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>운동 가이드 추가</DialogTitle>
             <DialogDescription>
@@ -585,24 +662,38 @@ export function BlockDetailClient({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>코치 가이드 (JSON 형식)</Label>
-              <Textarea
-                placeholder='예: {"sets": 3, "reps": "10-12", "weight": "60kg", "rest": "90초"}'
-                value={recommendationInput}
-                onChange={(e) => setRecommendationInput(e.target.value)}
-                rows={4}
-                className="font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                JSON 형식으로 입력하세요. 빈 값으로 두면 가이드 없이 추가됩니다.
-              </p>
+            <div className="space-y-3">
+              {Object.keys(
+                RECOMMENDATION_TEMPLATES[
+                  pendingExerciseType as keyof typeof RECOMMENDATION_TEMPLATES
+                ] || {}
+              ).map((field) => {
+                const typedField = field as keyof RecommendationData;
+                return (
+                  <div key={field} className="space-y-1">
+                    <Label className="text-sm font-medium">
+                      {RECOMMENDATION_FIELD_LABELS[typedField]}
+                    </Label>
+                    <Input
+                      placeholder={
+                        RECOMMENDATION_FIELD_PLACEHOLDERS[typedField]
+                      }
+                      value={recommendationData[typedField] || ""}
+                      onChange={(e) =>
+                        handleRecommendationChange(typedField, e.target.value)
+                      }
+                    />
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex gap-2 justify-end">
+            <div className="flex gap-2 justify-end pt-2">
               <Button variant="outline" onClick={handleCancelRecommendation}>
+                <X className="h-4 w-4 mr-1" />
                 취소
               </Button>
               <Button onClick={handleConfirmRecommendation}>
+                <Check className="h-4 w-4 mr-1" />
                 추가하기
               </Button>
             </div>
