@@ -299,7 +299,10 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
 
             <div className="flex items-center gap-2">
               {/* 뷰 모드 토글 */}
-              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "grid" | "calendar")}>
+              <Tabs
+                value={viewMode}
+                onValueChange={(v) => setViewMode(v as "grid" | "calendar")}
+              >
                 <TabsList>
                   <TabsTrigger value="grid">그리드</TabsTrigger>
                   <TabsTrigger value="calendar">캘린더</TabsTrigger>
@@ -371,7 +374,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                             </div>
                             {blueprint.notes && (
                               <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                                <FileText className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                <FileText className="h-4 w-4 mt-0.5 shrink-0" />
                                 <span className="line-clamp-2">
                                   {blueprint.notes}
                                 </span>
@@ -503,7 +506,8 @@ function CalendarView({
             <CardTitle className="text-base">
               {weekIndex + 1}주차
               <span className="text-sm font-normal text-muted-foreground ml-2">
-                (Day {weekIndex * 7 + 1} - Day {Math.min((weekIndex + 1) * 7, phaseData.days.length)})
+                (Day {weekIndex * 7 + 1} - Day{" "}
+                {Math.min((weekIndex + 1) * 7, phaseData.days.length)})
               </span>
             </CardTitle>
           </CardHeader>
@@ -533,7 +537,9 @@ function CalendarView({
                     className={`
                       min-h-[120px] p-2 rounded-md border cursor-pointer
                       transition-all hover:shadow-md hover:border-primary/50
-                      ${isRestDay ? "bg-muted/50 border-muted" : "bg-background"}
+                      ${
+                        isRestDay ? "bg-muted/50 border-muted" : "bg-background"
+                      }
                     `}
                   >
                     <div className="space-y-1">
@@ -558,14 +564,14 @@ function CalendarView({
                       {blueprint.routineBlockName && (
                         <div className="mt-auto">
                           <div className="flex items-center gap-1">
-                            <Dumbbell className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <Dumbbell className="h-3 w-3 text-muted-foreground shrink-0" />
                             <p className="text-xs text-muted-foreground line-clamp-1">
                               {blueprint.routineBlockName}
                             </p>
                           </div>
                           {blueprint.notes && (
                             <div className="flex items-start gap-1 mt-1">
-                              <FileText className="h-3 w-3 text-muted-foreground flex-shrink-0 mt-0.5" />
+                              <FileText className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
                               <p className="text-xs text-muted-foreground line-clamp-2">
                                 {blueprint.notes}
                               </p>
