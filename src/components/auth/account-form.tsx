@@ -19,13 +19,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { ImageForm } from "@/components/form";
-
-const accountFormSchema = z.object({
-  fullName: z.string().min(1, "이름을 입력하세요"),
-  avatarUrl: z.string().nullable().optional(),
-});
-
-type FormValues = z.infer<typeof accountFormSchema>;
+import { useTranslations } from "next-intl";
 
 export function AccountForm({
   initialData,
@@ -34,8 +28,17 @@ export function AccountForm({
   initialData: { fullName: string; avatarUrl: string };
   onSuccess: () => void;
 }) {
+  const t = useTranslations('account');
+  const tValidation = useTranslations('validation');
   const [isLoading, startTransition] = useTransition();
   const router = useRouter();
+
+  const accountFormSchema = z.object({
+    fullName: z.string().min(1, tValidation('required')),
+    avatarUrl: z.string().nullable().optional(),
+  });
+
+  type FormValues = z.infer<typeof accountFormSchema>;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(accountFormSchema),
@@ -50,11 +53,11 @@ export function AccountForm({
       const result = await updateAccountAction(values);
 
       if (result.success) {
-        toast.success("계정 정보가 수정되었습니다.");
+        toast.success(t('updateSuccess'));
         router.refresh();
         onSuccess();
       } else {
-        toast.error("실패", { description: result.message });
+        toast.error(t('failed'), { description: result.message });
       }
     });
   };
@@ -65,7 +68,7 @@ export function AccountForm({
         {/* 프로필 이미지 */}
         <ImageForm
           name="avatarUrl"
-          label="프로필 이미지"
+          label={t('profileImage')}
           form={form}
           bucketName="avatars"
           path="avatars"
@@ -77,7 +80,7 @@ export function AccountForm({
           name="fullName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>이름</FormLabel>
+              <FormLabel>{t('name')}</FormLabel>
               <FormControl>
                 <Input placeholder="홍길동" {...field} />
               </FormControl>
@@ -88,7 +91,7 @@ export function AccountForm({
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? <Spinner className="mr-2" /> : null}
-          저장
+          {t('save')}
         </Button>
       </form>
     </Form>

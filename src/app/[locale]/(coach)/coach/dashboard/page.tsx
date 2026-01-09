@@ -12,7 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { FolderCodeIcon, PlusIcon, UsersIcon, PackageIcon } from "lucide-react";
 import { ProgramCard } from "@/components/program/program-card";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { getTranslations } from "next-intl/server";
 
 /**
  * 코치가 로그인 했을 때 처음으로 마주하는 페이지 입니다.
@@ -24,19 +25,20 @@ import Link from "next/link";
  */
 export default async function CoachDashboardPage() {
   const { data: programs } = await getMyProgramsAction();
+  const t = await getTranslations('dashboard');
 
   return (
     <div className="space-y-6">
       {/* 헤더 섹션 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">대시보드</h1>
-          <p className="text-muted-foreground">프로그램을 관리하고 회원을 확인하세요.</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('managePrograms')}</p>
         </div>
         <Button asChild size="default">
           <Link href="/coach/dashboard/new">
             <PlusIcon className="mr-2 size-4" />
-            새 프로그램
+            {t('newProgram')}
           </Link>
         </Button>
       </div>
@@ -50,16 +52,16 @@ export default async function CoachDashboardPage() {
                 <EmptyMedia variant="icon">
                   <FolderCodeIcon className="size-12" />
                 </EmptyMedia>
-                <EmptyTitle>등록된 프로그램이 없습니다</EmptyTitle>
+                <EmptyTitle>{t('noPrograms')}</EmptyTitle>
                 <EmptyDescription>
-                  아직 프로그램을 만들지 않으셨네요. 첫 번째 프로그램을 만들어보세요!
+                  {t('noProgramsDesc')}
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
                 <Button asChild>
                   <Link href="/coach/dashboard/new">
                     <PlusIcon className="mr-2 size-4" />
-                    프로그램 만들기
+                    {t('createProgram')}
                   </Link>
                 </Button>
               </EmptyContent>
@@ -75,36 +77,36 @@ export default async function CoachDashboardPage() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">총 프로그램</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('totalPrograms')}</CardTitle>
                 <PackageIcon className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{programs.length}</div>
-                <p className="text-xs text-muted-foreground">활성 프로그램</p>
+                <p className="text-xs text-muted-foreground">{t('activePrograms')}</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">구독형 프로그램</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('subscriptionPrograms')}</CardTitle>
                 <UsersIcon className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {programs.filter((p) => p.type === "SUBSCRIPTION").length}
                 </div>
-                <p className="text-xs text-muted-foreground">월 구독</p>
+                <p className="text-xs text-muted-foreground">{t('monthlySubscription')}</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">단건 프로그램</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('singlePrograms')}</CardTitle>
                 <PackageIcon className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {programs.filter((p) => p.type === "SINGLE").length}
                 </div>
-                <p className="text-xs text-muted-foreground">1회 구매</p>
+                <p className="text-xs text-muted-foreground">{t('oneTimePurchase')}</p>
               </CardContent>
             </Card>
           </div>
@@ -113,7 +115,7 @@ export default async function CoachDashboardPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">
-                내 프로그램{" "}
+                {t('myPrograms')}{" "}
                 <span className="text-muted-foreground">({programs.length})</span>
               </h2>
             </div>

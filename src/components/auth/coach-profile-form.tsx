@@ -26,29 +26,32 @@ import { Spinner } from "@/components/ui/spinner";
 import { TiptapForm } from "@/components/form";
 import { AvatarForm } from "@/components/form/avatar-form";
 import type { CoachProfile } from "@/db/schema";
-
-const coachProfileFormSchema = z.object({
-  profileImageUrl: z.string().nullable().optional(),
-  nickname: z.string().optional(),
-  introduction: z.string().optional(),
-  experience: z.string().optional(),
-  certifications: z.string().optional(),
-  contactNumber: z.string().optional(),
-  instagram: z.string().optional(),
-  youtube: z.string().optional(),
-  blog: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof coachProfileFormSchema>;
+import { useTranslations } from "next-intl";
 
 export function CoachProfileForm({
   initialData,
 }: {
   initialData?: CoachProfile | null;
 }) {
+  const t = useTranslations('profile');
+  const tAccount = useTranslations('account');
   const [isLoading, startTransition] = useTransition();
   const router = useRouter();
   const [isEditMode, setIsEditMode] = useState(!!initialData);
+
+  const coachProfileFormSchema = z.object({
+    profileImageUrl: z.string().nullable().optional(),
+    nickname: z.string().optional(),
+    introduction: z.string().optional(),
+    experience: z.string().optional(),
+    certifications: z.string().optional(),
+    contactNumber: z.string().optional(),
+    instagram: z.string().optional(),
+    youtube: z.string().optional(),
+    blog: z.string().optional(),
+  });
+
+  type FormValues = z.infer<typeof coachProfileFormSchema>;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(coachProfileFormSchema),
@@ -115,11 +118,11 @@ export function CoachProfileForm({
 
       if (result.success) {
         toast.success(
-          isEditMode ? "프로필이 수정되었습니다." : "프로필이 생성되었습니다."
+          isEditMode ? t('profileUpdated') : t('profileCreated')
         );
         router.refresh();
       } else {
-        toast.error("실패", { description: result.message });
+        toast.error(tAccount('failed'), { description: result.message });
       }
     });
   };
@@ -130,7 +133,7 @@ export function CoachProfileForm({
         {/* 프로필 이미지 */}
         <AvatarForm
           name="profileImageUrl"
-          label="프로필 이미지"
+          label={t('profileImage')}
           form={form}
           bucketName="public-assets"
           path="coach/profile"
@@ -142,9 +145,9 @@ export function CoachProfileForm({
           name="nickname"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>닉네임</FormLabel>
+              <FormLabel>{t('nickname')}</FormLabel>
               <FormControl>
-                <Input placeholder="홍길동 코치" {...field} />
+                <Input placeholder={t('nicknamePlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -156,10 +159,10 @@ export function CoachProfileForm({
           name="introduction"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>한줄 소개</FormLabel>
+              <FormLabel>{t('introduction')}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="건강한 몸 만들기를 도와드립니다"
+                  placeholder={t('introductionPlaceholder')}
                   {...field}
                 />
               </FormControl>
@@ -170,9 +173,9 @@ export function CoachProfileForm({
 
         <TiptapForm
           name="experience"
-          label="코칭 경력"
+          label={t('experience')}
           form={form}
-          placeholder="경력 사항을 상세히 입력하세요..."
+          placeholder={t('experiencePlaceholder')}
           minHeight="150px"
         />
 
@@ -181,7 +184,7 @@ export function CoachProfileForm({
           name="certifications"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>자격증 (쉼표로 구분)</FormLabel>
+              <FormLabel>{t('certifications')}</FormLabel>
               <FormControl>
                 <Input
                   placeholder="NASM-CPT, 생활스포츠지도사, ..."
@@ -198,7 +201,7 @@ export function CoachProfileForm({
           name="contactNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>연락처</FormLabel>
+              <FormLabel>{t('contactNumber')}</FormLabel>
               <FormControl>
                 <Input placeholder="010-1234-5678" {...field} />
               </FormControl>
@@ -208,14 +211,14 @@ export function CoachProfileForm({
         />
 
         <div className="space-y-4 border rounded-lg p-4">
-          <h3 className="font-medium">SNS 링크</h3>
+          <h3 className="font-medium">{t('snsLinks')}</h3>
 
           <FormField
             control={form.control}
             name="instagram"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Instagram</FormLabel>
+                <FormLabel>{t('instagram')}</FormLabel>
                 <FormControl>
                   <Input placeholder="@username" {...field} />
                 </FormControl>
@@ -229,7 +232,7 @@ export function CoachProfileForm({
             name="youtube"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>YouTube</FormLabel>
+                <FormLabel>{t('youtube')}</FormLabel>
                 <FormControl>
                   <Input placeholder="https://youtube.com/..." {...field} />
                 </FormControl>
@@ -243,7 +246,7 @@ export function CoachProfileForm({
             name="blog"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Blog</FormLabel>
+                <FormLabel>{t('blog')}</FormLabel>
                 <FormControl>
                   <Input placeholder="https://blog.naver.com/..." {...field} />
                 </FormControl>
@@ -255,7 +258,7 @@ export function CoachProfileForm({
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? <Spinner className="mr-2" /> : null}
-          {isEditMode ? "프로필 수정" : "프로필 생성"}
+          {isEditMode ? t('updateProfile') : t('createProfile')}
         </Button>
       </form>
     </Form>

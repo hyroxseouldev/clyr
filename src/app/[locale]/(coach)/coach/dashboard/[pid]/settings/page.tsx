@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import SettingTab from "@/app/[locale]/(coach)/coach/dashboard/[pid]/_components/setting-tab";
 import { getProgramByIdAction } from "@/actions";
+import { getTranslations } from "next-intl/server";
+
 /**
  * 프로그램 설정 페이지
  * 프로그램의 기본 정보, 가격, 공개 여부 등을 설정할 수 있습니다.
@@ -23,6 +25,7 @@ export default async function ProgramSettingsPage({
   params: Promise<{ pid: string }>;
 }) {
   const { pid } = await params;
+  const t = await getTranslations('settings');
 
   const { data: program } = await getProgramByIdAction(pid);
 
@@ -30,9 +33,9 @@ export default async function ProgramSettingsPage({
     <div className="space-y-6">
       {/* 헤더 섹션 */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">프로그램 설정</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
         <p className="text-muted-foreground">
-          프로그램의 세부 설정을 관리하세요.
+          {t('description')}
         </p>
       </div>
 
@@ -42,9 +45,9 @@ export default async function ProgramSettingsPage({
         <Card className="cursor-pointer hover:shadow-md transition-shadow">
           <CardHeader>
             <PencilIcon className="size-8 mb-2 text-primary" />
-            <CardTitle>기본 정보</CardTitle>
+            <CardTitle>{t('basicInfo')}</CardTitle>
             <CardDescription>
-              제목, 설명, 썸네일 이미지를 수정하세요.
+              {t('basicInfoDesc')}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -53,9 +56,9 @@ export default async function ProgramSettingsPage({
         <Card className="cursor-pointer hover:shadow-md transition-shadow">
           <CardHeader>
             <DollarSignIcon className="size-8 mb-2 text-primary" />
-            <CardTitle>가격 설정</CardTitle>
+            <CardTitle>{t('priceSettings')}</CardTitle>
             <CardDescription>
-              프로그램 가격과 결제 방식을 설정하세요.
+              {t('priceSettingsDesc')}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -64,9 +67,9 @@ export default async function ProgramSettingsPage({
         <Card className="cursor-pointer hover:shadow-md transition-shadow">
           <CardHeader>
             <Settings2Icon className="size-8 mb-2 text-primary" />
-            <CardTitle>프로그램 관리</CardTitle>
+            <CardTitle>{t('programManagement')}</CardTitle>
             <CardDescription>
-              공개 여부, 삭제 등 프로그램을 관리하세요.
+              {t('programManagementDesc')}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -76,15 +79,14 @@ export default async function ProgramSettingsPage({
       <Card>
         <CardHeader>
           <Settings2Icon className="size-8 mb-2 text-muted-foreground" />
-          <CardTitle>설정 기능 준비 중</CardTitle>
+          <CardTitle>{t('comingSoon')}</CardTitle>
           <CardDescription>
-            다양한 프로그램 설정 기능을 준비 중입니다.
+            {t('comingSoonDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            기본 정보 수정, 가격 설정, 공개 여부 관리 등의 기능이 곧 추가될
-            예정입니다.
+            {t('featuresComingSoon')}
           </p>
         </CardContent>
       </Card>

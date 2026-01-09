@@ -32,6 +32,7 @@ import { useTransition } from "react";
 import { signOut } from "@/actions/auth";
 import { deleteAccountAction, getMyAccountAction } from "@/actions/account";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 const UserAvatarDropdown = ({
   user,
@@ -43,6 +44,7 @@ const UserAvatarDropdown = ({
     avatarUrl?: string | null;
   };
 }) => {
+  const t = useTranslations('account');
   const [, startTransition] = useTransition();
 
   const [accountDialogOpen, setAccountDialogOpen] = useState(false);
@@ -62,10 +64,10 @@ const UserAvatarDropdown = ({
     startTransition(async () => {
       const result = await deleteAccountAction();
       if (result.success) {
-        toast.success("계정이 삭제되었습니다.");
+        toast.success(t('updateSuccess'));
         setDeleteDialogOpen(false);
       } else {
-        toast.error("계정 삭제 실패", { description: result.message });
+        toast.error(t('failed'), { description: result.message });
       }
     });
   };
@@ -92,18 +94,18 @@ const UserAvatarDropdown = ({
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium">{user.fullName || "사용자"}</p>
+              <p className="text-sm font-medium">{user.fullName || t('user')}</p>
               <p className="text-xs text-muted-foreground">{user.email}</p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setAccountDialogOpen(true)}>
             <UserCircleIcon className="mr-2 size-4" />
-            계정 정보 수정
+            {t('edit')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setPasswordDialogOpen(true)}>
             <KeyIcon className="mr-2 size-4" />
-            비밀번호 변경
+            {t('passwordChange')}
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
@@ -112,12 +114,12 @@ const UserAvatarDropdown = ({
             className="text-destructive focus:text-destructive"
           >
             <TrashIcon className="mr-2 size-4" />
-            계정 삭제
+            {t('delete')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>
             <LogOutIcon className="mr-2 size-4" />
-            로그아웃
+            {t('signOut')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -126,9 +128,9 @@ const UserAvatarDropdown = ({
       <Dialog open={accountDialogOpen} onOpenChange={setAccountDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>계정 정보 수정</DialogTitle>
+            <DialogTitle>{t('edit')}</DialogTitle>
             <DialogDescription>
-              이름과 프로필 이미지를 수정할 수 있습니다.
+              {t('editDesc')}
             </DialogDescription>
           </DialogHeader>
           <AccountForm
@@ -145,8 +147,8 @@ const UserAvatarDropdown = ({
       <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>비밀번호 변경</DialogTitle>
-            <DialogDescription>새 비밀번호를 입력해주세요.</DialogDescription>
+            <DialogTitle>{t('passwordChange')}</DialogTitle>
+            <DialogDescription>{t('passwordChangeDesc')}</DialogDescription>
           </DialogHeader>
           <PasswordChangeForm onSuccess={() => setPasswordDialogOpen(false)} />
         </DialogContent>
@@ -156,10 +158,9 @@ const UserAvatarDropdown = ({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>계정 삭제</DialogTitle>
+            <DialogTitle>{t('delete')}</DialogTitle>
             <DialogDescription>
-              계정을 삭제하면 모든 데이터가 영구적으로 삭제되며 복구할 수
-              없습니다. 정말 삭제하시겠습니까?
+              {t('deleteDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2 mt-4">
@@ -167,10 +168,10 @@ const UserAvatarDropdown = ({
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
             >
-              취소
+              {t('cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDeleteAccount}>
-              계정 삭제
+              {t('confirmDelete')}
             </Button>
           </div>
         </DialogContent>

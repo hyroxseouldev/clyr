@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ResetPasswordForm } from "./reset-password-form";
+import { getTranslations } from "next-intl/server";
 
 export default async function ResetPasswordPage() {
   const supabase = await createClient();
+  const t = await getTranslations('auth.resetPassword');
 
   const {
     data: { session },
@@ -21,7 +23,7 @@ export default async function ResetPasswordPage() {
         <div className="text-center">
           <h1 className="text-3xl font-bold">CLYR</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            새 비밀번호를 입력해주세요
+            {t('description')}
           </p>
         </div>
 

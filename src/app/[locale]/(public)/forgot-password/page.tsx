@@ -1,7 +1,10 @@
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
+import { getTranslations } from "next-intl/server";
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage() {
+  const t = await getTranslations('auth.forgotPassword');
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-8">
@@ -9,7 +12,7 @@ export default function ForgotPasswordPage() {
         <div className="text-center">
           <h1 className="text-3xl font-bold">CLYR</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            비밀번호를 찾기 위해 이메일을 입력해주세요
+            {t('description')}
           </p>
         </div>
 
@@ -19,7 +22,7 @@ export default function ForgotPasswordPage() {
             href="/signin"
             className="text-sm text-muted-foreground hover:text-primary"
           >
-            ← 로그인으로 돌아가기
+            ← {t('backToSignIn')}
           </Link>
         </div>
 

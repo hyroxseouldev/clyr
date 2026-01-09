@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeftIcon, CalendarIcon, UserIcon, CreditCardIcon } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { getTranslations } from "next-intl/server";
 
 /**
  * 주문 상세 페이지
@@ -16,6 +17,7 @@ export default async function OrderDetailPage({
   params: Promise<{ pid: string; orderId: string }>;
 }) {
   const { pid, orderId } = await params;
+  const t = await getTranslations('order');
 
   // 주문 상세 정보 조회
   const result = await getOrderDetailByCoachAction(orderId);
@@ -28,14 +30,14 @@ export default async function OrderDetailPage({
           <Link href={`/coach/dashboard/${pid}/purchases`}>
             <Button variant="ghost" size="sm">
               <ArrowLeftIcon className="mr-2 size-4" />
-              목록으로
+              {t('backToList')}
             </Button>
           </Link>
         </div>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-muted-foreground">
-              {result.message || "주문을 찾을 수 없습니다."}
+              {result.message || t('notFound')}
             </p>
           </CardContent>
         </Card>
@@ -44,9 +46,9 @@ export default async function OrderDetailPage({
   }
 
   const STATUS_LABELS = {
-    PENDING: "대기",
-    COMPLETED: "완료",
-    CANCELLED: "취소",
+    PENDING: t('statusLabels.pending'),
+    COMPLETED: t('statusLabels.completed'),
+    CANCELLED: t('statusLabels.cancelled'),
   };
 
   const STATUS_VARIANTS = {
@@ -58,7 +60,7 @@ export default async function OrderDetailPage({
   // 포맷팅 함수
   const formatAmount = (amount: string) => {
     const num = Number(amount);
-    return `${num.toLocaleString()}원`;
+    return `${num.toLocaleString()}${t('won')}`;
   };
 
   const formatDate = (date: Date) => {
@@ -76,15 +78,15 @@ export default async function OrderDetailPage({
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">주문 상세</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('detail')}</h1>
           <p className="text-muted-foreground">
-            주문 번호: {order.id.slice(0, 8)}...
+            {t('orderNumber')}: {order.id.slice(0, 8)}...
           </p>
         </div>
         <Link href={`/coach/dashboard/${pid}/purchases`}>
           <Button variant="outline">
             <ArrowLeftIcon className="mr-2 size-4" />
-            목록으로
+            {t('backToList')}
           </Button>
         </Link>
       </div>
@@ -93,7 +95,7 @@ export default async function OrderDetailPage({
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>주문 상태</CardTitle>
+            <CardTitle>{t('status')}</CardTitle>
             <Badge variant={STATUS_VARIANTS[order.status]}>
               {STATUS_LABELS[order.status]}
             </Badge>
@@ -102,14 +104,14 @@ export default async function OrderDetailPage({
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">주문 일시</p>
+              <p className="text-sm text-muted-foreground mb-1">{t('orderDate')}</p>
               <div className="flex items-center gap-2">
                 <CalendarIcon className="size-4 text-muted-foreground" />
                 <p className="font-medium">{formatDate(order.createdAt)}</p>
               </div>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground mb-1">결제 금액</p>
+              <p className="text-sm text-muted-foreground mb-1">{t('amount')}</p>
               <div className="flex items-center gap-2">
                 <CreditCardIcon className="size-4 text-muted-foreground" />
                 <p className="font-medium">{formatAmount(order.amount)}</p>
@@ -118,7 +120,7 @@ export default async function OrderDetailPage({
           </div>
           {order.paymentKey && (
             <div>
-              <p className="text-sm text-muted-foreground mb-1">결제 키</p>
+              <p className="text-sm text-muted-foreground mb-1">{t('paymentKey')}</p>
               <p className="font-mono text-sm">{order.paymentKey}</p>
             </div>
           )}
@@ -130,19 +132,19 @@ export default async function OrderDetailPage({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserIcon className="size-5" />
-            구매자 정보
+            {t('buyerInfo')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">이름</p>
+            <p className="text-sm text-muted-foreground mb-1">{t('name')}</p>
             <p className="font-medium">
-              {order.buyer.fullName || "미등록"}
+              {order.buyer.fullName || t('unregistered')}
             </p>
           </div>
           <Separator />
           <div>
-            <p className="text-sm text-muted-foreground mb-1">이메일</p>
+            <p className="text-sm text-muted-foreground mb-1">{t('email')}</p>
             <p className="font-medium">{order.buyer.email}</p>
           </div>
         </CardContent>
@@ -151,25 +153,25 @@ export default async function OrderDetailPage({
       {/* 프로그램 정보 */}
       <Card>
         <CardHeader>
-          <CardTitle>프로그램 정보</CardTitle>
+          <CardTitle>{t('programInfo')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">프로그램명</p>
+            <p className="text-sm text-muted-foreground mb-1">{t('programName')}</p>
             <p className="font-medium">{order.program.title}</p>
           </div>
           {order.program.description && (
             <>
               <Separator />
               <div>
-                <p className="text-sm text-muted-foreground mb-1">설명</p>
+                <p className="text-sm text-muted-foreground mb-1">{t('description')}</p>
                 <p className="text-sm">{order.program.description}</p>
               </div>
             </>
           )}
           <Separator />
           <div>
-            <p className="text-sm text-muted-foreground mb-1">판매가</p>
+            <p className="text-sm text-muted-foreground mb-1">{t('price')}</p>
             <p className="font-medium">{formatAmount(order.program.price)}</p>
           </div>
         </CardContent>
@@ -179,36 +181,40 @@ export default async function OrderDetailPage({
       {order.enrollments && order.enrollments.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>수강권 정보</CardTitle>
+            <CardTitle>{t('enrollmentInfo')}</CardTitle>
           </CardHeader>
           <CardContent>
             {order.enrollments.map((enrollment) => (
               <div key={enrollment.id} className="space-y-2">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">상태</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t('status')}</p>
                     <Badge variant={enrollment.status === "ACTIVE" ? "default" : "secondary"}>
-                      {enrollment.status === "ACTIVE" ? "활성" : enrollment.status === "EXPIRED" ? "만료" : "정지"}
+                      {enrollment.status === "ACTIVE"
+                        ? t('statusLabels.active')
+                        : enrollment.status === "EXPIRED"
+                          ? t('statusLabels.expired')
+                          : t('statusLabels.paused')}
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">시작일</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t('startDate')}</p>
                     <p className="text-sm">
                       {enrollment.startDate
                         ? new Date(enrollment.startDate).toLocaleDateString("ko-KR")
-                        : "미설정"}
+                        : t('notSet')}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">종료일</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t('endDate')}</p>
                     <p className="text-sm">
                       {enrollment.endDate
                         ? new Date(enrollment.endDate).toLocaleDateString("ko-KR")
-                        : "무기한"}
+                        : t('indefinite')}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">생성일</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t('createdAt')}</p>
                     <p className="text-sm">
                       {new Date(enrollment.createdAt).toLocaleDateString("ko-KR")}
                     </p>

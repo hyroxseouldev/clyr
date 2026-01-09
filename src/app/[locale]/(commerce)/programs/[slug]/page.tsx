@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Clock, Calendar, TrendingUp, CheckCircle2, User, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { getTranslations } from "next-intl/server";
 
 /**
  * 프로그램 상세 및 구매 페이지
@@ -17,14 +18,17 @@ const PublicCommercePage = async ({
 }) => {
   const { slug } = await params;
   const { data: program } = await getProgramBySlugAction(slug);
+  const t = await getTranslations('programDetail');
+  const tProgram = await getTranslations('program');
+  const tCommon = await getTranslations('common');
 
   if (!program) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">상품을 찾을 수 없습니다</h1>
+          <h1 className="text-2xl font-bold">{t('notFound')}</h1>
           <p className="text-gray-600 mt-2">
-            요청하신 페이지가 존재하지 않습니다.
+            {t('notFoundDesc')}
           </p>
         </div>
       </div>
@@ -38,9 +42,9 @@ const PublicCommercePage = async ({
   };
 
   const difficultyLabels = {
-    BEGINNER: "입문",
-    INTERMEDIATE: "중급",
-    ADVANCED: "고급",
+    BEGINNER: tProgram('difficulty.BEGINNER'),
+    INTERMEDIATE: tProgram('difficulty.INTERMEDIATE'),
+    ADVANCED: tProgram('difficulty.ADVANCED'),
   };
 
   return (
@@ -49,7 +53,7 @@ const PublicCommercePage = async ({
         {/* 헤더 */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <Badge>{program.type === "SINGLE" ? "단건 판매" : "구독형"}</Badge>
+            <Badge>{program.type === "SINGLE" ? t('singleSale') : t('subscription')}</Badge>
             <Badge
               variant={program.isPublic ? "default" : "secondary"}
               className={cn(
@@ -62,18 +66,18 @@ const PublicCommercePage = async ({
               {program.isPublic ? (
                 <>
                   <Eye className="h-3 w-3" />
-                  공개
+                  {t('public')}
                 </>
               ) : (
                 <>
                   <EyeOff className="h-3 w-3" />
-                  비공개
+                  {t('private')}
                 </>
               )}
             </Badge>
             {!program.isForSale && (
               <Badge variant="outline" className="text-gray-500">
-                판매 중지
+                {t('notForSale')}
               </Badge>
             )}
           </div>
@@ -96,7 +100,7 @@ const PublicCommercePage = async ({
         <div className="grid grid-cols-4 gap-4 mb-8">
           <div className="text-center p-4 border rounded">
             <TrendingUp className="h-5 w-5 mx-auto mb-2 text-gray-600" />
-            <div className="text-sm text-gray-600">난이도</div>
+            <div className="text-sm text-gray-600">{t('difficulty')}</div>
             <Badge
               className={cn(
                 difficultyColors[program.difficulty],
@@ -108,21 +112,21 @@ const PublicCommercePage = async ({
           </div>
           <div className="text-center p-4 border rounded">
             <Calendar className="h-5 w-5 mx-auto mb-2 text-gray-600" />
-            <div className="text-sm text-gray-600">총 기간</div>
-            <div className="font-bold mt-1">{program.durationWeeks}주</div>
+            <div className="text-sm text-gray-600">{t('totalDuration')}</div>
+            <div className="font-bold mt-1">{program.durationWeeks}{t('weeks')}</div>
           </div>
           <div className="text-center p-4 border rounded">
             <Clock className="h-5 w-5 mx-auto mb-2 text-gray-600" />
-            <div className="text-sm text-gray-600">주당 운동</div>
-            <div className="font-bold mt-1">{program.daysPerWeek}일</div>
+            <div className="text-sm text-gray-600">{t('perWeek')}</div>
+            <div className="font-bold mt-1">{program.daysPerWeek}</div>
           </div>
           <div className="text-center p-4 border rounded">
             <User className="h-5 w-5 mx-auto mb-2 text-gray-600" />
-            <div className="text-sm text-gray-600">수강 기간</div>
+            <div className="text-sm text-gray-600">{t('accessPeriod')}</div>
             <div className="font-bold mt-1">
               {program.accessPeriodDays
-                ? `${program.accessPeriodDays}일`
-                : "평생"}
+                ? `${program.accessPeriodDays}${t('days')}`
+                : t('lifetime')}
             </div>
           </div>
         </div>
@@ -133,7 +137,7 @@ const PublicCommercePage = async ({
             {/* 상세 설명 */}
             {program.description && (
               <section>
-                <h2 className="text-2xl font-bold mb-4">프로그램 상세</h2>
+                <h2 className="text-2xl font-bold mb-4">{t('programDetails')}</h2>
                 <div
                   className="prose max-w-none p-6 border rounded"
                   dangerouslySetInnerHTML={{ __html: program.description }}
@@ -144,7 +148,7 @@ const PublicCommercePage = async ({
             {/* 커리큘럼 */}
             {program.weeks && program.weeks.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold mb-4">커리큘럼</h2>
+                <h2 className="text-2xl font-bold mb-4">{t('curriculum')}</h2>
                 <div className="space-y-3">
                   {program.weeks.map((week) => (
                     <Card key={week.id}>
@@ -189,7 +193,7 @@ const PublicCommercePage = async ({
             {program.coach && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">코치 소개</CardTitle>
+                  <CardTitle className="text-lg">{t('coachIntro')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-3">
@@ -199,7 +203,7 @@ const PublicCommercePage = async ({
                     <div>
                       <div className="font-bold">{program.coach.fullName}</div>
                       <Badge variant="outline" className="text-xs">
-                        코치
+                        {t('coach')}
                       </Badge>
                     </div>
                   </div>
@@ -211,9 +215,9 @@ const PublicCommercePage = async ({
             <Card>
               <CardContent className="p-6 space-y-4">
                 <div>
-                  <div className="text-sm text-gray-600">결제 금액</div>
+                  <div className="text-sm text-gray-600">{t('paymentAmount')}</div>
                   <div className="text-3xl font-bold mt-1">
-                    {Number(program.price).toLocaleString()}원
+                    {Number(program.price).toLocaleString()}{t('won')}
                   </div>
                 </div>
 
@@ -222,27 +226,27 @@ const PublicCommercePage = async ({
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-gray-600" />
-                    <span>전문 코치의 피드백</span>
+                    <span>{t('features.feedback')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-gray-600" />
-                    <span>체계적인 커리큘럼</span>
+                    <span>{t('features.curriculum')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-gray-600" />
-                    <span>언제든지 접근 가능</span>
+                    <span>{t('features.anytime')}</span>
                   </div>
                 </div>
 
                 {program.isForSale ? (
                   <Button asChild className="w-full" size="lg">
                     <Link href={`/programs/payment/${slug}`}>
-                      구매하기
+                      {t('purchase')}
                     </Link>
                   </Button>
                 ) : (
                   <Button disabled className="w-full" size="lg">
-                    현재 판매하지 않습니다
+                    {t('notAvailable')}
                   </Button>
                 )}
               </CardContent>

@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Home, User } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { processPaymentSuccessAction } from "@/actions/payment";
+import { getTranslations } from "next-intl/server";
 
 /**
  * 결제 성공 페이지
@@ -20,6 +21,7 @@ const PaymentSuccessPage = async ({
 }) => {
   const params = await searchParams;
   const { paymentKey, orderId, amount, programId } = params;
+  const t = await getTranslations('payment.success');
 
   // 필수 파라미터 확인
   if (!paymentKey || !orderId || !amount || !programId) {
@@ -40,11 +42,11 @@ const PaymentSuccessPage = async ({
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center">
             <h1 className="text-2xl font-bold mb-4 text-red-600">
-              결제 처리 오류
+              {t('error')}
             </h1>
             <p className="text-gray-600 mb-6">{result.error}</p>
             <Button asChild variant="outline">
-              <Link href="/programs">프로그램 목록으로 이동</Link>
+              <Link href="/programs">{t('backToPrograms')}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -64,17 +66,17 @@ const PaymentSuccessPage = async ({
           </div>
 
           {/* 메시지 */}
-          <h1 className="text-2xl font-bold mb-2">결제가 완료되었습니다</h1>
+          <h1 className="text-2xl font-bold mb-2">{t('title')}</h1>
           <p className="text-gray-600 mb-8">
-            수강 프로그램이 등록되었습니다.
+            {t('description')}
             <br />
-            지금 바로 수강을 시작하세요!
+            {t('startNow')}
           </p>
 
           {/* 주문 정보 */}
           {orderId && (
             <div className="bg-gray-50 rounded-lg p-4 mb-8 text-left">
-              <div className="text-sm text-gray-600 mb-1">주문 번호</div>
+              <div className="text-sm text-gray-600 mb-1">{t('orderNumber')}</div>
               <div className="font-mono text-sm font-medium">{orderId}</div>
             </div>
           )}
@@ -85,10 +87,9 @@ const PaymentSuccessPage = async ({
               <div className="flex gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
                 <div className="text-sm text-green-800 text-left">
-                  <p className="font-medium mb-1">앱에서 바로 시작하세요!</p>
+                  <p className="font-medium mb-1">{t('appInfo')}</p>
                   <p className="text-green-700">
-                    앱을 다운로드하고 구매 내역을 확인한 후 프로그램을
-                    시작하세요.
+                    {t('appDesc')}
                   </p>
                 </div>
               </div>
