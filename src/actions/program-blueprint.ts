@@ -9,7 +9,7 @@ import {
   deleteProgramBlueprintQuery,
   createPhaseBlueprintsQuery,
   deletePhaseBlueprintsQuery,
-} from "@/db/queries/programBlueprint";
+} from "@/db/queries/program-blueprint";
 import { getProgramByIdQuery } from "@/db/queries/program";
 import { getUserId } from "@/actions/auth";
 

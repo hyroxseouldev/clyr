@@ -11,7 +11,7 @@ import {
   getHomeworkSubmissionsByProgramAndDayQuery,
   getHomeworkLeaderboardByProgramAndDayQuery,
   getHomeworkStatsByProgramQuery,
-} from "@/db/queries/workoutLog";
+} from "@/db/queries/workout-log";
 import { getEnrollmentsByUserIdQuery } from "@/db/queries/order";
 import { getProgramFullCurriculumQuery } from "@/db/queries/program";
 import { db } from "@/db";

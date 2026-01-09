@@ -1,4 +1,4 @@
-import { getHomeworkPageDataAction } from "@/actions/workoutLog";
+import { getHomeworkPageDataAction } from "@/actions/workout-log";
 import { HomeworkClient } from "./_components/homework-client";
 
 interface HomeworkPageProps {

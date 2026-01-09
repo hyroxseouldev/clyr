@@ -60,15 +60,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import type { PaginatedRoutineBlocks } from "@/db/queries/routineBlock";
-import type { WorkoutLibraryItem } from "@/db/queries/workoutLibrary";
+import type { PaginatedRoutineBlocks } from "@/db/queries/routine-block";
+import type { WorkoutLibraryItem } from "@/db/queries/workout-library";
 import {
   createRoutineBlockAction,
   updateRoutineBlockAction,
   deleteRoutineBlockAction,
   addRoutineItemAction,
-} from "@/actions/routineBlock";
-import { getWorkoutLibraryAction } from "@/actions/workoutLibrary";
+} from "@/actions/routine-block";
+import { getWorkoutLibraryAction } from "@/actions/workout-library";
 
 interface WorkoutRoutineClientProps {
   initialData: PaginatedRoutineBlocks | null;

@@ -11,7 +11,7 @@ import {
   updateRoutineItemOrderQuery,
   updateRoutineItemQuery,
   deleteRoutineItemQuery,
-} from "@/db/queries/routineBlock";
+} from "@/db/queries/routine-block";
 import { getUserId } from "@/actions/auth";
 
 /**

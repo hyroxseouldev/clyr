@@ -36,14 +36,14 @@ import {
   deletePhaseAction,
   updateProgramBlueprintAction,
   getProgramPlanDataAction,
-} from "@/actions/programBlueprint";
-import { getRoutineBlocksAction } from "@/actions/routineBlock";
+} from "@/actions/program-blueprint";
+import { getRoutineBlocksAction } from "@/actions/routine-block";
 import type {
   ProgramPlanData,
   ProgramBlueprintGroupedByPhase,
   ProgramBlueprintWithBlock,
-} from "@/db/queries/programBlueprint";
-import type { RoutineBlockWithItems } from "@/db/queries/routineBlock";
+} from "@/db/queries/program-blueprint";
+import type { RoutineBlockWithItems } from "@/db/queries/routine-block";
 
 interface PlanClientProps {
   programId: string;

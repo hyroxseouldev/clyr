@@ -1,4 +1,4 @@
-import { getRoutineBlocksAction } from "@/actions/routineBlock";
+import { getRoutineBlocksAction } from "@/actions/routine-block";
 import { RoutineBlockList } from "./_components/routine-block-list";
 
 const PAGE_SIZE = 20;

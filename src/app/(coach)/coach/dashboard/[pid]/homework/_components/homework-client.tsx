@@ -42,8 +42,8 @@ import {
   updateCoachCommentAction,
   toggleCoachCheckAction,
   getHomeworkPageDataAction,
-} from "@/actions/workoutLog";
-import type { HomeworkSubmission, HomeworkPageData } from "@/db/queries/workoutLog.types";
+} from "@/actions/workout-log";
+import type { HomeworkSubmission, HomeworkPageData } from "@/db/queries/workout-log.types";
 
 interface HomeworkClientProps {
   programId: string;

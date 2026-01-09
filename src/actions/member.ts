@@ -14,7 +14,7 @@ import {
   searchMembersQuery,
 } from "@/db/queries/member";
 import { getProgramFullCurriculumQuery } from "@/db/queries/program";
-import { updateEnrollmentStatusQuery, updateEnrollmentStartDateQuery } from "@/db/queries/order";
+import { updateEnrollmentStatusQuery, updateEnrollmentStartDateQuery, updateEnrollmentEndDateQuery } from "@/db/queries/order";
 import { getUserId } from "@/actions/auth";
 
 /**

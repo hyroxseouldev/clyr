@@ -1,4 +1,4 @@
-import { getProgramPlanDataAction } from "@/actions/programBlueprint";
+import { getProgramPlanDataAction } from "@/actions/program-blueprint";
 import { PlanClient } from "./_components/plan-client";
 
 interface PlanPageProps {

@@ -4,7 +4,7 @@ import {
   getWorkoutLibraryQuery,
   getWorkoutLibraryByIdQuery,
   getWorkoutLibraryFiltersQuery,
-} from "@/db/queries/workoutLibrary";
+} from "@/db/queries/workout-library";
 
 /**
  * ==========================================

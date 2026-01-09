@@ -1,7 +1,7 @@
 import { eq, desc, and, sql } from "drizzle-orm";
 import { workoutLogs, programBlueprints } from "@/db/schema";
 import { db } from "@/db";
-import type { HomeworkSubmission, HomeworkStats } from "./workoutLog.types";
+import type { HomeworkSubmission, HomeworkStats } from "./workout-log.types";
 
 /**
  * ==========================================

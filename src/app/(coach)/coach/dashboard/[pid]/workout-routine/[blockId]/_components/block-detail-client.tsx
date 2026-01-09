@@ -35,16 +35,16 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { RoutineBlockWithItems } from "@/db/queries/routineBlock";
-import type { WorkoutLibraryItem } from "@/db/queries/workoutLibrary";
+import type { RoutineBlockWithItems } from "@/db/queries/routine-block";
+import type { WorkoutLibraryItem } from "@/db/queries/workout-library";
 import {
   updateRoutineBlockAction,
   deleteRoutineBlockAction,
   addRoutineItemAction,
   updateRoutineItemOrderAction,
   deleteRoutineItemAction,
-} from "@/actions/routineBlock";
-import { getWorkoutLibraryAction } from "@/actions/workoutLibrary";
+} from "@/actions/routine-block";
+import { getWorkoutLibraryAction } from "@/actions/workout-library";
 import {
   getWorkoutTypeLabel,
   RECOMMENDATION_FIELD_LABELS,

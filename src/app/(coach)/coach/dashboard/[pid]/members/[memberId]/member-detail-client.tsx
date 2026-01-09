@@ -1,11 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   FileTextIcon,
   CalendarIcon,
@@ -13,9 +21,11 @@ import {
   TrendingUpIcon,
   UserIcon,
   ShoppingBagIcon,
+  LoaderIcon,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, addDays, addWeeks, addMonths } from "date-fns";
 import { ko } from "date-fns/locale";
+import { toast } from "sonner";
 import type { Enrollment, WorkoutLog } from "@/db/schema";
 
 interface MemberDetailClientProps {
@@ -78,7 +88,57 @@ export function MemberDetailClient({
   workoutLogs,
   coachComments,
 }: MemberDetailClientProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"enrollment" | "performance">("enrollment");
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // 상태 변경 핸들러
+  const handleStatusChange = async (newStatus: "ACTIVE" | "EXPIRED" | "PAUSED") => {
+    setIsUpdating(true);
+    try {
+      const response = await fetch(`/api/members/${member.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) throw new Error("상태 변경 실패");
+
+      toast.success("수강 상태가 변경되었습니다.");
+      router.refresh();
+    } catch (error) {
+      toast.error("상태 변경에 실패했습니다.");
+      console.error(error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // 기간 연장 핸들러
+  const handleExtendEnrollment = async (days: number) => {
+    setIsUpdating(true);
+    try {
+      const newEndDate = member.endDate
+        ? addDays(new Date(member.endDate), days)
+        : addDays(new Date(), days);
+
+      const response = await fetch(`/api/members/${member.id}/extend`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ endDate: newEndDate.toISOString() }),
+      });
+
+      if (!response.ok) throw new Error("기간 연장 실패");
+
+      toast.success(`${days}일 연장되었습니다.`);
+      router.refresh();
+    } catch (error) {
+      toast.error("기간 연장에 실패했습니다.");
+      console.error(error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   // 3대 운동 PR 계산 (content에서 운동 이름 찾기)
   const bigThreePRs = {
@@ -133,11 +193,24 @@ export function MemberDetailClient({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">상태</p>
-                <p className="font-medium">
-                  {member.status === "ACTIVE" && "수강 중"}
-                  {member.status === "PAUSED" && "일시정지"}
-                  {member.status === "EXPIRED" && "만료"}
-                </p>
+                <Select
+                  value={member.status}
+                  onValueChange={(value) => handleStatusChange(value as "ACTIVE" | "EXPIRED" | "PAUSED")}
+                  disabled={isUpdating}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      {member.status === "ACTIVE" && "수강 중"}
+                      {member.status === "PAUSED" && "일시정지"}
+                      {member.status === "EXPIRED" && "만료"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ACTIVE">수강 중</SelectItem>
+                    <SelectItem value="PAUSED">일시정지</SelectItem>
+                    <SelectItem value="EXPIRED">만료</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">시작일</p>
@@ -160,6 +233,37 @@ export function MemberDetailClient({
                 <p className="font-medium">
                   {format(new Date(member.createdAt), "yyyy.MM.dd", { locale: ko })}
                 </p>
+              </div>
+            </div>
+
+            {/* 수강 기간 연장 버튼 */}
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">수강 기간 연장</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleExtendEnrollment(7)}
+                  disabled={isUpdating}
+                >
+                  +7일
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleExtendEnrollment(30)}
+                  disabled={isUpdating}
+                >
+                  +30일
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleExtendEnrollment(90)}
+                  disabled={isUpdating}
+                >
+                  +90일
+                </Button>
               </div>
             </div>
 

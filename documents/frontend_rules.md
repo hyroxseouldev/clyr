@@ -1,81 +1,68 @@
-# 기본 가이드 라인
+# 🚀 Next.js 개발 표준 가이드라인
 
-1. 최신 Nextjs 문서를 참고해서 개발합니다.
-2. 함수 생성 시 Server Action 우선적으로 활용한다.
-3. 비동기 함수 실행 시에는 Spinner 를 보여주고 , 결과 알림은 Sonner Toaster 로 유저에게 안내한다.
-   3-1. 성공, 실패 알림에 따른 색상을 달리하여 시각적 효과를 준다.
-4. UI 는 Shadncn 공용 Components 를 우선적으로 사용한다.
-5. Form 데이터는 React Hook Form + Zod 로 명확한 타입 생성을 한다.
-   6-1. Compoennt 또한 Shadcn UI Form 을 사용
-6. DB Model 에 대한 CRUD 쿼리는 drizzle 쿼리를 사용하며 위치는 src/db/queries/modelName 이다.
-7. Controller 에 해당하는 부분, Drizzle 쿼리는 순수하게 DB만 다룹니다. 트랜잭션도 이곳에서 다룹니다.
-   7-1. 서버 액션 레이어 에서는 캐시 갱신등을 처리합니다.
-8. 아키텍쳐는 MVC 를 지향합니다. Model(Drizzle, Query), View(Page, Components), Controller(Actions)
-9. 인증 시스템은 Mvp 개발로 완성이 우선이기에 supabase 에서 제공하는 패키지을 적극 활용합니다
-   - 참고 링크: https://supabase.com/docs/guides/auth/server-side/creating-a-client?queryGroups=package-manager&package-manager=pnpm&queryGroups=framework&framework=nextjs
-10. View 레이어 에서는 Drizzle의 생성 Type 을 직접적으로 쓰지 않습니다. 이유는 Schema(도메인 타입) 변경 시에 충돌 가능성이 생기기 때문입니다.
-11. 상수는 src/lib/constants 에서 관리한다.
-12. 다크모드 설정되어있습니다. 개발시 유의하ㅔㅅ요
+## 1. 아키텍처: MVC 패턴 (Layered Architecture)
 
-# 아키텍쳐 및 구조
+역할 분담을 명확히 하여 코드의 예측 가능성을 높입니다.
 
-- MVC 아키텍쳐에 기반합니다.
-- Model(Domain): DB 에 관련된 것들을 모델 안에 포함합니다. Drizzle Orm 이 포함 됩니다.
-- View: 뷰 영역입니다. 화면을 담당하는 것들입니다. src/app 안에 있는 페이지 컴포넌트들과 src/components 에 있는 것들이 포함됩니다.
-- Controller: ServerAction, 비동기 함수들이 포함됩니다.
-
-# App Routing
-
-- 코치 유저와 회원 유저가 함께 사용할수 있기 때문에 그룹 라우팅으로 디렉토리를 관리 하고 Middleware 로 앱 사용시 유저 접근을 제한 합니다
-- Role: 롤은 어드민, 코치, 일반 유저
-
-```
-/랜딩 페이지
-/404
-
-(Auth)
-
-/signin
-/signup
-서치파라미터로 코치와 유저 구분
-전체 접근 가능
-
-(Coach)
-
-코치 유저만 접근 가능
-/dashboard 이하 모두
-/coach/onboarding
-
-(User)
-
-/user/program/[slug]
-/user/checkout/success
-/user/checkout/failure
-/user/signin
-/user/signup
-```
-
-## Action 개발 표준 가이드 라인
-
-- Action Result 사용으로 에러 처리를 엄격히 관리 한다.
-
-## 📋 Form 개발 표준 가이드라인
-
-1. **Schema 정의**: 파일 상단에 `zod`를 사용하여 입력값 검증 로직을 명확히 정의합니다.
-2. **Type 추출**: `z.infer`를 사용하여 스키마로부터 타입을 자동으로 추출, 타입 안정성을 확보합니다.
-3. **Form 초기화**: `useForm`에 `zodResolver`를 연결하고 `defaultValues`를 반드시 설정합니다.
-4. **구조화된 UI**: `FormField`, `FormItem`, `FormLabel`, `FormControl` 순서의 위계 구조를 엄격히 따릅니다.
+| 레이어         | 위치                        | 역할                                                  | 비고                                                    |
+| -------------- | --------------------------- | ----------------------------------------------------- | ------------------------------------------------------- |
+| **View**       | `src/app`, `src/components` | UI 렌더링 및 사용자 이벤트 처리                       | Drizzle 타입을 직접 참조 금지 (별도 DTO/Interface 사용) |
+| **Controller** | `src/actions`               | 비동기 로직, 캐시 갱신(`revalidatePath`), 에러 핸들링 | Server Action 활용                                      |
+| **Model**      | `src/db/queries`            | 순수 DB CRUD 및 트랜잭션 처리                         | Drizzle ORM 사용                                        |
 
 ---
 
-### 🛠️ 표준 Form 템플릿 코드
+## 2. 데이터 관리 및 인증 (Model & Auth)
+
+- **DB 쿼리 위치**: `src/db/queries/[model-name]/` 경로에 작성합니다.
+- **트랜잭션**: 비즈니스 로직에 필요한 트랜잭션은 쿼리 레이어(Model)에서 처리합니다.
+- **인증(Auth)**: Supabase SSR 패키지를 활용하며, Middleware를 통해 Role(`Admin`, `Coach`, `User`)에 따른 접근 제어를 수행합니다.
+- **상수 관리**: 전역에서 쓰이는 값은 `src/lib/constants`에서 관리합니다.
+
+---
+
+## 3. 서버 액션(Action) 표준
+
+모든 서버 액션은 엄격한 결과 객체를 반환하여 View에서 에러를 처리할 수 있게 합니다.
+
+- **성공/실패 구조화**: `{ success: boolean, data?: T, error?: string }` 형태 권장.
+- **후처리**: 데이터 변경 후 `revalidatePath` 또는 `revalidateTag`를 통해 서버 캐시를 갱신합니다.
+
+---
+
+## 4. 폼(Form) 개발 표준 (React Hook Form + Zod)
+
+Shadcn UI의 Form 컴포넌트를 사용하여 일관된 UX를 제공합니다.
+
+### ✅ 개발 체크리스트
+
+1. **Schema**: 파일 상단에 `zod` 스키마 정의 (에러 메시지 필수).
+2. **Type**: `z.infer`를 사용하여 입력 타입 추출.
+3. **Default Values**: `useForm` 선언 시 초기값 반드시 설정.
+4. **UI 위계**: `FormField > FormItem > FormLabel > FormControl > FormMessage` 순서 준수.
+
+---
+
+## 5. UI/UX 가이드라인
+
+- **공용 컴포넌트**: `src/components/ui` (Shadcn UI)를 최우선으로 사용합니다.
+- **비동기 피드백**:
+- **Loading**: 실행 중에는 **Spinner**를 표시하여 상태 알림.
+- **Result**: 결과는 **Sonner Toaster**를 사용 (성공-Green, 실패-Red 등 색상 구분).
+- **다크모드**: 모든 UI는 다크모드 대응이 되어야 합니다 (`dark:` 클래스 활용 확인).
+
+---
+
+## 🛠️ 표준 Form 템플릿 코드 (Full Example)
 
 ```tsx
 "use client";
 
+import { useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { toast } from "sonner"; // Sonner Toaster 사용
 
 import { Button } from "@/components/ui/button";
 import {
@@ -88,38 +75,48 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react"; // Spinner 예시
 
-/** * 1. Schema 정의
- * 에러 메시지를 포함한 검증 로직을 한 곳에서 관리합니다.
- */
-const formSchema = z.object({
-  username: z.string().min(2, {
-    message: "사용자 이름은 최소 2글자 이상이어야 합니다.",
-  }),
+// 1. Schema 정의
+const profileSchema = z.object({
+  username: z
+    .string()
+    .min(2, { message: "사용자 이름은 최소 2글자 이상이어야 합니다." }),
 });
 
-/** 2. Type 정의 */
-type FormValues = z.infer<typeof formSchema>;
+type ProfileValues = z.infer<typeof profileSchema>;
 
 export function ProfileForm() {
-  /** 3. Form 초기화 */
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      username: "",
-    },
+  const [isPending, startTransition] = useTransition();
+
+  // 2. Form 초기화
+  const form = useForm<ProfileValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { username: "" },
   });
 
-  /** 4. Submit 핸들러 (현재 비워둠) */
-  const onSubmit = (values: FormValues) => {
-    // TODO: 서버 액션 또는 API 호출 로직 구현
-    console.log(values);
+  // 3. Submit 핸들러 (Server Action 연동)
+  const onSubmit = (values: ProfileValues) => {
+    startTransition(async () => {
+      // const result = await updateProfileAction(values);
+      // 예시 로직:
+      const success = true;
+
+      if (success) {
+        toast.success("프로필이 업데이트되었습니다.", {
+          style: { backgroundColor: "#10b981", color: "#fff" },
+        });
+      } else {
+        toast.error("업데이트에 실패했습니다.", {
+          style: { backgroundColor: "#ef4444", color: "#fff" },
+        });
+      }
+    });
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {/* Username 필드 */}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="username"
@@ -127,21 +124,41 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>사용자 이름</FormLabel>
               <FormControl>
-                <Input placeholder="이름을 입력하세요" {...field} />
+                <Input
+                  placeholder="이름을 입력하세요"
+                  {...field}
+                  disabled={isPending}
+                />
               </FormControl>
-              <FormDescription>
-                서비스에서 사용하실 공용 닉네임입니다.
-              </FormDescription>
+              <FormDescription>공용 닉네임으로 사용됩니다.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <Button type="submit" className="w-full">
-          저장하기
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            "저장하기"
+          )}
         </Button>
       </form>
     </Form>
   );
 }
 ```
+
+---
+
+## 📂 디렉토리 구조 요약
+
+- `(Auth)`: 로그인/회원가입 (서치 파라미터로 Coach/User 구분)
+- `(Coach)`: `/dashboard`, `/coach/onboarding` (접근 제한)
+- `(User)`: `/user/program/[slug]`, `/user/checkout` (일반 유저 전용)
+- `src/db/queries`: 순수 DB 로직 (Model)
+- `src/actions`: 비즈니스 로직 및 캐시 제어 (Controller)
+
+---
+
+이 가이드라인이 프로젝트의 일관성을 유지하는 데 도움이 되길 바랍니다. 추가로 특정 레이어(예: Drizzle 쿼리 작성법)에 대한 상세 템플릿이 필요하신가요?

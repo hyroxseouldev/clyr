@@ -1,4 +1,4 @@
-import { getWorkoutLibraryAction, getWorkoutLibraryFiltersAction } from "@/actions/workoutLibrary";
+import { getWorkoutLibraryAction, getWorkoutLibraryFiltersAction } from "@/actions/workout-library";
 import { WorkoutLibraryClient } from "./_components/workout-library-client";
 
 const PAGE_SIZE = 20;

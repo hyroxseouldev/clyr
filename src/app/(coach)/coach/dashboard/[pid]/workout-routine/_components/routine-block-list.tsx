@@ -39,8 +39,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import type { PaginatedRoutineBlocks } from "@/db/queries/routineBlock";
-import { createRoutineBlockAction } from "@/actions/routineBlock";
+import type { PaginatedRoutineBlocks } from "@/db/queries/routine-block";
+import { createRoutineBlockAction } from "@/actions/routine-block";
 
 interface RoutineBlockListProps {
   initialData: PaginatedRoutineBlocks | null;

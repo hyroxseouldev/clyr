@@ -1,7 +1,7 @@
-import { getRoutineBlockByIdAction } from "@/actions/routineBlock";
+import { getRoutineBlockByIdAction } from "@/actions/routine-block";
 import { notFound } from "next/navigation";
 import { BlockDetailClient } from "./_components/block-detail-client";
-import type { RoutineBlockWithItems } from "@/db/queries/routineBlock";
+import type { RoutineBlockWithItems } from "@/db/queries/routine-block";
 
 const BlockDetailPage = async ({
   params,

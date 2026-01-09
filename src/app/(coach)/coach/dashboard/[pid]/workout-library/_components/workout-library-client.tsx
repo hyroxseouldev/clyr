@@ -23,7 +23,7 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { Search, Dumbbell, Video, Calendar, User, X } from "lucide-react";
-import type { PaginatedWorkoutLibrary } from "@/db/queries/workoutLibrary";
+import type { PaginatedWorkoutLibrary } from "@/db/queries/workout-library";
 
 interface WorkoutLibraryClientProps {
   initialData: PaginatedWorkoutLibrary | null;
