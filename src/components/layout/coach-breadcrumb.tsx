@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/routing";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,6 +10,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Fragment } from "react";
+import { Link } from "@/i18n/routing";
 
 // 경로 표시용 라벨 맵
 const PATH_LABELS: Record<string, string> = {
@@ -29,11 +30,16 @@ const PATH_LABELS: Record<string, string> = {
 export function CoachBreadcrumb() {
   const pathname = usePathname();
 
-  // 경로 분리 및 필터링
+  // 경로 분리 및 필터링 (로케일, coach, app 제외)
   const pathSegments = pathname
     .split("/")
     .filter(Boolean)
-    .filter((segment) => segment !== "coach" && segment !== "app");
+    .filter((segment) =>
+      segment !== "coach" &&
+      segment !== "app" &&
+      segment !== "ko" &&
+      segment !== "en"
+    );
 
   // 코치 대시보드인 경우 브레드크럼 표시 안 함
   if (pathSegments.length === 1 && pathSegments[0] === "dashboard") {
@@ -78,7 +84,9 @@ export function CoachBreadcrumb() {
                 {item.isLast ? (
                   <BreadcrumbPage>{item.label}</BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
+                  <Link href={item.href}>
+                    <BreadcrumbLink>{item.label}</BreadcrumbLink>
+                  </Link>
                 )}
               </BreadcrumbItem>
             </Fragment>

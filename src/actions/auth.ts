@@ -1,10 +1,11 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { redirect } from "@/i18n/routing";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { account } from "@/db/schema";
+import { getLocale } from "next-intl/server";
 import {
   createCoachProfileQuery,
   getCoachProfileByAccountIdQuery,
@@ -49,7 +50,8 @@ export async function signInWithEmailAndPassword(
   }
 
   // 4. redirect는 함수의 가장 마지막에 호출 (try-catch를 쓸 경우 반드시 밖에서 호출)
-  redirect(redirectPath);
+  const locale = await getLocale();
+  redirect({ href: redirectPath, locale });
 }
 
 // Signout Action
@@ -60,7 +62,8 @@ export async function signOut() {
   if (error) {
     return { error: error.message };
   }
-  redirect("/");
+  const locale = await getLocale();
+  redirect({ href: "/", locale });
 }
 
 /**
