@@ -1,4 +1,3 @@
-import MembersListTab from "@/app/(coach)/coach/dashboard/[pid]/_components/members-list-tab";
 import { getProgramOrdersAndEnrollmentsAction } from "@/actions/order";
 
 /**
@@ -27,8 +26,6 @@ export default async function ProgramMembersPage({
           </p>
         </div>
       </div>
-
-      <MembersListTab programId={pid} initialData={initialData} />
     </div>
   );
 }
