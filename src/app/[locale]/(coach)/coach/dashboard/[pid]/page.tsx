@@ -8,6 +8,7 @@ import { Users, DollarSign, TrendingUp, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
+import { redirect } from "next/navigation";
 
 interface DashboardStats {
   totalSales: number;
@@ -23,6 +24,13 @@ interface RecentPurchase {
   amount: number;
 }
 
+// UUID 유효성 검사 함수
+function isValidUUID(str: string): boolean {
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
 const CoachDashboardPidPage = async ({
   params,
 }: {
@@ -30,6 +38,11 @@ const CoachDashboardPidPage = async ({
 }) => {
   const { pid } = await params;
   const t = await getTranslations("dashboard");
+
+  // UUID 유효성 검사 - "new" 같은 특정 경로 처리
+  if (!isValidUUID(pid)) {
+    redirect("/coach/dashboard");
+  }
 
   // Fetch real data
   const [statsResult, purchasesResult] = await Promise.all([

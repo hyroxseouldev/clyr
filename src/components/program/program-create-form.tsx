@@ -25,13 +25,14 @@ import { AsyncButton } from "@/components/common/async-button";
 import { useTransition } from "react";
 import { createProgramAction } from "@/actions";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
-/** 생성용 Schema */
+/** 생성용 Schema - 번역 에러 메시지는 컴포넌트에서 처리 */
 const programCreateSchema = z.object({
-  title: z.string().min(1, "제목을 입력하세요"),
-  slug: z.string().min(1, "슬러그를 입력하세요"),
+  title: z.string().min(1),
+  slug: z.string().min(1),
   type: z.enum(["SINGLE", "SUBSCRIPTION"]),
-  price: z.string().min(1, "가격을 입력하세요"),
+  price: z.string().min(1),
   difficulty: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]),
   durationWeeks: z.number().min(1),
   daysPerWeek: z.number().min(1).max(7),
@@ -42,6 +43,7 @@ const programCreateSchema = z.object({
 type FormValues = z.infer<typeof programCreateSchema>;
 
 export function ProgramCreateForm() {
+  const t = useTranslations("newProgram.form");
   const [isLoading, startTransition] = useTransition();
   const router = useRouter();
 
@@ -68,13 +70,13 @@ export function ProgramCreateForm() {
         return;
       }
       if (result && "success" in result && result.success) {
-        toast.success("프로그램 생성 성공");
-        router.push(`/coach/dashboard/${result.id}`);
+        toast.success(t("success"));
+        router.push(`../${result.id}`);
       }
     });
   };
 
-  const typeLabel = form.watch("type") === "SINGLE" ? "단건 판매" : "구독형";
+  const typeLabel = form.watch("type") === "SINGLE" ? t("singleSale") : t("subscription");
 
   return (
     <Form {...form}>
@@ -84,16 +86,16 @@ export function ProgramCreateForm() {
       >
         {/* 기본 정보 */}
         <div className="space-y-6 border rounded-lg p-4">
-          <h3 className="text-lg font-semibold">기본 정보</h3>
+          <h3 className="text-lg font-semibold">{t("basicInfo")}</h3>
 
           <FormField
             control={form.control}
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>프로그램 제목</FormLabel>
+                <FormLabel>{t("title")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="예: 12주 런닝 완성" {...field} />
+                  <Input placeholder={t("titlePlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -105,9 +107,9 @@ export function ProgramCreateForm() {
             name="slug"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>슬러그 (URL)</FormLabel>
+                <FormLabel>{t("slug")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="예: 12weeks-running" {...field} />
+                  <Input placeholder={t("slugPlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -119,13 +121,13 @@ export function ProgramCreateForm() {
             name="shortDescription"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>요약 설명</FormLabel>
+                <FormLabel>{t("shortDescription")}</FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
                     value={field.value ?? ""}
                     rows={3}
-                    placeholder="프로그램을 간단히 설명해주세요"
+                    placeholder={t("shortDescriptionPlaceholder")}
                     onChange={(e) => field.onChange(e.target.value || null)}
                   />
                 </FormControl>
@@ -137,14 +139,14 @@ export function ProgramCreateForm() {
 
         {/* 판매 정보 */}
         <div className="space-y-6 border rounded-lg p-4">
-          <h3 className="text-lg font-semibold">판매 정보</h3>
+          <h3 className="text-lg font-semibold">{t("salesInfo")}</h3>
 
           <FormField
             control={form.control}
             name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>판매 방식</FormLabel>
+                <FormLabel>{t("type")}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -155,12 +157,12 @@ export function ProgramCreateForm() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="SINGLE">단건 판매</SelectItem>
-                    <SelectItem value="SUBSCRIPTION">구독형</SelectItem>
+                    <SelectItem value="SINGLE">{t("singleSale")}</SelectItem>
+                    <SelectItem value="SUBSCRIPTION">{t("subscription")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  판매 방식은 생성 후 수정할 수 없습니다 ({typeLabel})
+                  {t("typeLockWarning")} ({typeLabel})
                 </p>
                 <FormMessage />
               </FormItem>
@@ -172,9 +174,9 @@ export function ProgramCreateForm() {
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>가격 (원)</FormLabel>
+                <FormLabel>{t("price")}</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="0" {...field} />
+                  <Input type="number" placeholder={t("pricePlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -186,11 +188,11 @@ export function ProgramCreateForm() {
             name="accessPeriodDays"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>수강 기간 (일)</FormLabel>
+                <FormLabel>{t("accessPeriod")}</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
-                    placeholder="비워두면 평생소장"
+                    placeholder={t("accessPeriodPlaceholder")}
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(
@@ -200,7 +202,7 @@ export function ProgramCreateForm() {
                   />
                 </FormControl>
                 <p className="text-xs text-muted-foreground mt-1">
-                  비워두면 평생 소장
+                  {t("lifetimeAccess")}
                 </p>
                 <FormMessage />
               </FormItem>
@@ -210,14 +212,14 @@ export function ProgramCreateForm() {
 
         {/* 프로그램 구성 */}
         <div className="space-y-6 border rounded-lg p-4">
-          <h3 className="text-lg font-semibold">프로그램 구성</h3>
+          <h3 className="text-lg font-semibold">{t("programConfig")}</h3>
 
           <FormField
             control={form.control}
             name="difficulty"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>난이도</FormLabel>
+                <FormLabel>{t("difficulty")}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -228,9 +230,9 @@ export function ProgramCreateForm() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="BEGINNER">입문</SelectItem>
-                    <SelectItem value="INTERMEDIATE">중급</SelectItem>
-                    <SelectItem value="ADVANCED">고급</SelectItem>
+                    <SelectItem value="BEGINNER">{t("beginner")}</SelectItem>
+                    <SelectItem value="INTERMEDIATE">{t("intermediate")}</SelectItem>
+                    <SelectItem value="ADVANCED">{t("advanced")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -244,7 +246,7 @@ export function ProgramCreateForm() {
               name="durationWeeks"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>총 주차</FormLabel>
+                  <FormLabel>{t("durationWeeks")}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -263,7 +265,7 @@ export function ProgramCreateForm() {
               name="daysPerWeek"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>주당 운동 일수</FormLabel>
+                  <FormLabel>{t("daysPerWeek")}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -281,7 +283,7 @@ export function ProgramCreateForm() {
         </div>
 
         <AsyncButton type="submit" className="w-full" isLoading={isLoading}>
-          {isLoading ? "생성 중..." : "프로그램 생성하기"}
+          {isLoading ? t("creating") : t("submit")}
         </AsyncButton>
       </form>
     </Form>
