@@ -22,12 +22,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Search, Dumbbell, Video, Calendar, User, Filter, X, ChevronDown } from "lucide-react";
+import { Search, Dumbbell, Video, Calendar, User, X } from "lucide-react";
 import type { PaginatedWorkoutLibrary } from "@/db/queries/workoutLibrary";
 
 interface WorkoutLibraryClientProps {
@@ -58,7 +53,6 @@ export function WorkoutLibraryClient({
   const [selectedWorkoutTypes, setSelectedWorkoutTypes] = useState<string[]>(
     searchParams.get("workoutTypes")?.split(",").filter(Boolean) || []
   );
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const totalPages = initialData?.totalPages || 1;
   const items = initialData?.items || [];
@@ -149,7 +143,8 @@ export function WorkoutLibraryClient({
   };
 
   // 활성 필터 개수
-  const activeFilterCount = selectedCategories.length + selectedWorkoutTypes.length;
+  const activeFilterCount =
+    selectedCategories.length + selectedWorkoutTypes.length;
 
   const handlePageChange = (page: number) => {
     updateFilters({ page });
@@ -211,80 +206,61 @@ export function WorkoutLibraryClient({
           />
         </div>
       </div>
-
-      {/* 필터 섹션 */}
-      <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-        <CollapsibleTrigger asChild>
-          <Button variant="outline" className="w-full justify-between">
-            <span className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              필터
-              {activeFilterCount > 0 && (
-                <Badge variant="secondary">{activeFilterCount}</Badge>
-              )}
-            </span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${isFilterOpen ? "rotate-180" : ""}`} />
-          </Button>
-        </CollapsibleTrigger>
-
-        <CollapsibleContent className="space-y-4 pt-4">
-          {/* 카테고리 필터 */}
-          {filtersData.categories.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium mb-3">카테고리</h3>
-              <div className="flex flex-wrap gap-2">
-                {filtersData.categories.map((category) => (
-                  <div key={category} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`category-${category}`}
-                      checked={selectedCategories.includes(category)}
-                      onCheckedChange={() => handleCategoryToggle(category)}
-                    />
-                    <label
-                      htmlFor={`category-${category}`}
-                      className="text-sm cursor-pointer"
-                    >
-                      {category}
-                    </label>
-                  </div>
-                ))}
+      {/* 카테고리 필터 */}
+      {filtersData.categories.length > 0 && (
+        <div>
+          <h3 className="text-sm font-medium mb-3">카테고리</h3>
+          <div className="flex flex-wrap gap-2">
+            {filtersData.categories.map((category) => (
+              <div key={category} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`category-${category}`}
+                  checked={selectedCategories.includes(category)}
+                  onCheckedChange={() => handleCategoryToggle(category)}
+                />
+                <label
+                  htmlFor={`category-${category}`}
+                  className="text-sm cursor-pointer"
+                >
+                  {category}
+                </label>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
+        </div>
+      )}
 
-          {/* 워크아웃 타입 필터 */}
-          {filtersData.workoutTypes.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium mb-3">운동 타입</h3>
-              <div className="flex flex-wrap gap-2">
-                {filtersData.workoutTypes.map((type) => (
-                  <div key={type} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`type-${type}`}
-                      checked={selectedWorkoutTypes.includes(type)}
-                      onCheckedChange={() => handleWorkoutTypeToggle(type)}
-                    />
-                    <label
-                      htmlFor={`type-${type}`}
-                      className="text-sm cursor-pointer"
-                    >
-                      {getWorkoutTypeLabel(type)}
-                    </label>
-                  </div>
-                ))}
+      {/* 워크아웃 타입 필터 */}
+      {filtersData.workoutTypes.length > 0 && (
+        <div>
+          <h3 className="text-sm font-medium mb-3">운동 타입</h3>
+          <div className="flex flex-wrap gap-2">
+            {filtersData.workoutTypes.map((type) => (
+              <div key={type} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`type-${type}`}
+                  checked={selectedWorkoutTypes.includes(type)}
+                  onCheckedChange={() => handleWorkoutTypeToggle(type)}
+                />
+                <label
+                  htmlFor={`type-${type}`}
+                  className="text-sm cursor-pointer"
+                >
+                  {getWorkoutTypeLabel(type)}
+                </label>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
+        </div>
+      )}
 
-          {/* 필터 초기화 버튼 */}
-          {activeFilterCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={handleResetFilters}>
-              <X className="h-4 w-4 mr-2" />
-              필터 초기화
-            </Button>
-          )}
-        </CollapsibleContent>
-      </Collapsible>
+      {/* 필터 초기화 버튼 */}
+      {activeFilterCount > 0 && (
+        <Button variant="ghost" size="sm" onClick={handleResetFilters}>
+          <X className="h-4 w-4 mr-2" />
+          필터 초기화
+        </Button>
+      )}
 
       {/* 워크아웃 목록 */}
       {items.length === 0 ? (
