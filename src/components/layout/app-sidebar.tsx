@@ -13,8 +13,6 @@ import { usePathname } from "next/navigation";
 import UserAvatarDropdown from "@/components/auth/user-avatar-dropdown";
 import CoachSidebar from "@/components/layout/coach-sidebar";
 import DashboardSidebar from "@/components/layout/dashboard-sidebar";
-import { ModeToggle } from "@/components/theme/mode-toggle";
-import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { useTranslations } from "next-intl";
 
 interface AppSidebarProps {
@@ -45,12 +43,6 @@ export default function AppSidebar({ user }: AppSidebarProps) {
       )}
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <div className="flex items-center gap-2 px-2 py-2">
-              <ModeToggle />
-              <LanguageSwitcher />
-            </div>
-          </SidebarMenuItem>
           {user && (
             <SidebarMenuItem>
               <div className="flex items-center gap-2 px-2 py-2">

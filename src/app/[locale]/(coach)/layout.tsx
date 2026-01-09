@@ -7,6 +7,7 @@ import {
 import AppSidebar from "@/components/layout/app-sidebar";
 import { ModeToggle } from "@/components/theme/mode-toggle";
 import { CoachBreadcrumb } from "@/components/layout/coach-breadcrumb";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 
 export default async function CoachLayout({
   children,
@@ -39,7 +40,10 @@ export default async function CoachLayout({
               <SidebarTrigger />
               <CoachBreadcrumb />
             </div>
-            <ModeToggle />
+            <div className="flex items-center gap-4">
+              <ModeToggle />
+              <LanguageSwitcher />
+            </div>
           </div>
         </header>
 

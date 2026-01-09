@@ -67,12 +67,6 @@ interface MemberDetailClientProps {
   }>;
 }
 
-const INTENSITY_LABELS: Record<string, string> = {
-  LOW: "낮음",
-  MEDIUM: "중간",
-  HIGH: "높음",
-};
-
 const INTENSITY_VARIANTS: Record<
   string,
   "default" | "secondary" | "outline"
@@ -89,6 +83,7 @@ export function MemberDetailClient({
   workoutLogs,
   coachComments,
 }: MemberDetailClientProps) {
+  const t = useTranslations('memberDetail');
   const tToast = useTranslations('toast');
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"enrollment" | "performance">("enrollment");
@@ -104,7 +99,7 @@ export function MemberDetailClient({
         body: JSON.stringify({ status: newStatus }),
       });
 
-      if (!response.ok) throw new Error("상태 변경 실패");
+      if (!response.ok) throw new Error("Failed to change status");
 
       toast.success(tToast('statusChanged'));
       router.refresh();
@@ -130,7 +125,7 @@ export function MemberDetailClient({
         body: JSON.stringify({ endDate: newEndDate.toISOString() }),
       });
 
-      if (!response.ok) throw new Error("기간 연장 실패");
+      if (!response.ok) throw new Error("Failed to extend period");
 
       toast.success(tToast('periodExtended', { days }));
       router.refresh();
@@ -170,13 +165,13 @@ export function MemberDetailClient({
         <TabsTrigger value="enrollment">
           <div className="flex items-center gap-2">
             <UserIcon className="size-4" />
-            수강 관리
+            {t('enrollmentManagement')}
           </div>
         </TabsTrigger>
         <TabsTrigger value="performance">
           <div className="flex items-center gap-2">
             <TrendingUpIcon className="size-4" />
-            퍼포먼스 로그
+            {t('performanceLog')}
           </div>
         </TabsTrigger>
       </TabsList>
@@ -186,15 +181,15 @@ export function MemberDetailClient({
         {/* 수강 상태 카드 */}
         <Card>
           <CardHeader>
-            <CardTitle>수강 상태</CardTitle>
+            <CardTitle>{t('enrollmentStatus')}</CardTitle>
             <CardDescription>
-              {member.program.title} 프로그램의 수강 현황
+              {t('enrollmentStatusDesc', { program: member.program.title })}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">상태</p>
+                <p className="text-sm text-muted-foreground">{t('status')}</p>
                 <Select
                   value={member.status}
                   onValueChange={(value) => handleStatusChange(value as "ACTIVE" | "EXPIRED" | "PAUSED")}
@@ -202,36 +197,36 @@ export function MemberDetailClient({
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue>
-                      {member.status === "ACTIVE" && "수강 중"}
-                      {member.status === "PAUSED" && "일시정지"}
-                      {member.status === "EXPIRED" && "만료"}
+                      {member.status === "ACTIVE" && t('active')}
+                      {member.status === "PAUSED" && t('paused')}
+                      {member.status === "EXPIRED" && t('expired')}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ACTIVE">수강 중</SelectItem>
-                    <SelectItem value="PAUSED">일시정지</SelectItem>
-                    <SelectItem value="EXPIRED">만료</SelectItem>
+                    <SelectItem value="ACTIVE">{t('active')}</SelectItem>
+                    <SelectItem value="PAUSED">{t('paused')}</SelectItem>
+                    <SelectItem value="EXPIRED">{t('expired')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">시작일</p>
+                <p className="text-sm text-muted-foreground">{t('startDate')}</p>
                 <p className="font-medium">
                   {member.startDate
                     ? format(new Date(member.startDate), "yyyy.MM.dd", { locale: ko })
-                    : "미정"}
+                    : t('undecided')}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">종료일</p>
+                <p className="text-sm text-muted-foreground">{t('endDate')}</p>
                 <p className="font-medium">
                   {member.endDate
                     ? format(new Date(member.endDate), "yyyy.MM.dd", { locale: ko })
-                    : "무기한"}
+                    : t('unlimited')}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">구매일</p>
+                <p className="text-sm text-muted-foreground">{t('purchaseDate')}</p>
                 <p className="font-medium">
                   {format(new Date(member.createdAt), "yyyy.MM.dd", { locale: ko })}
                 </p>
@@ -240,7 +235,7 @@ export function MemberDetailClient({
 
             {/* 수강 기간 연장 버튼 */}
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">수강 기간 연장</p>
+              <p className="text-sm text-muted-foreground">{t('extendPeriod')}</p>
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
@@ -248,7 +243,7 @@ export function MemberDetailClient({
                   onClick={() => handleExtendEnrollment(7)}
                   disabled={isUpdating}
                 >
-                  +7일
+                  +7{t('days')}
                 </Button>
                 <Button
                   variant="outline"
@@ -256,7 +251,7 @@ export function MemberDetailClient({
                   onClick={() => handleExtendEnrollment(30)}
                   disabled={isUpdating}
                 >
-                  +30일
+                  +30{t('days')}
                 </Button>
                 <Button
                   variant="outline"
@@ -264,7 +259,7 @@ export function MemberDetailClient({
                   onClick={() => handleExtendEnrollment(90)}
                   disabled={isUpdating}
                 >
-                  +90일
+                  +90{t('days')}
                 </Button>
               </div>
             </div>
@@ -273,9 +268,9 @@ export function MemberDetailClient({
               <>
                 <Separator />
                 <div>
-                  <p className="text-sm text-muted-foreground">결제 금액</p>
+                  <p className="text-sm text-muted-foreground">{t('paymentAmount')}</p>
                   <p className="text-2xl font-bold">
-                    {new Intl.NumberFormat("ko-KR").format(Number(member.order.amount))}원
+                    {new Intl.NumberFormat("ko-KR").format(Number(member.order.amount))}{t('won')}
                   </p>
                 </div>
               </>
@@ -287,40 +282,40 @@ export function MemberDetailClient({
         {member.userProfile && (
           <Card>
             <CardHeader>
-              <CardTitle>회원 프로필</CardTitle>
+              <CardTitle>{t('memberProfile')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {member.userProfile.nickname && (
                 <div>
-                  <p className="text-sm text-muted-foreground">닉네임</p>
+                  <p className="text-sm text-muted-foreground">{t('nickname')}</p>
                   <p className="font-medium">{member.userProfile.nickname}</p>
                 </div>
               )}
               {member.userProfile.bio && (
                 <div>
-                  <p className="text-sm text-muted-foreground">자기소개</p>
+                  <p className="text-sm text-muted-foreground">{t('bio')}</p>
                   <p className="font-medium">{member.userProfile.bio}</p>
                 </div>
               )}
               {member.userProfile.phoneNumber && (
                 <div>
-                  <p className="text-sm text-muted-foreground">연락처</p>
+                  <p className="text-sm text-muted-foreground">{t('phoneNumber')}</p>
                   <p className="font-medium">{member.userProfile.phoneNumber}</p>
                 </div>
               )}
               {member.userProfile.fitnessLevel && (
                 <div>
-                  <p className="text-sm text-muted-foreground">운동 수준</p>
+                  <p className="text-sm text-muted-foreground">{t('fitnessLevel')}</p>
                   <p className="font-medium">
-                    {member.userProfile.fitnessLevel === "BEGINNER" && "초급"}
-                    {member.userProfile.fitnessLevel === "INTERMEDIATE" && "중급"}
-                    {member.userProfile.fitnessLevel === "ADVANCED" && "고급"}
+                    {member.userProfile.fitnessLevel === "BEGINNER" && t('beginner')}
+                    {member.userProfile.fitnessLevel === "INTERMEDIATE" && t('intermediate')}
+                    {member.userProfile.fitnessLevel === "ADVANCED" && t('advanced')}
                   </p>
                 </div>
               )}
               {member.userProfile.fitnessGoals && member.userProfile.fitnessGoals.length > 0 && (
                 <div>
-                  <p className="text-sm text-muted-foreground">운동 목표</p>
+                  <p className="text-sm text-muted-foreground">{t('fitnessGoals')}</p>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {member.userProfile.fitnessGoals.map((goal, i) => (
                       <Badge key={i} variant="secondary">
@@ -339,17 +334,17 @@ export function MemberDetailClient({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageSquareIcon className="size-5" />
-              코치 코멘트
+              {t('coachComments')}
               <Badge variant="secondary">{coachComments.length}</Badge>
             </CardTitle>
             <CardDescription>
-              회원의 운동 기록에 남긴 코치 코멘트들입니다.
+              {t('coachCommentsDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {coachComments.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                코치 코멘트가 없습니다.
+                {t('noCoachComments')}
               </p>
             ) : (
               <div className="space-y-4">
@@ -373,9 +368,9 @@ export function MemberDetailClient({
         {/* 3대 운동 PR */}
         <Card>
           <CardHeader>
-            <CardTitle>3대 운동 최고 기록 (PR)</CardTitle>
+            <CardTitle>{t('bigThreePR')}</CardTitle>
             <CardDescription>
-              벤치프레스, 데드리프트, 스쿼트의 최고 중량 기록입니다.
+              {t('bigThreePRDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -383,7 +378,7 @@ export function MemberDetailClient({
               {/* 벤치프레스 */}
               <div className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium">벤치프레스</p>
+                  <p className="font-medium">{t('benchPress')}</p>
                   {bigThreePRs.bench && (
                     <Badge variant="default">PR</Badge>
                   )}
@@ -391,21 +386,21 @@ export function MemberDetailClient({
                 {bigThreePRs.bench ? (
                   <>
                     <p className="text-2xl font-bold">
-                      {parseFloat(bigThreePRs.bench.maxWeight || "0").toFixed(1)}kg
+                      {parseFloat(bigThreePRs.bench.maxWeight || "0").toFixed(1)}{t('kg')}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(bigThreePRs.bench.logDate), "yyyy.MM.dd", { locale: ko })}
                     </p>
                   </>
                 ) : (
-                  <p className="text-sm text-muted-foreground">기록 없음</p>
+                  <p className="text-sm text-muted-foreground">{t('noRecord')}</p>
                 )}
               </div>
 
               {/* 데드리프트 */}
               <div className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium">데드리프트</p>
+                  <p className="font-medium">{t('deadlift')}</p>
                   {bigThreePRs.deadlift && (
                     <Badge variant="default">PR</Badge>
                   )}
@@ -413,21 +408,21 @@ export function MemberDetailClient({
                 {bigThreePRs.deadlift ? (
                   <>
                     <p className="text-2xl font-bold">
-                      {parseFloat(bigThreePRs.deadlift.maxWeight || "0").toFixed(1)}kg
+                      {parseFloat(bigThreePRs.deadlift.maxWeight || "0").toFixed(1)}{t('kg')}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(bigThreePRs.deadlift.logDate), "yyyy.MM.dd", { locale: ko })}
                     </p>
                   </>
                 ) : (
-                  <p className="text-sm text-muted-foreground">기록 없음</p>
+                  <p className="text-sm text-muted-foreground">{t('noRecord')}</p>
                 )}
               </div>
 
               {/* 스쿼트 */}
               <div className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium">스쿼트</p>
+                  <p className="font-medium">{t('squat')}</p>
                   {bigThreePRs.squat && (
                     <Badge variant="default">PR</Badge>
                   )}
@@ -435,14 +430,14 @@ export function MemberDetailClient({
                 {bigThreePRs.squat ? (
                   <>
                     <p className="text-2xl font-bold">
-                      {parseFloat(bigThreePRs.squat.maxWeight || "0").toFixed(1)}kg
+                      {parseFloat(bigThreePRs.squat.maxWeight || "0").toFixed(1)}{t('kg')}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(bigThreePRs.squat.logDate), "yyyy.MM.dd", { locale: ko })}
                     </p>
                   </>
                 ) : (
-                  <p className="text-sm text-muted-foreground">기록 없음</p>
+                  <p className="text-sm text-muted-foreground">{t('noRecord')}</p>
                 )}
               </div>
             </div>
@@ -454,23 +449,23 @@ export function MemberDetailClient({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileTextIcon className="size-5" />
-              운동 기록
+              {t('workoutLog')}
               <Badge variant="secondary">{workoutLogs.length}</Badge>
             </CardTitle>
             <CardDescription>
-              회원의 최근 운동 기록입니다.
+              {t('workoutLogDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {workoutLogs.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <FileTextIcon className="size-12 mx-auto mb-4 opacity-50" />
-                <p>운동 기록이 없습니다.</p>
+                <p>{t('noWorkoutLog')}</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {workoutLogs.slice(0, 20).map((log) => {
-                  const exerciseName = log.content?.exerciseName as string | undefined || "운동";
+                  const exerciseName = log.content?.exerciseName as string | undefined || t('exercise');
                   return (
                     <div key={log.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between mb-2">
@@ -483,15 +478,15 @@ export function MemberDetailClient({
                         <Badge
                           variant={INTENSITY_VARIANTS[log.intensity || "MEDIUM"]}
                         >
-                          {INTENSITY_LABELS[log.intensity || "MEDIUM"]}
+                          {t(`intensity.${log.intensity || "MEDIUM"}`)}
                         </Badge>
                       </div>
 
                     {parseFloat(log.maxWeight || "0") > 0 && (
                       <div className="mt-2">
                         <p className="text-sm">
-                          <span className="font-medium">최대 중량:</span>{" "}
-                          {parseFloat(log.maxWeight || "0").toFixed(1)}kg
+                          <span className="font-medium">{t('maxWeight')}:</span>{" "}
+                          {parseFloat(log.maxWeight || "0").toFixed(1)}{t('kg')}
                         </p>
                       </div>
                     )}
@@ -499,7 +494,7 @@ export function MemberDetailClient({
                     {log.coachComment && (
                       <div className="mt-2 p-2 bg-muted rounded text-sm">
                         <p className="font-medium text-xs text-muted-foreground mb-1">
-                          코치 코멘트:
+                          {t('coachComment')}:
                         </p>
                         <p>{log.coachComment}</p>
                       </div>

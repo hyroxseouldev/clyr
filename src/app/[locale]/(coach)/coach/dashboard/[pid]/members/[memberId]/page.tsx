@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/routing";
 
 interface PageProps {
   params: Promise<{
@@ -24,6 +26,7 @@ interface PageProps {
 
 export default async function MemberDetailPage({ params }: PageProps) {
   const { pid: programId, memberId } = await params;
+  const t = await getTranslations("memberDetail");
 
   // 회원 상세 정보 조회
   const memberResult = await getMemberDetailAction(programId, memberId);
@@ -49,10 +52,10 @@ export default async function MemberDetailPage({ params }: PageProps) {
       {/* Header */}
       <div className="mb-6">
         <Button asChild variant="ghost" className="mb-4">
-          <a href={`/coach/dashboard/${programId}/members`}>
+          <Link href={`/coach/dashboard/${programId}/members`}>
             <ArrowLeftIcon className="size-4 mr-2" />
-            회원 목록으로 돌아가기
-          </a>
+            {t("backToList")}
+          </Link>
         </Button>
 
         <div className="flex items-center gap-4">
@@ -69,7 +72,7 @@ export default async function MemberDetailPage({ params }: PageProps) {
           </Avatar>
           <div className="flex-1">
             <h1 className="text-2xl font-bold">
-              {member.user.fullName || "이름 없음"}님의 상세 정보
+              {t("detailTitle", { name: member.user.fullName || t("noName") })}
             </h1>
             <div className="flex items-center gap-4 text-muted-foreground">
               <div className="flex items-center gap-1">
@@ -80,11 +83,11 @@ export default async function MemberDetailPage({ params }: PageProps) {
                 <CalendarIcon className="size-4" />
                 {member.startDate
                   ? format(new Date(member.startDate), "yyyy.MM.dd", { locale: ko })
-                  : "시작일 미정"}
+                  : t("startDateUndecided")}
                 {" ~ "}
                 {member.endDate
                   ? format(new Date(member.endDate), "yyyy.MM.dd", { locale: ko })
-                  : "무기한"}
+                  : t("unlimited")}
               </div>
             </div>
           </div>

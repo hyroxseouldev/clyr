@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface PaymentClientProps {
   program: {
@@ -25,6 +26,8 @@ interface PaymentClientProps {
 
 export default function PaymentClient({ program, user }: PaymentClientProps) {
   const { toast } = useToast();
+  const t = useTranslations("payment.client");
+  const tError = useTranslations("payment.client.errors");
   const [paymentWidget, setPaymentWidget] = useState<unknown>(null);
   const [widgetReady, setWidgetReady] = useState(false);
   const isInitialized = useRef(false);
@@ -40,8 +43,8 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
 
     if (!clientKey) {
       toast({
-        title: "결제 설정 오류",
-        description: "결제 서비스 설정이 올바르지 않습니다.",
+        title: tError("setupError"),
+        description: tError("setupErrorDesc"),
         variant: "destructive",
       });
       return;
@@ -67,11 +70,11 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
         console.error("Widget load error:", error);
         isInitialized.current = false;
         toast({
-          title: "위젯 로드 실패",
+          title: tError("widgetLoadFailed"),
           description:
             error instanceof Error
               ? error.message
-              : "결제 위젯을 불러오는데 실패했습니다.",
+              : tError("widgetLoadFailedDesc"),
           variant: "destructive",
         });
       }
@@ -87,14 +90,14 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [tError]);
 
   // 결제 요청
   const handlePayment = async () => {
     if (!paymentWidget) {
       toast({
-        title: "결제 위젯 오류",
-        description: "결제 위젯이 준비되지 않았습니다.",
+        title: tError("widgetError"),
+        description: tError("widgetNotReady"),
         variant: "destructive",
       });
       return;
@@ -108,7 +111,7 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
       ).requestPayment({
         orderId: `order-${Date.now()}-${program.id.substring(0, 8)}`,
         orderName: program.title,
-        customerName: user.fullName || "구매자",
+        customerName: user.fullName || t("buyer"),
         customerEmail: user.email,
         successUrl: `${window.location.origin}/programs/success?programId=${program.slug}`,
         failUrl: `${window.location.origin}/programs/failed?programId=${program.slug}`,
@@ -116,8 +119,8 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
     } catch (error) {
       console.error("PAYMENT_ERROR", error);
       toast({
-        title: "결제 오류",
-        description: "결제 처리 중 오류가 발생했습니다.",
+        title: tError("paymentError"),
+        description: tError("paymentErrorDesc"),
         variant: "destructive",
       });
     }
@@ -128,8 +131,8 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
       <div className="container max-w-4xl mx-auto px-4">
         {/* 헤더 */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">결제하기</h1>
-          <p className="text-gray-600">안전하게 결제하고 수강을 시작하세요</p>
+          <h1 className="text-2xl font-bold mb-2">{t("title")}</h1>
+          <p className="text-gray-600">{t("description")}</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -138,15 +141,15 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
             {/* 프로그램 정보 */}
             <Card>
               <CardContent className="p-6">
-                <h2 className="font-semibold mb-4">프로그램 정보</h2>
+                <h2 className="font-semibold mb-4">{t("programInfo")}</h2>
                 <div className="space-y-3">
                   <div>
-                    <div className="text-sm text-gray-600">프로그램명</div>
+                    <div className="text-sm text-gray-600">{t("programName")}</div>
                     <div className="font-medium">{program.title}</div>
                   </div>
                   <Separator />
                   <div>
-                    <div className="text-sm text-gray-600">결제 금액</div>
+                    <div className="text-sm text-gray-600">{t("amount")}</div>
                     <div className="text-2xl font-bold">
                       {amount.toLocaleString()}원
                     </div>
@@ -155,9 +158,9 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
                     <>
                       <Separator />
                       <div>
-                        <div className="text-sm text-gray-600">수강 기간</div>
+                        <div className="text-sm text-gray-600">{t("accessPeriod")}</div>
                         <div className="font-medium">
-                          {program.accessPeriodDays}일
+                          {program.accessPeriodDays}{t("days")}
                         </div>
                       </div>
                     </>
@@ -169,15 +172,15 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
             {/* 구매자 정보 */}
             <Card>
               <CardContent className="p-6">
-                <h2 className="font-semibold mb-4">구매자 정보</h2>
+                <h2 className="font-semibold mb-4">{t("buyerInfo")}</h2>
                 <div className="space-y-3">
                   <div>
-                    <div className="text-sm text-gray-600">이메일</div>
+                    <div className="text-sm text-gray-600">{t("email")}</div>
                     <div className="font-medium">{user.email}</div>
                   </div>
                   <Separator />
                   <div>
-                    <div className="text-sm text-gray-600">이름</div>
+                    <div className="text-sm text-gray-600">{t("name")}</div>
                     <div className="font-medium">{user.fullName}</div>
                   </div>
                 </div>
@@ -189,7 +192,7 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
           <div className="space-y-6">
             <Card>
               <CardContent className="p-6">
-                <h2 className="font-semibold mb-4">결제 수단</h2>
+                <h2 className="font-semibold mb-4">{t("paymentMethod")}</h2>
 
                 {/* 결제 수단 선택 영역 */}
                 <div className="min-h-[200px] relative">
@@ -208,7 +211,7 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
                     className="w-full mt-4"
                     size="lg"
                   >
-                    {amount.toLocaleString()}원 결제하기
+                    {t("payButton", { amount: amount.toLocaleString() })}
                   </Button>
                 )}
               </CardContent>
@@ -220,10 +223,9 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
                 <div className="flex gap-3">
                   <CheckCircle2 className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                   <div className="text-sm text-blue-800">
-                    <p className="font-medium mb-1">안전한 결제</p>
+                    <p className="font-medium mb-1">{t("safePayment")}</p>
                     <p className="text-blue-700">
-                      토스페이먼츠를 통해 안전하게 결제됩니다. 결제 정보는
-                      암호화되어 전송됩니다.
+                      {t("safePaymentDesc")}
                     </p>
                   </div>
                 </div>

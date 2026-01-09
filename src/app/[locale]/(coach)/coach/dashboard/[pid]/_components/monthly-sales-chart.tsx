@@ -11,6 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { useTranslations } from "next-intl";
 
 type MonthlySalesData = {
   year: number;
@@ -24,6 +25,9 @@ type MonthlySalesChartProps = {
 };
 
 export default function MonthlySalesChart({ data }: MonthlySalesChartProps) {
+  const t = useTranslations("dashboard.monthlySalesChart");
+  const tStats = useTranslations("dashboard.stats");
+
   // 최근 12개월 데이터 생성 (데이터가 없는 달도 포함)
   const chartData = useMemo(() => {
     const result: Array<{
@@ -46,14 +50,14 @@ export default function MonthlySalesChart({ data }: MonthlySalesChartProps) {
       const monthData = data.find((d) => d.year === year && d.month === month);
 
       result.push({
-        month: `${month}월`,
+        month: t("month", { month }),
         amount: monthData?.totalAmount || 0,
         count: monthData?.orderCount || 0,
       });
     }
 
     return result;
-  }, [data]);
+  }, [data, t]);
 
   // 총 매출 계산
   const totalSales = useMemo(() => {
@@ -67,7 +71,7 @@ export default function MonthlySalesChart({ data }: MonthlySalesChartProps) {
 
   // 포맷팅 함수
   const formatAmount = (value: number) => {
-    return `${(value / 10000).toFixed(0)}만원`;
+    return `${(value / 10000).toFixed(0)}${t("tenThousandWon")}`;
   };
 
   return (
@@ -75,20 +79,20 @@ export default function MonthlySalesChart({ data }: MonthlySalesChartProps) {
       {/* 요약 카드 */}
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-lg border p-4">
-          <p className="text-sm text-muted-foreground">총 매출</p>
+          <p className="text-sm text-muted-foreground">{t("totalSales")}</p>
           <p className="text-2xl font-bold">
             {formatAmount(totalSales)}
           </p>
         </div>
         <div className="rounded-lg border p-4">
-          <p className="text-sm text-muted-foreground">총 주문수</p>
-          <p className="text-2xl font-bold">{totalOrders}건</p>
+          <p className="text-sm text-muted-foreground">{t("totalOrders")}</p>
+          <p className="text-2xl font-bold">{totalOrders}{tStats("count")}</p>
         </div>
       </div>
 
       {/* 차트 */}
       <div className="rounded-lg border p-6">
-        <h3 className="text-lg font-semibold mb-4">월별 매출 현황</h3>
+        <h3 className="text-lg font-semibold mb-4">{t("monthlySalesStatus")}</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -97,8 +101,8 @@ export default function MonthlySalesChart({ data }: MonthlySalesChartProps) {
             <YAxis yAxisId="count" orientation="right" />
             <Tooltip
               formatter={(value: number, name: string) => {
-                if (name === "매출") return formatAmount(value);
-                return `${value}건`;
+                if (name === t("sales")) return formatAmount(value);
+                return `${value}${tStats("count")}`;
               }}
             />
             <Legend />
@@ -106,13 +110,13 @@ export default function MonthlySalesChart({ data }: MonthlySalesChartProps) {
               yAxisId="amount"
               dataKey="amount"
               fill="hsl(var(--primary))"
-              name="매출"
+              name={t("sales")}
             />
             <Bar
               yAxisId="count"
               dataKey="count"
               fill="hsl(var(--muted))"
-              name="주문수"
+              name={t("orderCount")}
             />
           </BarChart>
         </ResponsiveContainer>

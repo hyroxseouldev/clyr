@@ -49,18 +49,11 @@ interface RoutineBlockListProps {
   pageSize: number;
 }
 
-const WORKOUT_FORMATS = [
-  { value: "STRENGTH", label: "Strength (중량)" },
-  { value: "FOR_TIME", label: "For Time (빠른순)" },
-  { value: "AMRAP", label: "AMRAP (회수순)" },
-  { value: "EMOM", label: "EMOM (분당회수)" },
-  { value: "CUSTOM", label: "Custom" },
-];
-
 export function RoutineBlockList({
   initialData,
   pageSize,
 }: RoutineBlockListProps) {
+  const t = useTranslations('workoutRoutine');
   const tToast = useTranslations('toast');
   const tCommon = useTranslations('common');
   const router = useRouter();
@@ -143,8 +136,16 @@ export function RoutineBlockList({
   };
 
   const getFormatLabel = (format: string) => {
-    return WORKOUT_FORMATS.find((f) => f.value === format)?.label || format;
+    return t(`formats.${format}`) || format;
   };
+
+  const getWorkoutFormats = () => [
+    { value: "STRENGTH", label: t('formats.STRENGTH') },
+    { value: "FOR_TIME", label: t('formats.FOR_TIME') },
+    { value: "AMRAP", label: t('formats.AMRAP') },
+    { value: "EMOM", label: t('formats.EMOM') },
+    { value: "CUSTOM", label: t('formats.CUSTOM') },
+  ];
 
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
@@ -172,35 +173,35 @@ export function RoutineBlockList({
       {/* 헤더 */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">루틴 블록 관리</h1>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
           <p className="text-muted-foreground">
-            재사용 가능한 운동 루틴을 만들고 관리하세요
+            {t('description')}
           </p>
         </div>
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />새 블록 만들기
+              <Plus className="h-4 w-4 mr-2" />{t('newBlock')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>새 루틴 블록 만들기</DialogTitle>
+              <DialogTitle>{t('newBlockTitle')}</DialogTitle>
               <DialogDescription>
-                재사용 가능한 운동 루틴 블록을 생성합니다
+                {t('newBlockDesc')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>블록 이름</Label>
+                <Label>{t('blockName')}</Label>
                 <Input
-                  placeholder="예: [하체] 스쿼트 집중 파워"
+                  placeholder={t('blockNamePlaceholder')}
                   value={newBlockName}
                   onChange={(e) => setNewBlockName(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label>운동 포맷</Label>
+                <Label>{t('workoutFormat')}</Label>
                 <Select
                   value={newBlockFormat}
                   onValueChange={setNewBlockFormat}
@@ -209,7 +210,7 @@ export function RoutineBlockList({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {WORKOUT_FORMATS.map((format) => (
+                    {getWorkoutFormats().map((format) => (
                       <SelectItem key={format.value} value={format.value}>
                         {format.label}
                       </SelectItem>
@@ -222,7 +223,7 @@ export function RoutineBlockList({
                 disabled={isCreating || !newBlockName.trim()}
                 className="w-full"
               >
-                {isCreating ? "생성 중..." : "생성하기"}
+                {isCreating ? t('creating') : t('create')}
               </Button>
             </div>
           </DialogContent>
@@ -234,7 +235,7 @@ export function RoutineBlockList({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="블록 이름 검색..."
+            placeholder={t('blockNameSearchPlaceholder')}
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
             className="pl-10"
@@ -245,11 +246,11 @@ export function RoutineBlockList({
           onValueChange={handleFormatFilter}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="포맷 필터" />
+            <SelectValue placeholder={t('formatFilter')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">전체</SelectItem>
-            {WORKOUT_FORMATS.map((format) => (
+            <SelectItem value="all">{t('all')}</SelectItem>
+            {getWorkoutFormats().map((format) => (
               <SelectItem key={format.value} value={format.value}>
                 {format.label}
               </SelectItem>
@@ -266,8 +267,8 @@ export function RoutineBlockList({
               <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-lg text-muted-foreground">
                 {search || formatFilter
-                  ? "검색 결과가 없습니다"
-                  : "루틴 블록이 없습니다"}
+                  ? t('noSearchResults')
+                  : t('noBlocks')}
               </p>
             </CardContent>
           </Card>
@@ -286,12 +287,12 @@ export function RoutineBlockList({
                         {getFormatLabel(block.workoutFormat)}
                       </Badge>
                       {block.isLeaderboardEnabled && (
-                        <Badge variant="default">리더보드</Badge>
+                        <Badge variant="default">{t('leaderboard')}</Badge>
                       )}
                     </div>
                     <CardTitle className="text-lg">{block.name}</CardTitle>
                     <CardDescription className="text-xs">
-                      운동 {block.itemCount}개
+                      {t('exerciseCount', { count: block.itemCount })}
                     </CardDescription>
                   </div>
                 </div>

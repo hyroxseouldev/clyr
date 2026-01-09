@@ -92,10 +92,10 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <NextIntlClientProvider messages={messages} locale={locale}>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <NextIntlClientProvider messages={messages} locale={locale}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -106,8 +106,8 @@ export default async function LocaleLayout({
           </ThemeProvider>
 
           <Toaster />
-        </body>
-      </NextIntlClientProvider>
+        </NextIntlClientProvider>
+      </body>
     </html>
   );
 }

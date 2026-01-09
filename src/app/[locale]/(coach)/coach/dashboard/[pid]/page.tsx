@@ -1,9 +1,13 @@
-import { getDashboardStatsAction, getRecentPurchasesAction } from "@/actions/dashboard";
+import {
+  getDashboardStatsAction,
+  getRecentPurchasesAction,
+} from "@/actions/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, DollarSign, TrendingUp, Calendar } from "lucide-react";
 import { format } from "date-fns";
-import { ko } from "date-fns/locale";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/routing";
 
 interface DashboardStats {
   totalSales: number;
@@ -25,6 +29,7 @@ const CoachDashboardPidPage = async ({
   params: { pid: string };
 }) => {
   const { pid } = await params;
+  const t = await getTranslations("dashboard");
 
   // Fetch real data
   const [statsResult, purchasesResult] = await Promise.all([
@@ -49,54 +54,65 @@ const CoachDashboardPidPage = async ({
     <div className="space-y-6">
       {/* 헤더 */}
       <div>
-        <h1 className="text-2xl font-bold">대시보드</h1>
-        <p className="text-muted-foreground">프로그램 통계 및 활동 현황</p>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("description")}</p>
       </div>
 
       {/* 통계 카드 */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 판매량</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("stats.totalSales")}
+            </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalSales}</div>
-            <p className="text-xs text-muted-foreground">건</p>
+            <p className="text-xs text-muted-foreground">{t("stats.count")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 수익</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("stats.totalRevenue")}
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.totalRevenue.toLocaleString()}원
+              {stats.totalRevenue.toLocaleString()}
+              {t("currency")}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">활성 사용자</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("stats.activeUsers")}
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.activeUsers}</div>
-            <p className="text-xs text-muted-foreground">명</p>
+            <p className="text-xs text-muted-foreground">{t("stats.users")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">완료율</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("stats.completionRate")}
+            </CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.completionRate}%</div>
-            <p className="text-xs text-muted-foreground">평균 완료율</p>
+            <p className="text-xs text-muted-foreground">
+              {t("stats.avgCompletion")}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -104,12 +120,12 @@ const CoachDashboardPidPage = async ({
       {/* 최근 활동 */}
       <Card>
         <CardHeader>
-          <CardTitle>최근 구매 내역</CardTitle>
+          <CardTitle>{t("recentPurchases.title")}</CardTitle>
         </CardHeader>
         <CardContent>
           {recentPurchases.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              구매 내역이 없습니다.
+              {t("recentPurchases.noPurchases")}
             </p>
           ) : (
             <div className="space-y-4">
@@ -124,17 +140,17 @@ const CoachDashboardPidPage = async ({
                     </div>
                     <div>
                       <p className="text-sm font-medium">
-                        {purchase.userName}님이 구매함
+                        {purchase.userName}
+                        {t("recentPurchases.userPurchased")}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(purchase.date), "yyyy.MM.dd", {
-                          locale: ko,
-                        })}
+                        {format(new Date(purchase.date), "yyyy.MM.dd")}
                       </p>
                     </div>
                   </div>
                   <span className="text-sm font-semibold text-green-600">
-                    +{purchase.amount.toLocaleString()}원
+                    +{purchase.amount.toLocaleString()}
+                    {t("currency")}
                   </span>
                 </div>
               ))}
@@ -146,33 +162,39 @@ const CoachDashboardPidPage = async ({
       {/* 빠른 링크 */}
       <div className="grid gap-4 md:grid-cols-3">
         <Button asChild variant="outline" className="h-24">
-          <a href={`/coach/dashboard/${pid}/members`}>
+          <Link href={`/coach/dashboard/${pid}/members`}>
             <div className="text-left">
               <Users className="h-5 w-5 mb-2" />
-              <p className="font-medium">회원 관리</p>
-              <p className="text-xs text-muted-foreground">프로그램 회원 조회</p>
+              <p className="font-medium">{t("memberManagement")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("quickLinks.membersView")}
+              </p>
             </div>
-          </a>
+          </Link>
         </Button>
 
         <Button asChild variant="outline" className="h-24">
-          <a href={`/coach/dashboard/${pid}/purchases`}>
+          <Link href={`/coach/dashboard/${pid}/purchases`}>
             <div className="text-left">
               <DollarSign className="h-5 w-5 mb-2" />
-              <p className="font-medium">구매 내역</p>
-              <p className="text-xs text-muted-foreground">판매 현황 확인</p>
+              <p className="font-medium">{t("purchases")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("quickLinks.salesStatus")}
+              </p>
             </div>
-          </a>
+          </Link>
         </Button>
 
         <Button asChild variant="outline" className="h-24">
-          <a href={`/coach/dashboard/${pid}/settings`}>
+          <Link href={`/coach/dashboard/${pid}/settings`}>
             <div className="text-left">
               <Calendar className="h-5 w-5 mb-2" />
-              <p className="font-medium">프로그램 설정</p>
-              <p className="text-xs text-muted-foreground">프로그램 정보 수정</p>
+              <p className="font-medium">{t("settings")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("quickLinks.programInfo")}
+              </p>
             </div>
-          </a>
+          </Link>
         </Button>
       </div>
     </div>

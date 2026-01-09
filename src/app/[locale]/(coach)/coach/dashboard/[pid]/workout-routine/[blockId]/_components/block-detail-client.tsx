@@ -58,15 +58,8 @@ interface BlockDetailClientProps {
   block: RoutineBlockWithItems;
 }
 
-const WORKOUT_FORMATS = [
-  { value: "STRENGTH", label: "Strength (중량)" },
-  { value: "FOR_TIME", label: "For Time (빠른순)" },
-  { value: "AMRAP", label: "AMRAP (회수순)" },
-  { value: "EMOM", label: "EMOM (분당회수)" },
-  { value: "CUSTOM", label: "Custom" },
-];
-
 export function BlockDetailClient({ block }: BlockDetailClientProps) {
+  const t = useTranslations('workoutRoutine');
   const tToast = useTranslations('toast');
   const tCommon = useTranslations('common');
   const router = useRouter();
@@ -175,7 +168,7 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
 
   // 블록 삭제
   const handleDeleteBlock = async () => {
-    if (!confirm("정말로 이 루틴 블록을 삭제하시겠습니까?")) {
+    if (!confirm(t('deleteConfirmMessage'))) {
       return;
     }
 
@@ -360,8 +353,16 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
   };
 
   const getFormatLabel = (format: string) => {
-    return WORKOUT_FORMATS.find((f) => f.value === format)?.label || format;
+    return t(`formats.${format}`) || format;
   };
+
+  const getWorkoutFormats = () => [
+    { value: "STRENGTH", label: t('formats.STRENGTH') },
+    { value: "FOR_TIME", label: t('formats.FOR_TIME') },
+    { value: "AMRAP", label: t('formats.AMRAP') },
+    { value: "EMOM", label: t('formats.EMOM') },
+    { value: "CUSTOM", label: t('formats.CUSTOM') },
+  ];
 
   return (
     <div className="space-y-6">
@@ -371,9 +372,9 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold">루틴 블록 상세</h1>
+          <h1 className="text-2xl font-bold">{t('blockDetailTitle')}</h1>
           <p className="text-muted-foreground">
-            운동 루틴을 구성하고 관리하세요
+            {t('blockDetailDesc')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -386,18 +387,18 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
                 disabled={isSaving}
               >
                 <X className="h-4 w-4 mr-1" />
-                취소
+                {t('cancel')}
               </Button>
               <Button size="sm" onClick={handleSaveEdit} disabled={isSaving}>
                 <Check className="h-4 w-4 mr-1" />
-                {isSaving ? "저장 중..." : "저장"}
+                {isSaving ? t('saving') : t('save')}
               </Button>
             </>
           ) : (
             <>
               <Button variant="outline" size="sm" onClick={handleStartEdit}>
                 <Edit className="h-4 w-4 mr-1" />
-                편집
+                {t('edit')}
               </Button>
               <Button
                 variant="destructive"
@@ -405,7 +406,7 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
                 onClick={handleDeleteBlock}
               >
                 <Trash2 className="h-4 w-4 mr-1" />
-                삭제
+                {t('delete')}
               </Button>
             </>
           )}
@@ -418,16 +419,16 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
           {/* 기본 정보 */}
           <Card>
             <CardHeader>
-              <CardTitle>기본 정보</CardTitle>
+              <CardTitle>{t('basicInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>블록 이름</Label>
+                <Label>{t('blockName')}</Label>
                 {isEditMode ? (
                   <Input
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    placeholder="블록 이름"
+                    placeholder={t('blockName')}
                   />
                 ) : (
                   <p className="text-sm font-medium">{block.name}</p>
@@ -436,14 +437,14 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>운동 포맷</Label>
+                  <Label>{t('workoutFormat')}</Label>
                   {isEditMode ? (
                     <Select value={editFormat} onValueChange={setEditFormat}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {WORKOUT_FORMATS.map((format) => (
+                        {getWorkoutFormats().map((format) => (
                           <SelectItem key={format.value} value={format.value}>
                             {format.label}
                           </SelectItem>
@@ -458,12 +459,12 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
                 </div>
 
                 <div>
-                  <Label>목표값</Label>
+                  <Label>{t('targetValue')}</Label>
                   {isEditMode ? (
                     <Input
                       value={editTargetValue}
                       onChange={(e) => setEditTargetValue(e.target.value)}
-                      placeholder="예: 20min, 5 rounds"
+                      placeholder={t('targetValuePlaceholder')}
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground">
@@ -474,12 +475,12 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
               </div>
 
               <div>
-                <Label>설명</Label>
+                <Label>{t('description')}</Label>
                 {isEditMode ? (
                   <Textarea
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
-                    placeholder="블록에 대한 설명"
+                    placeholder={t('descriptionPlaceholder')}
                     rows={3}
                   />
                 ) : (
@@ -494,7 +495,7 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
           {/* 포함된 운동 */}
           <Card>
             <CardHeader>
-              <CardTitle>포함된 운동 ({block.items.length})</CardTitle>
+              <CardTitle>{t('includedExercisesCount', { count: block.items.length })}</CardTitle>
             </CardHeader>
             <CardContent
               onDragOver={handleDragOver}
@@ -504,7 +505,7 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
                 <div className="py-12 text-center text-muted-foreground border-2 border-dashed rounded-lg bg-muted/20">
                   <Dumbbell className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p className="text-sm">
-                    오른쪽 라이브러리에서 운동을 드래그하여 추가하세요
+                    {t('dragToAdd')}
                   </p>
                 </div>
               ) : (
@@ -528,7 +529,7 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
                           </div>
                           <div className="flex-1">
                             <p className="font-medium">
-                              {item.libraryTitle || "알 수 없는 운동"}
+                              {item.libraryTitle || t('unknownExercise')}
                             </p>
                             {item.recommendation && (
                               <p className="text-xs text-muted-foreground mt-1">
@@ -558,7 +559,7 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>운동 라이브러리</CardTitle>
+              <CardTitle>{t('workoutLibrary')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* 검색 */}
@@ -566,7 +567,7 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="운동 검색..."
+                    placeholder={t('exerciseSearchPlaceholder')}
                     value={exerciseSearch}
                     onChange={(e) => setExerciseSearch(e.target.value)}
                     onKeyDown={handleKeyDown}
@@ -592,15 +593,15 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
                 {isLoadingLibrary ? (
                   <div className="py-8 text-center text-muted-foreground">
                     <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin" />
-                    <p className="text-sm">검색 중...</p>
+                    <p className="text-sm">{t('searching')}</p>
                   </div>
                 ) : exerciseLibrary.length === 0 ? (
                   <div className="py-8 text-center text-muted-foreground">
                     <Dumbbell className="h-8 w-8 mx-auto mb-2" />
                     <p className="text-sm">
                       {exerciseSearch
-                        ? "검색 결과가 없습니다"
-                        : "운동이 없습니다"}
+                        ? t('noSearchResults')
+                        : t('noExercisesInLibrary')}
                     </p>
                   </div>
                 ) : (
@@ -635,7 +636,7 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
                               )}
                               {exercise.isSystem && (
                                 <Badge variant="default" className="text-xs">
-                                  시스템
+                                  {t('system')}
                                 </Badge>
                               )}
                             </div>
@@ -659,9 +660,9 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>운동 가이드 추가</DialogTitle>
+            <DialogTitle>{t('addExerciseGuide')}</DialogTitle>
             <DialogDescription>
-              "{pendingExerciseTitle}" 운동에 코치의 가이드를 입력하세요.
+              {t('addExerciseGuideDesc', { title: pendingExerciseTitle })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -693,11 +694,11 @@ export function BlockDetailClient({ block }: BlockDetailClientProps) {
             <div className="flex gap-2 justify-end pt-2">
               <Button variant="outline" onClick={handleCancelRecommendation}>
                 <X className="h-4 w-4 mr-1" />
-                취소
+                {t('cancel')}
               </Button>
               <Button onClick={handleConfirmRecommendation}>
                 <Check className="h-4 w-4 mr-1" />
-                추가하기
+                {t('addToRoutine')}
               </Button>
             </div>
           </div>

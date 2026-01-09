@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,12 +45,6 @@ type OrderListProps = {
   programId: string;
 };
 
-const STATUS_LABELS = {
-  PENDING: "대기",
-  COMPLETED: "완료",
-  CANCELLED: "취소",
-};
-
 const STATUS_VARIANTS = {
   PENDING: "secondary" as const,
   COMPLETED: "default" as const,
@@ -61,12 +56,18 @@ export default function OrderList({
   initialPagination,
   programId,
 }: OrderListProps) {
+  const t = useTranslations('order');
   const router = useRouter();
 
   // 주문 상태 포맷팅
   const formatAmount = (amount: string) => {
     const num = Number(amount);
-    return `${(num / 10000).toFixed(1)}만원`;
+    return `${(num / 10000).toFixed(1)}${t('tenThousand')}`;
+  };
+
+  // 주문 상태 라벨
+  const getStatusLabel = (status: string) => {
+    return t(`statusLabels.${status.toLowerCase()}`);
   };
 
   const formatDate = (date: Date) => {
@@ -87,25 +88,25 @@ export default function OrderList({
       {/* 주문 목록 */}
       <Card>
         <CardHeader>
-          <CardTitle>주문 내역</CardTitle>
+          <CardTitle>{t('list')}</CardTitle>
         </CardHeader>
         <CardContent>
           {initialOrders.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <UserIcon className="size-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">주문 내역이 없습니다</p>
+              <p className="text-muted-foreground">{t('noOrders')}</p>
             </div>
           ) : (
             <div className="space-y-4">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>구매자</TableHead>
-                    <TableHead>프로그램</TableHead>
-                    <TableHead>금액</TableHead>
-                    <TableHead>상태</TableHead>
-                    <TableHead>주문일</TableHead>
-                    <TableHead className="text-right">상세</TableHead>
+                    <TableHead>{t('buyer')}</TableHead>
+                    <TableHead>{t('program')}</TableHead>
+                    <TableHead>{t('amount')}</TableHead>
+                    <TableHead>{t('status')}</TableHead>
+                    <TableHead>{t('orderDate')}</TableHead>
+                    <TableHead className="text-right">{t('details')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -131,7 +132,7 @@ export default function OrderList({
                       <TableCell>{formatAmount(order.amount)}</TableCell>
                       <TableCell>
                         <Badge variant={STATUS_VARIANTS[order.status]}>
-                          {STATUS_LABELS[order.status]}
+                          {getStatusLabel(order.status)}
                         </Badge>
                       </TableCell>
                       <TableCell>{formatDate(order.createdAt)}</TableCell>

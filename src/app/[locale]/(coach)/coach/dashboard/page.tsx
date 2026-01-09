@@ -29,9 +29,17 @@ import { getTranslations } from "next-intl/server";
  * 로그아웃 버튼을 클릭하면 로그아웃 됩니다.
  * 프로그램 등록 버튼을 클릭하면 프로그램 등록 페이지로 이동합니다. [new]
  */
-export default async function CoachDashboardPage() {
+export default async function CoachDashboardPage({
+  params,
+}: {
+  params: { locale: string };
+}) {
   const { data: programs } = await getMyProgramsAction();
-  const t = await getTranslations("dashboard");
+  const { locale } = await params;
+  const t = await getTranslations({
+    locale: locale,
+    namespace: "dashboard",
+  });
 
   return (
     <div className="space-y-6">
@@ -42,7 +50,7 @@ export default async function CoachDashboardPage() {
           <p className="text-muted-foreground">{t("managePrograms")}</p>
         </div>
         <Button asChild size="default">
-          <Link href="/coach/dashboard/new">
+          <Link href="/coach/dashboard/new" locale={locale}>
             <PlusIcon className="mr-2 size-4" />
             {t("newProgram")}
           </Link>
@@ -63,7 +71,7 @@ export default async function CoachDashboardPage() {
               </EmptyHeader>
               <EmptyContent>
                 <Button asChild>
-                  <Link href="/coach/dashboard/new">
+                  <Link href="/coach/dashboard/new" locale={locale}>
                     <PlusIcon className="mr-2 size-4" />
                     {t("createProgram")}
                   </Link>

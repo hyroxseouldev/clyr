@@ -52,6 +52,7 @@ interface HomeworkClientProps {
 }
 
 export function HomeworkClient({ programId, initialData }: HomeworkClientProps) {
+  const t = useTranslations('homework');
   const tToast = useTranslations('toast');
   const router = useRouter();
   const [pageData, setPageData] = useState<HomeworkPageData | null>(initialData);
@@ -237,12 +238,12 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
     const diffDays = Math.floor(diffHours / 24);
 
     if (diffDays > 0) {
-      return `${diffDays}일 전`;
+      return t('timeAgo.days', { days: diffDays });
     } else if (diffHours > 0) {
-      return `${diffHours}시간 전`;
+      return t('timeAgo.hours', { hours: diffHours });
     } else {
       const diffMins = Math.floor(diffMs / (1000 * 60));
-      return `${diffMins}분 전`;
+      return t('timeAgo.minutes', { minutes: diffMins });
     }
   };
 
@@ -259,7 +260,7 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-lg font-medium">데이터를 불러올 수 없습니다</p>
+          <p className="text-lg font-medium">{t('cannotLoadData')}</p>
         </div>
       </div>
     );
@@ -271,10 +272,10 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">
-            {pageData.program.title} - 숙제 관리
+            {t('subtitle', { programTitle: pageData.program.title })}
           </h1>
           <p className="text-muted-foreground">
-            회원들의 운동 숙제를 검토하고 피드백을 남기세요
+            {t('description')}
           </p>
         </div>
       </div>
@@ -283,42 +284,42 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>총 제출</CardDescription>
+            <CardDescription>{t('stats.totalSubmissions')}</CardDescription>
             <CardTitle className="text-3xl">
               {pageData.stats.totalSubmissions}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              전체 숙제 제출 건수
+              {t('stats.totalSubmissionsDesc')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>검토 대기</CardDescription>
+            <CardDescription>{t('stats.pendingReviews')}</CardDescription>
             <CardTitle className="text-3xl text-orange-600">
               {pageData.stats.pendingReviews}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              코치 확인이 필요한 숙제
+              {t('stats.pendingReviewsDesc')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>검토 완료</CardDescription>
+            <CardDescription>{t('stats.completedReviews')}</CardDescription>
             <CardTitle className="text-3xl text-green-600">
               {pageData.stats.completedReviews}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              피드백이 완료된 숙제
+              {t('stats.completedReviewsDesc')}
             </p>
           </CardContent>
         </Card>
@@ -328,7 +329,7 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
       {pageData.availableDays.length > 0 ? (
         <div className="space-y-6">
           <div>
-            <h3 className="text-lg font-semibold mb-4">회차별 보기</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('viewByPhase')}</h3>
             <div className="flex gap-4">
               {/* Phase 선택 */}
               <div className="flex-1 max-w-xs">
@@ -338,7 +339,7 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
                   onValueChange={handlePhaseChange}
                 >
                   <SelectTrigger id="phase-select">
-                    <SelectValue placeholder="Phase 선택" />
+                    <SelectValue placeholder={t('selectPhase')} />
                   </SelectTrigger>
                   <SelectContent>
                     {availablePhases.map((phase) => (
@@ -361,7 +362,7 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
                   <SelectTrigger id="day-select">
                     <SelectValue
                       placeholder={
-                        selectedPhase ? "Day 선택" : "먼저 Phase를 선택하세요"
+                        selectedPhase ? t('selectDay') : t('selectPhaseFirst')
                       }
                     />
                   </SelectTrigger>
@@ -384,10 +385,10 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>
-                      Phase {selectedPhase} - Day {selectedDay} 제출 현황
+                      {t('submissionStatus', { phase: selectedPhase, day: selectedDay })}
                     </CardTitle>
                     <CardDescription>
-                      총 {submissions.length}명 제출
+                      {t('totalSubmissions', { count: submissions.length })}
                     </CardDescription>
                   </div>
                   <Trophy className="h-5 w-5 text-muted-foreground" />
@@ -396,13 +397,13 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
               <CardContent>
                 {isLoading ? (
                   <div className="text-center py-8">
-                    <p className="text-sm text-muted-foreground">로딩 중...</p>
+                    <p className="text-sm text-muted-foreground">{t('loading')}</p>
                   </div>
                 ) : submissions.length === 0 ? (
                   <div className="text-center py-8">
                     <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-sm text-muted-foreground">
-                      제출된 숙제가 없습니다
+                      {t('noSubmissions')}
                     </p>
                   </div>
                 ) : (
@@ -429,7 +430,7 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-2">
                                 <p className="font-medium">
-                                  {submission.user.fullName || "익명"}
+                                  {submission.user.fullName || t('anonymous')}
                                 </p>
                                 {submission.isCheckedByCoach ? (
                                   <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -460,7 +461,7 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
                                     <div className="flex items-center gap-1">
                                       <Dumbbell className="h-3 w-3" />
                                       <span>
-                                        {submission.totalVolume}회
+                                        {t('resultReps', { reps: submission.totalVolume })}
                                       </span>
                                     </div>
                                   )}
@@ -486,7 +487,7 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
                                 onClick={() => handleOpenFeedback(submission)}
                               >
                                 <MessageSquare className="h-4 w-4 mr-2" />
-                                피드백
+                                {t('feedback')}
                               </Button>
                               <Button
                                 variant={
@@ -502,7 +503,7 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
                                 ) : (
                                   <Circle className="h-4 w-4 mr-2" />
                                 )}
-                                {submission.isCheckedByCoach ? "완료" : "확인"}
+                                {submission.isCheckedByCoach ? t('complete') : t('confirm')}
                               </Button>
                             </div>
                           </div>
@@ -519,9 +520,9 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
         <Card>
           <CardContent className="py-12 text-center">
             <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-lg font-medium">아직 플랜이 없습니다</p>
+            <p className="text-lg font-medium">{t('noPlan')}</p>
             <p className="text-sm text-muted-foreground mt-2">
-              먼저 프로그램 플랜을 생성하세요
+              {t('createPlanHint')}
             </p>
           </CardContent>
         </Card>
@@ -535,36 +536,38 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
         >
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>피드백 남기기</DialogTitle>
+              <DialogTitle>{t('feedbackTitle')}</DialogTitle>
               <DialogDescription>
-                {selectedLog.user.fullName || "회원"}님의 Day{" "}
-                {selectedLog.blueprint?.dayNumber} 숙제에 피드백을 남기세요
+                {t('feedbackDesc', {
+                  member: selectedLog.user.fullName || t('member'),
+                  day: selectedLog.blueprint?.dayNumber ?? 1
+                })}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               {/* 운동 결과 요약 */}
               <div className="p-3 bg-muted rounded-md">
-                <p className="text-sm font-medium mb-1">운동 결과</p>
+                <p className="text-sm font-medium mb-1">{t('workoutResult')}</p>
                 <div className="flex gap-4 text-sm text-muted-foreground">
                   {selectedLog.totalDuration !== null && (
-                    <span>기록: {formatDuration(selectedLog.totalDuration)}</span>
+                    <span>{t('resultTime', { time: formatDuration(selectedLog.totalDuration) })}</span>
                   )}
                   {selectedLog.totalVolume &&
                     parseFloat(selectedLog.totalVolume) > 0 && (
-                      <span>횟수: {selectedLog.totalVolume}회</span>
+                      <span>{t('resultReps', { reps: selectedLog.totalVolume })}</span>
                     )}
                   {selectedLog.maxWeight &&
                     parseFloat(selectedLog.maxWeight) > 0 && (
-                      <span>최대 중량: {selectedLog.maxWeight}kg</span>
+                      <span>{t('resultWeight', { weight: selectedLog.maxWeight })}</span>
                     )}
                 </div>
               </div>
 
               {/* 코치 코멘트 입력 */}
               <div className="space-y-2">
-                <Label>코치 코멘트</Label>
+                <Label>{t('coachComment')}</Label>
                 <Textarea
-                  placeholder="회원에게 전할 피드백을 입력하세요..."
+                  placeholder={t('coachCommentPlaceholder')}
                   value={coachComment}
                   onChange={(e) => setCoachComment(e.target.value)}
                   rows={5}
@@ -578,14 +581,14 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
                   disabled={isSaving}
                   className="flex-1"
                 >
-                  {isSaving ? "저장 중..." : "저장하기"}
+                  {isSaving ? t('saving') : t('saveButton')}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => setIsFeedbackModalOpen(false)}
                   className="flex-1"
                 >
-                  취소
+                  {t('cancel')}
                 </Button>
               </div>
             </div>

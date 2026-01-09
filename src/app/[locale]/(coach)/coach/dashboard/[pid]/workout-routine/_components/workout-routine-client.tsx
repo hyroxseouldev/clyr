@@ -77,18 +77,11 @@ interface WorkoutRoutineClientProps {
   pageSize: number;
 }
 
-const WORKOUT_FORMATS = [
-  { value: "STRENGTH", label: "Strength (중량)" },
-  { value: "FOR_TIME", label: "For Time (빠른순)" },
-  { value: "AMRAP", label: "AMRAP (회수순)" },
-  { value: "EMOM", label: "EMOM (분당회수)" },
-  { value: "CUSTOM", label: "Custom" },
-];
-
 export function WorkoutRoutineClient({
   initialData,
   pageSize,
 }: WorkoutRoutineClientProps) {
+  const t = useTranslations('workoutRoutine');
   const tToast = useTranslations('toast');
   const tCommon = useTranslations('common');
   const router = useRouter();
@@ -320,8 +313,16 @@ export function WorkoutRoutineClient({
   };
 
   const getFormatLabel = (format: string) => {
-    return WORKOUT_FORMATS.find((f) => f.value === format)?.label || format;
+    return t(`formats.${format}`) || format;
   };
+
+  const getWorkoutFormats = () => [
+    { value: "STRENGTH", label: t('formats.STRENGTH') },
+    { value: "FOR_TIME", label: t('formats.FOR_TIME') },
+    { value: "AMRAP", label: t('formats.AMRAP') },
+    { value: "EMOM", label: t('formats.EMOM') },
+    { value: "CUSTOM", label: t('formats.CUSTOM') },
+  ];
 
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
@@ -349,35 +350,35 @@ export function WorkoutRoutineClient({
       {/* 헤더 */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">루틴 블록 관리</h1>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
           <p className="text-muted-foreground">
-            재사용 가능한 운동 루틴을 만들고 관리하세요
+            {t('description')}
           </p>
         </div>
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />새 블록 만들기
+              <Plus className="h-4 w-4 mr-2" />{t('newBlock')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>새 루틴 블록 만들기</DialogTitle>
+              <DialogTitle>{t('newBlockTitle')}</DialogTitle>
               <DialogDescription>
-                재사용 가능한 운동 루틴 블록을 생성합니다
+                {t('newBlockDesc')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>블록 이름</Label>
+                <Label>{t('blockName')}</Label>
                 <Input
-                  placeholder="예: [하체] 스쿼트 집중 파워"
+                  placeholder={t('blockNamePlaceholder')}
                   value={newBlockName}
                   onChange={(e) => setNewBlockName(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label>운동 포맷</Label>
+                <Label>{t('workoutFormat')}</Label>
                 <Select
                   value={newBlockFormat}
                   onValueChange={setNewBlockFormat}
@@ -386,7 +387,7 @@ export function WorkoutRoutineClient({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {WORKOUT_FORMATS.map((format) => (
+                    {getWorkoutFormats().map((format) => (
                       <SelectItem key={format.value} value={format.value}>
                         {format.label}
                       </SelectItem>
@@ -399,7 +400,7 @@ export function WorkoutRoutineClient({
                 disabled={isCreating || !newBlockName.trim()}
                 className="w-full"
               >
-                {isCreating ? "생성 중..." : "생성하기"}
+                {isCreating ? t('creating') : t('create')}
               </Button>
             </div>
           </DialogContent>
@@ -414,7 +415,7 @@ export function WorkoutRoutineClient({
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="블록 이름 검색..."
+                placeholder={t('blockNameSearchPlaceholder')}
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="pl-10"
@@ -425,11 +426,11 @@ export function WorkoutRoutineClient({
               onValueChange={handleFormatFilter}
             >
               <SelectTrigger>
-                <SelectValue placeholder="포맷 필터" />
+                <SelectValue placeholder={t('formatFilter')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">전체</SelectItem>
-                {WORKOUT_FORMATS.map((format) => (
+                <SelectItem value="all">{t('all')}</SelectItem>
+                {getWorkoutFormats().map((format) => (
                   <SelectItem key={format.value} value={format.value}>
                     {format.label}
                   </SelectItem>
@@ -446,8 +447,8 @@ export function WorkoutRoutineClient({
                   <Dumbbell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">
                     {search || formatFilter
-                      ? "검색 결과가 없습니다"
-                      : "루틴 블록이 없습니다"}
+                      ? t('noSearchResults')
+                      : t('noBlocks')}
                   </p>
                 </CardContent>
               </Card>
@@ -468,14 +469,14 @@ export function WorkoutRoutineClient({
                             {getFormatLabel(block.workoutFormat)}
                           </Badge>
                           {block.isLeaderboardEnabled && (
-                            <Badge variant="default">리더보드</Badge>
+                            <Badge variant="default">{t('leaderboard')}</Badge>
                           )}
                         </div>
                         <CardTitle className="text-base">
                           {block.name}
                         </CardTitle>
                         <CardDescription className="text-xs">
-                          운동 {block.itemCount}개
+                          {t('exerciseCount', { count: block.itemCount })}
                         </CardDescription>
                       </div>
                     </div>
@@ -545,9 +546,9 @@ export function WorkoutRoutineClient({
             <Card>
               <CardContent className="py-12 text-center">
                 <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-lg font-medium">블록을 선택해주세요</p>
+                <p className="text-lg font-medium">{t('selectBlock')}</p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  좌측 목록에서 루틴 블록을 선택하면 상세 내용을 볼 수 있습니다
+                  {t('selectBlockDesc')}
                 </p>
               </CardContent>
             </Card>
@@ -555,7 +556,7 @@ export function WorkoutRoutineClient({
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>블록 상세</CardTitle>
+                  <CardTitle>{t('blockDetail')}</CardTitle>
                   <div className="flex gap-2">
                     {isEditMode ? (
                       <>
@@ -566,7 +567,7 @@ export function WorkoutRoutineClient({
                           disabled={isSaving}
                         >
                           <X className="h-4 w-4 mr-1" />
-                          취소
+                          {t('cancel')}
                         </Button>
                         <Button
                           size="sm"
@@ -574,7 +575,7 @@ export function WorkoutRoutineClient({
                           disabled={isSaving}
                         >
                           <Check className="h-4 w-4 mr-1" />
-                          {isSaving ? "저장 중..." : "저장"}
+                          {isSaving ? t('saving') : t('save')}
                         </Button>
                       </>
                     ) : (
@@ -585,27 +586,26 @@ export function WorkoutRoutineClient({
                           onClick={handleStartEdit}
                         >
                           <Edit className="h-4 w-4 mr-1" />
-                          편집
+                          {t('edit')}
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="sm">
                               <Trash2 className="h-4 w-4 mr-1" />
-                              삭제
+                              {t('delete')}
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>블록 삭제</AlertDialogTitle>
+                              <AlertDialogTitle>{t('deleteBlock')}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                정말로 이 루틴 블록을 삭제하시겠습니까? 이
-                                작업은 되돌릴 수 없습니다.
+                                {t('deleteConfirm')}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>취소</AlertDialogCancel>
+                              <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                               <AlertDialogAction onClick={handleDeleteBlock}>
-                                삭제
+                                {t('delete')}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -619,12 +619,12 @@ export function WorkoutRoutineClient({
                 {/* 블록 정보 */}
                 <div className="space-y-4">
                   <div>
-                    <Label>블록 이름</Label>
+                    <Label>{t('blockName')}</Label>
                     {isEditMode ? (
                       <Input
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        placeholder="블록 이름"
+                        placeholder={t('blockName')}
                       />
                     ) : (
                       <p className="text-sm font-medium">
@@ -635,7 +635,7 @@ export function WorkoutRoutineClient({
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>운동 포맷</Label>
+                      <Label>{t('workoutFormat')}</Label>
                       {isEditMode ? (
                         <Select
                           value={editFormat}
@@ -645,7 +645,7 @@ export function WorkoutRoutineClient({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {WORKOUT_FORMATS.map((format) => (
+                            {getWorkoutFormats().map((format) => (
                               <SelectItem
                                 key={format.value}
                                 value={format.value}
@@ -663,12 +663,12 @@ export function WorkoutRoutineClient({
                     </div>
 
                     <div>
-                      <Label>목표값</Label>
+                      <Label>{t('targetValue')}</Label>
                       {isEditMode ? (
                         <Input
                           value={editTargetValue}
                           onChange={(e) => setEditTargetValue(e.target.value)}
-                          placeholder="예: 20min, 5 rounds"
+                          placeholder={t('targetValuePlaceholder')}
                         />
                       ) : (
                         <p className="text-sm text-muted-foreground">
@@ -679,12 +679,12 @@ export function WorkoutRoutineClient({
                   </div>
 
                   <div>
-                    <Label>설명</Label>
+                    <Label>{t('description')}</Label>
                     {isEditMode ? (
                       <Textarea
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
-                        placeholder="블록에 대한 설명"
+                        placeholder={t('descriptionPlaceholder')}
                         rows={3}
                       />
                     ) : (
@@ -698,10 +698,10 @@ export function WorkoutRoutineClient({
                 {/* 운동 목록 */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">포함된 운동</h3>
+                    <h3 className="text-lg font-semibold">{t('includedExercises')}</h3>
                     <Button size="sm" variant="outline" onClick={handleOpenExerciseModal}>
                       <Plus className="h-4 w-4 mr-1" />
-                      운동 추가
+                      {t('addExercise')}
                     </Button>
                   </div>
 
@@ -710,7 +710,7 @@ export function WorkoutRoutineClient({
                       <CardContent className="py-8 text-center">
                         <Dumbbell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                         <p className="text-sm text-muted-foreground">
-                          추가된 운동이 없습니다
+                          {t('noExercises')}
                         </p>
                       </CardContent>
                     </Card>
@@ -728,7 +728,7 @@ export function WorkoutRoutineClient({
                               </div>
                               <div className="flex-1">
                                 <p className="font-medium">
-                                  {item.libraryTitle || "알 수 없는 운동"}
+                                  {item.libraryTitle || t('unknownExercise')}
                                 </p>
                                 {item.recommendation && (
                                   <p className="text-xs text-muted-foreground mt-1">
@@ -761,9 +761,9 @@ export function WorkoutRoutineClient({
       <Dialog open={isAddExerciseModalOpen} onOpenChange={setIsAddExerciseModalOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>운동 추가</DialogTitle>
+            <DialogTitle>{t('addExerciseTitle')}</DialogTitle>
             <DialogDescription>
-              운동 라이브러리에서 루틴 블록에 추가할 운동을 선택하세요
+              {t('addExerciseDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -771,7 +771,7 @@ export function WorkoutRoutineClient({
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="운동 검색..."
+                placeholder={t('exerciseSearchPlaceholder')}
                 value={exerciseSearch}
                 onChange={(e) => handleSearchExercise(e.target.value)}
                 className="pl-10"
@@ -782,13 +782,13 @@ export function WorkoutRoutineClient({
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {isLoadingExercises ? (
                 <div className="py-8 text-center text-muted-foreground">
-                  불러오는 중...
+                  {t('loading')}
                 </div>
               ) : exerciseLibrary.length === 0 ? (
                 <div className="py-8 text-center text-muted-foreground">
                   <Dumbbell className="h-8 w-8 mx-auto mb-2" />
                   <p className="text-sm">
-                    {exerciseSearch ? "검색 결과가 없습니다" : "운동 라이브러리가 비었습니다"}
+                    {exerciseSearch ? t('noSearchResults') : t('libraryEmpty')}
                   </p>
                 </div>
               ) : (
@@ -813,7 +813,7 @@ export function WorkoutRoutineClient({
                           </div>
                           {exercise.workoutType && (
                             <p className="text-xs text-muted-foreground">
-                              유형: {exercise.workoutType}
+                              {t('typeLabel', { type: exercise.workoutType })}
                             </p>
                           )}
                           {exercise.description && (
@@ -842,13 +842,13 @@ export function WorkoutRoutineClient({
                   setExerciseSearch("");
                 }}
               >
-                취소
+                {t('cancel')}
               </Button>
               <Button
                 onClick={handleAddExercise}
                 disabled={!selectedExerciseId}
               >
-                추가
+                {t('addExercise')}
               </Button>
             </div>
           </div>

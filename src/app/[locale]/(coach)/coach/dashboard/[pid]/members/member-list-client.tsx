@@ -21,6 +21,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { SearchIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { Enrollment } from "@/db/schema";
 
 const ITEMS_PER_PAGE = 12;
@@ -47,6 +48,7 @@ export function MemberListClient({
   programId,
   initialMembers,
 }: MemberListClientProps) {
+  const t = useTranslations('members');
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "EXPIRED" | "PAUSED">("ALL");
   const [sortBy, setSortBy] = useState<"name" | "enrollmentDate" | "status" | "lastWorkout">("enrollmentDate");
@@ -130,7 +132,7 @@ export function MemberListClient({
           <div className="relative flex-1 max-w-sm">
             <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="이름 또는 이메일 검색..."
+              placeholder={t('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-9"
@@ -144,13 +146,13 @@ export function MemberListClient({
             onValueChange={handleStatusFilterChange}
           >
             <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="상태" />
+              <SelectValue placeholder={t('status')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">전체</SelectItem>
-              <SelectItem value="ACTIVE">수강 중</SelectItem>
-              <SelectItem value="PAUSED">일시정지</SelectItem>
-              <SelectItem value="EXPIRED">만료</SelectItem>
+              <SelectItem value="ALL">{t('all')}</SelectItem>
+              <SelectItem value="ACTIVE">{t('statusTypes.ACTIVE')}</SelectItem>
+              <SelectItem value="PAUSED">{t('statusTypes.PAUSED')}</SelectItem>
+              <SelectItem value="EXPIRED">{t('statusTypes.EXPIRED')}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -159,13 +161,13 @@ export function MemberListClient({
             onValueChange={handleSortChange}
           >
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="정렬" />
+              <SelectValue placeholder={t('sort')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="enrollmentDate">수강일순</SelectItem>
-              <SelectItem value="name">이름순</SelectItem>
-              <SelectItem value="status">상태순</SelectItem>
-              <SelectItem value="lastWorkout">최근 운동순</SelectItem>
+              <SelectItem value="enrollmentDate">{t('sortBy.enrollmentDate')}</SelectItem>
+              <SelectItem value="name">{t('sortBy.name')}</SelectItem>
+              <SelectItem value="status">{t('sortBy.status')}</SelectItem>
+              <SelectItem value="lastWorkout">{t('sortBy.lastWorkout')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -173,15 +175,19 @@ export function MemberListClient({
 
       {/* 결과 count */}
       <div className="text-sm text-muted-foreground">
-        총 {filteredMembers.length}명 중 {startIndex + 1}-{Math.min(endIndex, filteredMembers.length)}명 표시
+        {t('resultsCount', {
+          total: filteredMembers.length,
+          start: startIndex + 1,
+          end: Math.min(endIndex, filteredMembers.length)
+        })}
       </div>
 
       {/* 회원 목록 그리드 */}
       {currentMembers.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-lg font-medium">회원을 찾을 수 없습니다</p>
+          <p className="text-lg font-medium">{t('noMembersFound')}</p>
           <p className="text-sm text-muted-foreground">
-            검색 조건을 변경하거나 다른 필터를 사용해 보세요.
+            {t('tryDifferentFilters')}
           </p>
         </div>
       ) : (
@@ -191,7 +197,7 @@ export function MemberListClient({
               <MemberCard
                 key={member.id}
                 memberId={member.user.id}
-                fullName={member.user.fullName || "이름 없음"}
+                fullName={member.user.fullName || t('noName')}
                 email={member.user.email || ""}
                 avatarUrl={member.user.avatarUrl}
                 programName={member.program.title}

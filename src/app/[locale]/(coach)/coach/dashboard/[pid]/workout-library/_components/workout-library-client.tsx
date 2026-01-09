@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -40,6 +41,7 @@ export function WorkoutLibraryClient({
   filtersData,
   pageSize,
 }: WorkoutLibraryClientProps) {
+  const t = useTranslations('workoutLibrary');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") || "");
@@ -60,12 +62,7 @@ export function WorkoutLibraryClient({
 
   // 워크아웃 타입 라벨 매핑
   const getWorkoutTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      WEIGHT_REPS: "무게/횟수",
-      DURATION: "시간",
-      DISTANCE: "거리",
-    };
-    return labels[type] || type;
+    return t(`types.${type}`);
   };
 
   const handleSearch = (value: string) => {
@@ -189,9 +186,9 @@ export function WorkoutLibraryClient({
     <div className="space-y-6">
       {/* 헤더 */}
       <div>
-        <h1 className="text-2xl font-bold">워크아웃 라이브러리</h1>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
         <p className="text-muted-foreground">
-          {`${initialData?.totalCount}개의 워크아웃 운동이 등록되어 있습니다.`}
+          {t('description', { count: initialData?.totalCount || 0 })}
         </p>
       </div>
 
@@ -200,7 +197,7 @@ export function WorkoutLibraryClient({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="제목, 카테고리, 설명으로 검색..."
+            placeholder={t('searchPlaceholder')}
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
             className="pl-10"
@@ -210,7 +207,7 @@ export function WorkoutLibraryClient({
       {/* 카테고리 필터 */}
       {filtersData.categories.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium mb-3">카테고리</h3>
+          <h3 className="text-sm font-medium mb-3">{t('category')}</h3>
           <div className="flex flex-wrap gap-2">
             {filtersData.categories.map((category) => (
               <div key={category} className="flex items-center space-x-2">
@@ -234,7 +231,7 @@ export function WorkoutLibraryClient({
       {/* 워크아웃 타입 필터 */}
       {filtersData.workoutTypes.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium mb-3">운동 타입</h3>
+          <h3 className="text-sm font-medium mb-3">{t('workoutType')}</h3>
           <div className="flex flex-wrap gap-2">
             {filtersData.workoutTypes.map((type) => (
               <div key={type} className="flex items-center space-x-2">
@@ -259,7 +256,7 @@ export function WorkoutLibraryClient({
       {activeFilterCount > 0 && (
         <Button variant="ghost" size="sm" onClick={handleResetFilters}>
           <X className="h-4 w-4 mr-2" />
-          필터 초기화
+          {t('resetFilters')}
         </Button>
       )}
 
@@ -268,11 +265,11 @@ export function WorkoutLibraryClient({
         <Card>
           <CardContent className="py-12 text-center">
             <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-lg font-medium">워크아웃이 없습니다</p>
+            <p className="text-lg font-medium">{t('noWorkouts')}</p>
             <p className="text-sm text-muted-foreground mt-2">
               {search || activeFilterCount > 0
-                ? "검색 조건과 일치하는 워크아웃이 없습니다."
-                : "등록된 워크아웃이 없습니다."}
+                ? t('noMatchingWorkouts')
+                : t('noWorkoutsDesc')}
             </p>
           </CardContent>
         </Card>
@@ -290,7 +287,7 @@ export function WorkoutLibraryClient({
                       <Badge variant="outline">
                         {getWorkoutTypeLabel(item.workoutType)}
                       </Badge>
-                      {item.isSystem && <Badge variant="default">시스템</Badge>}
+                      {item.isSystem && <Badge variant="default">{t('system')}</Badge>}
                     </div>
                     <CardTitle className="text-lg line-clamp-2">
                       {item.title}
@@ -320,7 +317,7 @@ export function WorkoutLibraryClient({
                   {item.videoUrl && (
                     <div className="flex items-center gap-2">
                       <Video className="h-4 w-4" />
-                      <span className="text-blue-600">영상 포함</span>
+                      <span className="text-blue-600">{t('includesVideo')}</span>
                     </div>
                   )}
                 </div>

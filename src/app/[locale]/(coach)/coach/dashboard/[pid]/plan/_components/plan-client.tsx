@@ -263,17 +263,17 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
             <div>
               <p className="text-sm text-muted-foreground">{tPlan('phaseCount')}</p>
               <p className="text-lg font-semibold">
-                {planData.blueprints.length}개
+                {planData.blueprints.length}{tPlan('phaseUnit')}
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">'tPlan('totalDays')'</p>
+              <p className="text-sm text-muted-foreground">{tPlan('totalDays')}</p>
               <p className="text-lg font-semibold">
                 {planData.blueprints.reduce(
                   (sum, bp) => sum + bp.days.length,
                   0
                 )}
-                일
+                {tPlan('dayUnit')}
               </p>
             </div>
           </div>
@@ -308,8 +308,8 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                 onValueChange={(v) => setViewMode(v as "grid" | "calendar")}
               >
                 <TabsList>
-                  <TabsTrigger value="grid">그리드</TabsTrigger>
-                  <TabsTrigger value="calendar">캘린더</TabsTrigger>
+                  <TabsTrigger value="grid">{tPlan('viewMode.grid')}</TabsTrigger>
+                  <TabsTrigger value="calendar">{tPlan('viewMode.calendar')}</TabsTrigger>
                 </TabsList>
               </Tabs>
 
@@ -321,7 +321,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                 className="text-destructive hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                페이즈 삭제
+                {tPlan('deletePhase')}
               </Button>
             </div>
           </div>
@@ -331,11 +331,10 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
             <div>
               <div className="mb-4">
                 <h3 className="text-lg font-semibold">
-                  Phase {selectedPhaseData.phaseNumber} -{" "}
-                  {selectedPhaseData.days.length}일차
+                  {tPlan('dayView', { phase: selectedPhaseData.phaseNumber, days: selectedPhaseData.days.length })}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  각 카드를 클릭하여 루틴 블록을 지정하거나 편집하세요
+                  {tPlan('dayViewDesc')}
                 </p>
               </div>
 
@@ -387,7 +386,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                           </div>
                         ) : (
                           <div className="text-sm text-muted-foreground">
-                            루틴 블록을 지정해주세요
+                            {tPlan('noRoutineBlock')}
                           </div>
                         )}
                       </CardContent>
@@ -411,9 +410,9 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
         <Card>
           <CardContent className="py-12 text-center">
             <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-lg font-medium">아직 페이즈가 없습니다</p>
+            <p className="text-lg font-medium">{tPlan('noPhase')}</p>
             <p className="text-sm text-muted-foreground mt-2">
-              새 페이즈를 만들어서 프로그램을 시작하세요
+              {tPlan('createPhaseHint')}
             </p>
           </CardContent>
         </Card>
@@ -435,12 +434,12 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
       <Dialog open={isDeletePhaseOpen} onOpenChange={setIsDeletePhaseOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>페이즈 삭제</DialogTitle>
+            <DialogTitle>{tPlan('deletePhase')}</DialogTitle>
             <DialogDescription>
-              페이즈 {phaseToDelete}를 삭제하시겠습니까?
+              {tPlan('deletePhaseConfirm', { phase: phaseToDelete ?? 0 })}
               <br />
               <span className="text-destructive font-medium">
-                이 작업은 되돌릴 수 없습니다.
+                {tPlan('deletePhaseWarning')}
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -450,7 +449,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
               onClick={confirmDeletePhase}
               className="flex-1"
             >
-              삭제
+              {tPlan('confirmDelete')}
             </Button>
             <Button
               variant="outline"
@@ -460,7 +459,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
               }}
               className="flex-1"
             >
-              취소
+              {tPlan('cancel')}
             </Button>
           </div>
         </DialogContent>
@@ -484,6 +483,8 @@ function CalendarView({
   onDayClick,
   getDayTypeLabel,
 }: CalendarViewProps) {
+  const tPlan = useTranslations('plan');
+
   // 일차를 주차별로 그룹화 (7일 단위)
   const weeks: ProgramBlueprintWithBlock[][] = [];
   for (let i = 0; i < phaseData.days.length; i += 7) {
@@ -491,16 +492,16 @@ function CalendarView({
   }
 
   // 요일 표시
-  const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
+  const weekDays = tPlan.raw('weekDays') as string[];
 
   return (
     <div className="space-y-6">
       <div className="mb-4">
         <h3 className="text-lg font-semibold">
-          Phase {phaseData.phaseNumber} - 캘린더 뷰
+          {tPlan('calendarView', { phase: phaseData.phaseNumber })}
         </h3>
         <p className="text-sm text-muted-foreground">
-          주차별 캘린더에서 운동 일정을 확인하세요
+          {tPlan('calendarViewDesc')}
         </p>
       </div>
 
@@ -508,7 +509,7 @@ function CalendarView({
         <Card key={weekIndex}>
           <CardHeader>
             <CardTitle className="text-base">
-              {weekIndex + 1}주차
+              {tPlan('week', { week: weekIndex + 1 })}
               <span className="text-sm font-normal text-muted-foreground ml-2">
                 (Day {weekIndex * 7 + 1} - Day{" "}
                 {Math.min((weekIndex + 1) * 7, phaseData.days.length)})
@@ -554,7 +555,7 @@ function CalendarView({
                         </Badge>
                         {isRestDay && (
                           <Badge variant="secondary" className="text-xs">
-                            휴식
+                            {tPlan('rest')}
                           </Badge>
                         )}
                       </div>
@@ -620,6 +621,8 @@ function BlueprintEditorModal({
   onSave,
 }: BlueprintEditorModalProps) {
   const tToast = useTranslations('toast');
+  const tPlan = useTranslations('plan');
+  const tCommon = useTranslations('common');
   const [dayTitle, setDayTitle] = useState(blueprint.dayTitle || "");
   const [notes, setNotes] = useState(blueprint.notes || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -736,17 +739,17 @@ function BlueprintEditorModal({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Day {blueprint.dayNumber} 편집</DialogTitle>
+            <DialogTitle>{tPlan('editDay', { day: blueprint.dayNumber })}</DialogTitle>
             <DialogDescription>
-              일차 제목, 코치 노트, 루틴 블록을 지정하세요
+              {tPlan('editDayDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {/* 일차 제목 */}
             <div className="space-y-2">
-              <Label>일차 제목</Label>
+              <Label>{tPlan('dayTitle')}</Label>
               <Input
-                placeholder="예: 하이록스 근지구력 테스트"
+                placeholder={tPlan('dayTitlePlaceholder')}
                 value={dayTitle}
                 onChange={(e) => setDayTitle(e.target.value)}
               />
@@ -754,10 +757,10 @@ function BlueprintEditorModal({
 
             {/* 코치 노트 */}
             <div className="space-y-2">
-              <Label>코치 노트</Label>
+              <Label>{tPlan('coachNotes')}</Label>
               <textarea
                 className="w-full min-h-[100px] px-3 py-2 text-sm rounded-md border border-input bg-background resize-y focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                placeholder="해당 일차의 운동을 시작하기 전 회원이 읽어야 할 주의사항을 입력하세요"
+                placeholder={tPlan('coachNotesPlaceholder')}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />
@@ -766,7 +769,7 @@ function BlueprintEditorModal({
             {/* 루틴 블록 지정 */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>루틴 블록</Label>
+                <Label>{tPlan('routineBlock')}</Label>
                 <div className="flex gap-2">
                   {selectedBlockId && (
                     <Button
@@ -776,7 +779,7 @@ function BlueprintEditorModal({
                       disabled={isSaving}
                       className="text-destructive hover:text-destructive"
                     >
-                      해제
+                      {tPlan('unassign')}
                     </Button>
                   )}
                   <Button
@@ -784,7 +787,7 @@ function BlueprintEditorModal({
                     size="sm"
                     onClick={handleBlockSelectorOpen}
                   >
-                    {selectedBlockId ? "변경" : "선택"}
+                    {selectedBlockId ? tPlan('change') : tPlan('select')}
                   </Button>
                 </div>
               </div>
@@ -796,14 +799,14 @@ function BlueprintEditorModal({
                     <p className="text-sm font-medium">{selectedBlock.name}</p>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {selectedBlock.itemCount}개 운동 •{" "}
+                    {tPlan('exerciseCount', { count: selectedBlock.itemCount })} •{" "}
                     {selectedBlock.workoutFormat}
                   </p>
                 </div>
               ) : (
                 <div className="p-3 bg-muted rounded-md text-center">
                   <p className="text-sm text-muted-foreground">
-                    루틴 블록을 선택해주세요
+                    {tPlan('selectRoutineBlock')}
                   </p>
                 </div>
               )}
@@ -816,14 +819,14 @@ function BlueprintEditorModal({
                 disabled={isSaving}
                 className="flex-1"
               >
-                {isSaving ? "저장 중..." : "저장하기"}
+                {isSaving ? tPlan('saving') : tPlan('saveButton')}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 className="flex-1"
               >
-                취소
+                {tPlan('cancel')}
               </Button>
             </div>
           </div>
@@ -834,9 +837,9 @@ function BlueprintEditorModal({
       <Dialog open={isBlockSelectorOpen} onOpenChange={setIsBlockSelectorOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>루틴 블록 선택</DialogTitle>
+            <DialogTitle>{tPlan('selectRoutineBlockTitle')}</DialogTitle>
             <DialogDescription>
-              이 일차에 지정할 루틴 블록을 선택하세요
+              {tPlan('selectRoutineBlockDesc')}
             </DialogDescription>
           </DialogHeader>
 
@@ -844,7 +847,7 @@ function BlueprintEditorModal({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="블록 이름 검색..."
+              placeholder={tPlan('searchBlock')}
               value={blockSearch}
               onChange={(e) => setBlockSearch(e.target.value)}
               className="pl-10"
@@ -855,15 +858,15 @@ function BlueprintEditorModal({
           <div className="flex-1 overflow-y-auto space-y-2 mt-4">
             {isLoadingBlocks ? (
               <div className="text-center py-8">
-                <p className="text-sm text-muted-foreground">로딩 중...</p>
+                <p className="text-sm text-muted-foreground">{tPlan('loadingBlocks')}</p>
               </div>
             ) : filteredBlocks.length === 0 ? (
               <div className="text-center py-8">
                 <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-sm text-muted-foreground">
                   {blockSearch
-                    ? "검색 결과가 없습니다"
-                    : "루틴 블록이 없습니다"}
+                    ? tPlan('noSearchResults')
+                    : tPlan('noBlocksFound')}
                 </p>
               </div>
             ) : (
@@ -881,7 +884,7 @@ function BlueprintEditorModal({
                             {block.workoutFormat}
                           </Badge>
                           {block.isLeaderboardEnabled && (
-                            <Badge variant="default">리더보드</Badge>
+                            <Badge variant="default">{tPlan('leaderboard')}</Badge>
                           )}
                         </div>
                         <CardTitle className="text-base">
@@ -893,7 +896,7 @@ function BlueprintEditorModal({
                   <CardContent>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Dumbbell className="h-4 w-4" />
-                      <span>운동 {block.itemCount}개</span>
+                      <span>{tPlan('exerciseCount', { count: block.itemCount })}</span>
                     </div>
                     {block.description && (
                       <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
@@ -912,12 +915,12 @@ function BlueprintEditorModal({
       <Dialog open={isRemoveBlockOpen} onOpenChange={setIsRemoveBlockOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>루틴 블록 해제</DialogTitle>
+            <DialogTitle>{tPlan('unassignBlockTitle')}</DialogTitle>
             <DialogDescription>
-              루틴 블록 지정을 해제하시겠습니까?
+              {tPlan('unassignBlockConfirm')}
               <br />
               <span className="text-destructive font-medium">
-                이 작업은 되돌릴 수 없습니다.
+                {tPlan('deletePhaseWarning')}
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -928,7 +931,7 @@ function BlueprintEditorModal({
               disabled={isSaving}
               className="flex-1"
             >
-              {isSaving ? "해제 중..." : "해제"}
+              {isSaving ? tPlan('unassigning') : tPlan('unassign')}
             </Button>
             <Button
               variant="outline"
@@ -936,7 +939,7 @@ function BlueprintEditorModal({
               disabled={isSaving}
               className="flex-1"
             >
-              취소
+              {tPlan('cancel')}
             </Button>
           </div>
         </DialogContent>
