@@ -1,29 +1,19 @@
 import { notFound, redirect } from "next/navigation";
-import { getMemberWorkoutLogsPageDataAction } from "@/actions/workoutLog";
+import { getMemberDetailAction, getMemberWorkoutLogsAction, getMemberCoachCommentsAction } from "@/actions/member";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MemberStatusBadge } from "@/components/coach/member-status-badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MemberDetailClient } from "./member-detail-client";
 import {
-  FileTextIcon,
   UserIcon,
   MailIcon,
   ArrowLeftIcon,
+  CalendarIcon,
 } from "lucide-react";
-
-const INTENSITY_LABELS = {
-  LOW: "낮음",
-  MEDIUM: "중간",
-  HIGH: "높음",
-};
-
-const INTENSITY_VARIANTS: Record<
-  "LOW" | "MEDIUM" | "HIGH",
-  "default" | "secondary" | "outline"
-> = {
-  LOW: "secondary",
-  MEDIUM: "default",
-  HIGH: "outline",
-};
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
 
 interface PageProps {
   params: Promise<{
@@ -32,128 +22,84 @@ interface PageProps {
   }>;
 }
 
-export default async function MemberWorkoutLogsPage({ params }: PageProps) {
-  const { pid, memberId } = await params;
+export default async function MemberDetailPage({ params }: PageProps) {
+  const { pid: programId, memberId } = await params;
 
-  // Server Action으로 모든 데이터 한번에 조회
-  const result = await getMemberWorkoutLogsPageDataAction(pid, memberId);
-
-  if (!result.success || !result.data) {
-    if (result.message?.includes("권한") || result.message?.includes("인증")) {
+  // 회원 상세 정보 조회
+  const memberResult = await getMemberDetailAction(programId, memberId);
+  if (!memberResult.success || !memberResult.data) {
+    if (memberResult.message?.includes("권한") || memberResult.message?.includes("인증")) {
       redirect("/signin");
     }
     notFound();
   }
 
-  const { member, logs } = result.data;
+  // 운동 기록 조회
+  const workoutLogsResult = await getMemberWorkoutLogsAction(programId, memberId);
+  const workoutLogs = workoutLogsResult.success ? workoutLogsResult.data : [];
 
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("ko-KR");
-  };
+  // 코치 코멘트 조회
+  const commentsResult = await getMemberCoachCommentsAction(programId, memberId);
+  const coachComments = commentsResult.success ? commentsResult.data : [];
+
+  const member = memberResult.data;
 
   return (
-    <div className="container max-w-4xl py-6">
+    <div className="container max-w-5xl py-6">
       {/* Header */}
       <div className="mb-6">
         <Button asChild variant="ghost" className="mb-4">
-          <a href={`/coach/dashboard/${pid}`}>
+          <a href={`/coach/dashboard/${programId}/members`}>
             <ArrowLeftIcon className="size-4 mr-2" />
-            돌아가기
+            회원 목록으로 돌아가기
           </a>
         </Button>
 
         <div className="flex items-center gap-4">
-          {member.avatarUrl ? (
-            <img
-              src={member.avatarUrl}
-              alt={member.fullName || member.email}
-              className="size-16 rounded-full object-cover"
-            />
-          ) : (
-            <div className="size-16 rounded-full bg-muted flex items-center justify-center">
-              <UserIcon className="size-8 text-muted-foreground" />
-            </div>
-          )}
-          <div>
+          <Avatar className="size-16">
+            <AvatarImage src={member.user.avatarUrl || undefined} />
+            <AvatarFallback>
+              {member.user.fullName
+                ?.split(" ")
+                .map(n => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold">
-              {member.fullName || "이름 없음"}님의 운동 일지
+              {member.user.fullName || "이름 없음"}님의 상세 정보
             </h1>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MailIcon className="size-4" />
-              {member.email}
+            <div className="flex items-center gap-4 text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <MailIcon className="size-4" />
+                {member.user.email}
+              </div>
+              <div className="flex items-center gap-1">
+                <CalendarIcon className="size-4" />
+                {member.startDate
+                  ? format(new Date(member.startDate), "yyyy.MM.dd", { locale: ko })
+                  : "시작일 미정"}
+                {" ~ "}
+                {member.endDate
+                  ? format(new Date(member.endDate), "yyyy.MM.dd", { locale: ko })
+                  : "무기한"}
+              </div>
             </div>
           </div>
+          <MemberStatusBadge status={member.status} />
         </div>
       </div>
 
-      {/* Logs List */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
-            총 {logs.length}개의 운동 일지
-          </h2>
-        </div>
-
-        {logs.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <FileTextIcon className="size-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">운동 일지가 없습니다</p>
-            </CardContent>
-          </Card>
-        ) : (
-          logs.map((log) => (
-            <Card key={log.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-xl mb-1">
-                      운동 일지 - {formatDate(log.logDate)}
-                    </CardTitle>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <Badge
-                        variant={
-                          INTENSITY_VARIANTS[
-                            log.intensity as "LOW" | "MEDIUM" | "HIGH"
-                          ]
-                        }
-                      >
-                        {
-                          INTENSITY_LABELS[
-                            log.intensity as "LOW" | "MEDIUM" | "HIGH"
-                          ]
-                        }
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* 내용 표시 */}
-                  <div>
-                    <h4 className="font-semibold mb-2">상세 내용</h4>
-                    <div className="bg-muted/50 rounded-lg p-4">
-                      <pre className="text-sm whitespace-pre-wrap wrap-break-word">
-                        {JSON.stringify(log.content, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-
-                  {/* 메타데이터 */}
-                  <div className="text-xs text-muted-foreground">
-                    작성일: {formatDate(log.createdAt)}
-                    {new Date(log.updatedAt).getTime() !==
-                      new Date(log.createdAt).getTime() && (
-                      <span> | 수정일: {formatDate(log.updatedAt)}</span>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+      {/* 클라이언트 컴포넌트로 탭 기능 제공 */}
+      <MemberDetailClient
+        programId={programId}
+        memberId={memberId}
+        member={member}
+        workoutLogs={workoutLogs || []}
+        coachComments={coachComments || []}
+      />
     </div>
   );
 }
