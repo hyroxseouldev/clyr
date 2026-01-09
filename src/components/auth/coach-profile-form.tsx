@@ -23,7 +23,8 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { TiptapForm, ImageForm } from "@/components/form";
+import { TiptapForm } from "@/components/form";
+import { AvatarForm } from "@/components/form/avatar-form";
 import type { CoachProfile } from "@/db/schema";
 
 const coachProfileFormSchema = z.object({
@@ -127,12 +128,12 @@ export function CoachProfileForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* 프로필 이미지 */}
-        <ImageForm
+        <AvatarForm
           name="profileImageUrl"
           label="프로필 이미지"
           form={form}
-          bucketName="avatars"
-          path="coach-profiles"
+          bucketName="public-assets"
+          path="coach/profile"
           maxFileSize={2 * 1024 * 1024}
         />
 

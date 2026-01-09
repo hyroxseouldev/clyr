@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Pagination,
   PaginationContent,
@@ -20,16 +22,26 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { Search, Dumbbell, Video, Calendar, User } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Search, Dumbbell, Video, Calendar, User, Filter, X, ChevronDown } from "lucide-react";
 import type { PaginatedWorkoutLibrary } from "@/db/queries/workoutLibrary";
 
 interface WorkoutLibraryClientProps {
   initialData: PaginatedWorkoutLibrary | null;
+  filtersData: {
+    categories: string[];
+    workoutTypes: string[];
+  };
   pageSize: number;
 }
 
 export function WorkoutLibraryClient({
   initialData,
+  filtersData,
   pageSize,
 }: WorkoutLibraryClientProps) {
   const router = useRouter();
@@ -39,22 +51,108 @@ export function WorkoutLibraryClient({
     parseInt(searchParams.get("page") || "1", 10)
   );
 
+  // 필터 상태
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    searchParams.get("categories")?.split(",").filter(Boolean) || []
+  );
+  const [selectedWorkoutTypes, setSelectedWorkoutTypes] = useState<string[]>(
+    searchParams.get("workoutTypes")?.split(",").filter(Boolean) || []
+  );
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
   const totalPages = initialData?.totalPages || 1;
   const items = initialData?.items || [];
 
+  // 워크아웃 타입 라벨 매핑
+  const getWorkoutTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      WEIGHT_REPS: "무게/횟수",
+      DURATION: "시간",
+      DISTANCE: "거리",
+    };
+    return labels[type] || type;
+  };
+
   const handleSearch = (value: string) => {
     setSearch(value);
-    const params = new URLSearchParams();
-    if (value) params.set("search", value);
-    params.set("page", "1");
+    updateFilters({ search: value });
+  };
+
+  // URL 업데이트 함수
+  const updateFilters = (options: {
+    search?: string;
+    categories?: string[];
+    workoutTypes?: string[];
+    page?: number;
+  }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (options.search !== undefined) {
+      if (options.search) {
+        params.set("search", options.search);
+      } else {
+        params.delete("search");
+      }
+    }
+
+    if (options.categories !== undefined) {
+      if (options.categories.length > 0) {
+        params.set("categories", options.categories.join(","));
+      } else {
+        params.delete("categories");
+      }
+    }
+
+    if (options.workoutTypes !== undefined) {
+      if (options.workoutTypes.length > 0) {
+        params.set("workoutTypes", options.workoutTypes.join(","));
+      } else {
+        params.delete("workoutTypes");
+      }
+    }
+
+    if (options.page !== undefined) {
+      params.set("page", options.page.toString());
+    }
+
     router.push(`?${params.toString()}`);
+  };
+
+  // 카테고리 토글
+  const handleCategoryToggle = (category: string) => {
+    const newCategories = selectedCategories.includes(category)
+      ? selectedCategories.filter((c) => c !== category)
+      : [...selectedCategories, category];
+
+    setSelectedCategories(newCategories);
+    updateFilters({ categories: newCategories, page: 1 });
     setCurrentPage(1);
   };
 
+  // 워크아웃 타입 토글
+  const handleWorkoutTypeToggle = (type: string) => {
+    const newTypes = selectedWorkoutTypes.includes(type)
+      ? selectedWorkoutTypes.filter((t) => t !== type)
+      : [...selectedWorkoutTypes, type];
+
+    setSelectedWorkoutTypes(newTypes);
+    updateFilters({ workoutTypes: newTypes, page: 1 });
+    setCurrentPage(1);
+  };
+
+  // 필터 초기화
+  const handleResetFilters = () => {
+    setSelectedCategories([]);
+    setSelectedWorkoutTypes([]);
+    updateFilters({ categories: [], workoutTypes: [], page: 1 });
+    setCurrentPage(1);
+  };
+
+  // 활성 필터 개수
+  const activeFilterCount = selectedCategories.length + selectedWorkoutTypes.length;
+
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", page.toString());
-    router.push(`?${params.toString()}`);
+    updateFilters({ page });
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -91,22 +189,13 @@ export function WorkoutLibraryClient({
     return pages;
   };
 
-  const getWorkoutTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      WEIGHT_REPS: "무게/횟수",
-      DURATION: "시간",
-      DISTANCE: "거리",
-    };
-    return labels[type] || type;
-  };
-
   return (
     <div className="space-y-6">
       {/* 헤더 */}
       <div>
         <h1 className="text-2xl font-bold">워크아웃 라이브러리</h1>
         <p className="text-muted-foreground">
-          모든 워크아웃 운동을 조회하고 관리하세요
+          {`${initialData?.totalCount}개의 워크아웃 운동이 등록되어 있습니다.`}
         </p>
       </div>
 
@@ -123,45 +212,79 @@ export function WorkoutLibraryClient({
         </div>
       </div>
 
-      {/* 통계 */}
-      {initialData && (
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                전체 워크아웃
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{initialData.totalCount}</div>
-            </CardContent>
-          </Card>
+      {/* 필터 섹션 */}
+      <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+        <CollapsibleTrigger asChild>
+          <Button variant="outline" className="w-full justify-between">
+            <span className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              필터
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary">{activeFilterCount}</Badge>
+              )}
+            </span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${isFilterOpen ? "rotate-180" : ""}`} />
+          </Button>
+        </CollapsibleTrigger>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                현재 페이지
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {currentPage} / {totalPages}
+        <CollapsibleContent className="space-y-4 pt-4">
+          {/* 카테고리 필터 */}
+          {filtersData.categories.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium mb-3">카테고리</h3>
+              <div className="flex flex-wrap gap-2">
+                {filtersData.categories.map((category) => (
+                  <div key={category} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`category-${category}`}
+                      checked={selectedCategories.includes(category)}
+                      onCheckedChange={() => handleCategoryToggle(category)}
+                    />
+                    <label
+                      htmlFor={`category-${category}`}
+                      className="text-sm cursor-pointer"
+                    >
+                      {category}
+                    </label>
+                  </div>
+                ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          )}
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                페이지당 개수
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pageSize}</div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+          {/* 워크아웃 타입 필터 */}
+          {filtersData.workoutTypes.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium mb-3">운동 타입</h3>
+              <div className="flex flex-wrap gap-2">
+                {filtersData.workoutTypes.map((type) => (
+                  <div key={type} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`type-${type}`}
+                      checked={selectedWorkoutTypes.includes(type)}
+                      onCheckedChange={() => handleWorkoutTypeToggle(type)}
+                    />
+                    <label
+                      htmlFor={`type-${type}`}
+                      className="text-sm cursor-pointer"
+                    >
+                      {getWorkoutTypeLabel(type)}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 필터 초기화 버튼 */}
+          {activeFilterCount > 0 && (
+            <Button variant="ghost" size="sm" onClick={handleResetFilters}>
+              <X className="h-4 w-4 mr-2" />
+              필터 초기화
+            </Button>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* 워크아웃 목록 */}
       {items.length === 0 ? (
@@ -170,8 +293,8 @@ export function WorkoutLibraryClient({
             <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-lg font-medium">워크아웃이 없습니다</p>
             <p className="text-sm text-muted-foreground mt-2">
-              {search
-                ? "검색어와 일치하는 워크아웃이 없습니다."
+              {search || activeFilterCount > 0
+                ? "검색 조건과 일치하는 워크아웃이 없습니다."
                 : "등록된 워크아웃이 없습니다."}
             </p>
           </CardContent>

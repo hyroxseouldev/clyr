@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { workoutLibrary, account } from "@/db/schema";
-import { desc, sql, or, ilike, eq } from "drizzle-orm";
+import { desc, sql, or, ilike, eq, and, inArray, isNotNull, ne } from "drizzle-orm";
 
 /**
  * ==========================================
@@ -31,16 +31,20 @@ export interface PaginatedWorkoutLibrary {
 }
 
 /**
- * 워크아웃 라이브러리 조회 (페이지네이션)
+ * 워크아웃 라이브러리 조회 (페이지네이션 + 필터)
  */
 export async function getWorkoutLibraryQuery({
   page = 1,
   pageSize = 20,
   search,
+  categories,
+  workoutTypes,
 }: {
   page?: number;
   pageSize?: number;
   search?: string;
+  categories?: string[];
+  workoutTypes?: string[];
 } = {}): Promise<PaginatedWorkoutLibrary> {
   const offset = (page - 1) * pageSize;
 
@@ -53,13 +57,36 @@ export async function getWorkoutLibraryQuery({
       )
     : undefined;
 
+  // 필터 조건
+  const filterConditions = [];
+
+  if (categories && categories.length > 0) {
+    filterConditions.push(inArray(workoutLibrary.category, categories));
+  }
+
+  if (workoutTypes && workoutTypes.length > 0) {
+    filterConditions.push(inArray(workoutLibrary.workoutType, workoutTypes));
+  }
+
+  // 모든 조건 결합
+  const whereCondition = searchCondition || filterConditions.length > 0
+    ? and(
+        searchCondition || undefined,
+        filterConditions.length > 0
+          ? filterConditions.length === 1
+            ? filterConditions[0]
+            : and(...filterConditions)
+          : undefined
+      )
+    : undefined;
+
   // 전체 개수 조회
   const countResult = await db
     .select({
       count: sql<number>`COUNT(*)`,
     })
     .from(workoutLibrary)
-    .where(searchCondition);
+    .where(whereCondition);
 
   const totalCount = Number(countResult[0]?.count || 0);
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -81,7 +108,7 @@ export async function getWorkoutLibraryQuery({
     })
     .from(workoutLibrary)
     .leftJoin(account, eq(workoutLibrary.coachId, account.id))
-    .where(searchCondition)
+    .where(whereCondition)
     .orderBy(desc(workoutLibrary.createdAt), desc(workoutLibrary.updatedAt))
     .limit(pageSize)
     .offset(offset);
@@ -119,4 +146,38 @@ export async function getWorkoutLibraryByIdQuery(id: string) {
     .limit(1);
 
   return result[0] || null;
+}
+
+/**
+ * 워크아웃 라이브러리 필터 옵션 조회
+ * 등록된 모든 카테고리와 워크아웃 타입을 중복 제거하여 반환
+ */
+export async function getWorkoutLibraryFiltersQuery() {
+  // 카테고리 목록 조회 (중복 제거, null 제외)
+  const categoriesResult = await db
+    .selectDistinct({
+      category: workoutLibrary.category,
+    })
+    .from(workoutLibrary)
+    .where(isNotNull(workoutLibrary.category))
+    .orderBy(workoutLibrary.category);
+
+  const categories = categoriesResult
+    .map((r) => r.category)
+    .filter(Boolean) as string[];
+
+  // 워크아웃 타입 목록 조회 (중복 제거)
+  const workoutTypesResult = await db
+    .selectDistinct({
+      workoutType: workoutLibrary.workoutType,
+    })
+    .from(workoutLibrary)
+    .orderBy(workoutLibrary.workoutType);
+
+  const workoutTypes = workoutTypesResult.map((r) => r.workoutType);
+
+  return {
+    categories,
+    workoutTypes,
+  };
 }
