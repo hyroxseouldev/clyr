@@ -251,6 +251,32 @@ export const completeOrderAndCreateEnrollmentQuery = async (
  */
 
 /**
+ * 프로그램별 최근 주문 조회 (대시보드용)
+ */
+export const getRecentOrdersByProgramIdQuery = async (
+  programId: string,
+  limit: number = 10
+) => {
+  return await db.query.orders.findMany({
+    where: and(
+      eq(orders.programId, programId),
+      eq(orders.status, "COMPLETED")
+    ),
+    orderBy: [desc(orders.createdAt)],
+    limit,
+    with: {
+      buyer: {
+        columns: {
+          id: true,
+          fullName: true,
+          email: true,
+        },
+      },
+    },
+  });
+};
+
+/**
  * 프로그램별 월간 매출 집계 (최근 12개월)
  */
 export const getProgramMonthlySalesQuery = async (programId: string) => {

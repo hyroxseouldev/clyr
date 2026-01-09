@@ -32,16 +32,31 @@ import { signUpAction } from "@/actions/auth";
 import { useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import Link from "next/link";
-import { signUpSchema } from "@/lib/validations";
+import { Link } from "@/i18n/routing";
 import { AsyncButton } from "@/components/common/async-button";
-
-type SignUpFormValues = z.infer<typeof signUpSchema>;
+import { useTranslations } from "next-intl";
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const t = useTranslations('auth.signUp');
+  const tValidation = useTranslations('validation');
+  const tToast = useTranslations('toast');
+
+  const formSchema = z.object({
+    fullName: z.string().min(2, tValidation('nameMin')).max(50, tValidation('nameMax')),
+    email: z.string().email(tValidation('email')),
+    password: z.string().min(8, tValidation('passwordMin')),
+    confirmPassword: z.string().min(8, tValidation('passwordMin')),
+    role: z.enum(["USER", "COACH"]),
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: tValidation('passwordMismatch'),
+    path: ["confirmPassword"],
+  });
+
+  type SignUpFormValues = z.infer<typeof formSchema>;
+
   const [isLoading, startTransition] = useTransition();
   const searchParams = useSearchParams();
   const roleParam = searchParams.get("role");
@@ -49,7 +64,7 @@ export function SignUpForm({
     roleParam === "COACH" ? "COACH" : "USER";
 
   const form = useForm<SignUpFormValues>({
-    resolver: zodResolver(signUpSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -70,14 +85,12 @@ export function SignUpForm({
       });
 
       if (result && "error" in result) {
-        toast.error(`회원가입에 실패했습니다. ${result.error}`);
+        toast.error(`${tToast('error')}: ${result.error}`);
         return;
       }
 
       if (result && "success" in result && result.success) {
-        toast.success(
-          `회원가입이 완료되었습니다. 이메일 인증 후 로그인 해주세요.`
-        );
+        toast.success(tToast('created'));
 
         return;
       }
@@ -88,8 +101,8 @@ export function SignUpForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>회원가입</CardTitle>
-          <CardDescription>정보를 입력하여 새 계정을 만드세요</CardDescription>
+          <CardTitle>{t('title')}</CardTitle>
+          <CardDescription>{t('description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -102,9 +115,9 @@ export function SignUpForm({
                 name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>이름</FormLabel>
+                    <FormLabel>{t('fullName')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="홍길동" {...field} />
+                      <Input placeholder={t('fullNamePlaceholder')} {...field} />
                     </FormControl>
                     <FormDescription>
                       서비스에서 사용하실 실명입니다.
@@ -119,10 +132,10 @@ export function SignUpForm({
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>이메일</FormLabel>
+                    <FormLabel>{t('email')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="example@email.com"
+                        placeholder={t('emailPlaceholder')}
                         type="email"
                         {...field}
                       />
@@ -137,10 +150,10 @@ export function SignUpForm({
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>비밀번호</FormLabel>
+                    <FormLabel>{t('password')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="••••••••"
+                        placeholder={t('passwordPlaceholder')}
                         type="password"
                         {...field}
                       />
@@ -158,10 +171,10 @@ export function SignUpForm({
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>비밀번호 확인</FormLabel>
+                    <FormLabel>{t('confirmPassword')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="••••••••"
+                        placeholder={t('confirmPasswordPlaceholder')}
                         type="password"
                         {...field}
                       />
@@ -176,7 +189,7 @@ export function SignUpForm({
                 name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>회원 유형</FormLabel>
+                    <FormLabel>{t('role')}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -187,8 +200,8 @@ export function SignUpForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="USER">일반 회원</SelectItem>
-                        <SelectItem value="COACH">코치</SelectItem>
+                        <SelectItem value="USER">{t('roleUser')}</SelectItem>
+                        <SelectItem value="COACH">{t('roleCoach')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>
@@ -201,12 +214,12 @@ export function SignUpForm({
 
               {/* 이미 계정이 있으면 로그인 페이지로 이동 */}
               <FormDescription className="text-center text-muted-foreground">
-                이미 계정이 있으신가요?{" "}
+                {t('hasAccount')}{" "}
                 <Link
                   href="/signin"
                   className="text-primary text-underline underline-offset-4 hover:text-primary/80"
                 >
-                  로그인
+                  {t('signIn')}
                 </Link>
               </FormDescription>
 
@@ -215,7 +228,7 @@ export function SignUpForm({
                 className="w-full"
                 isLoading={isLoading}
               >
-                가입하기
+                {t('submit')}
               </AsyncButton>
             </form>
           </Form>

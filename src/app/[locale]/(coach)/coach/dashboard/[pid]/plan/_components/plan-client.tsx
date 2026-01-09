@@ -31,6 +31,7 @@ import {
   Search,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import {
   createPhaseAction,
   deletePhaseAction,
@@ -51,6 +52,9 @@ interface PlanClientProps {
 }
 
 export function PlanClient({ programId, initialData }: PlanClientProps) {
+  const tToast = useTranslations('toast');
+  const tPlan = useTranslations('plan');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const [planData, setPlanData] = useState<ProgramPlanData | null>(initialData);
   const [selectedPhase, setSelectedPhase] = useState<number>(
@@ -88,7 +92,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
   // 페이즈 생성 핸들러
   const handleCreatePhase = async () => {
     if (planData?.blueprints.some((bp) => bp.phaseNumber === newPhaseNumber)) {
-      toast.error("이미 존재하는 페이즈 번호입니다.");
+      toast.error(tToast('phaseExists'));
       return;
     }
 
@@ -103,11 +107,11 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
     setIsCreatingPhase(false);
 
     if (!result.success) {
-      toast.error(result.message || "페이즈 생성에 실패했습니다.");
+      toast.error(result.message || tToast('phaseCreateFailed'));
       return;
     }
 
-    toast.success("페이즈가 생성되었습니다.");
+    toast.success(tToast('phaseCreated'));
     setIsCreatePhaseOpen(false);
 
     // 데이터 다시 로드
@@ -131,13 +135,13 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
     const result = await deletePhaseAction(programId, phaseToDelete);
 
     if (!result.success) {
-      toast.error(result.message || "페이즈 삭제에 실패했습니다.");
+      toast.error(result.message || tToast('phaseDeleteFailed'));
       setIsDeletePhaseOpen(false);
       setPhaseToDelete(null);
       return;
     }
 
-    toast.success("페이즈가 삭제되었습니다.");
+    toast.success(tToast('phaseDeleted'));
 
     // 데이터 다시 로드
     await refreshPlanData();
@@ -165,10 +169,10 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
   // 루틴 블록이 없는 날은 "휴식일"로 표시
   const getDayTypeLabel = (blueprint: ProgramBlueprintWithBlock) => {
     if (!blueprint.routineBlockId) {
-      return { label: "휴식일", variant: "secondary" as const };
+      return { label: tPlan('restDay'), variant: "secondary" as const };
     }
     return {
-      label: blueprint.routineBlockFormat || "운동",
+      label: blueprint.routineBlockFormat || tPlan('workout'),
       variant: "default" as const,
     };
   };
@@ -179,7 +183,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
         <div className="text-center">
           <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-lg font-medium">
-            플랜 데이터를 불러올 수 없습니다
+            {tPlan('cannotLoadPlan')}
           </p>
         </div>
       </div>
@@ -192,28 +196,28 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">
-            {planData.programTitle} - 프로그램 플랜
+            {planData.programTitle} - {tPlan('title')}
           </h1>
           <p className="text-muted-foreground">
-            총 {planData.durationWeeks}주 프로그램의 운동 일정을 설계하세요
+            {tPlan('subtitle', { weeks: planData.durationWeeks })}
           </p>
         </div>
         <Dialog open={isCreatePhaseOpen} onOpenChange={setIsCreatePhaseOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />새 페이즈 만들기
+              <Plus className="h-4 w-4 mr-2" />{tPlan('createPhase')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>새 페이즈 만들기</DialogTitle>
+              <DialogTitle>{tPlan('createPhase')}</DialogTitle>
               <DialogDescription>
-                새로운 페이즈를 생성하고 일차를 추가합니다
+                {tPlan('createPhaseDesc')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>페이즈 번호</Label>
+                <Label>{tPlan('phaseNumber')}</Label>
                 <Input
                   type="number"
                   min="1"
@@ -221,11 +225,11 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                   onChange={(e) =>
                     setNewPhaseNumber(parseInt(e.target.value) || 1)
                   }
-                  placeholder="예: 1"
+                  placeholder={tPlan('phaseNumberPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>일차 수</Label>
+                <Label>{tPlan('dayCount')}</Label>
                 <Input
                   type="number"
                   min="1"
@@ -234,7 +238,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                   onChange={(e) =>
                     setNewDayCount(parseInt(e.target.value) || 7)
                   }
-                  placeholder="예: 7 (일주일)"
+                  placeholder={tPlan('dayCountPlaceholder')}
                 />
               </div>
               <Button
@@ -242,7 +246,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                 disabled={isCreatingPhase}
                 className="w-full"
               >
-                {isCreatingPhase ? "생성 중..." : "페이즈 생성하기"}
+                {isCreatingPhase ? tPlan('creating') : tPlan('createPhaseButton')}
               </Button>
             </div>
           </DialogContent>
@@ -252,18 +256,18 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
       {/* 프로그램 정보 카드 */}
       <Card>
         <CardHeader>
-          <CardTitle>프로그램 정보</CardTitle>
+          <CardTitle>{tPlan('programInfo')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <p className="text-sm text-muted-foreground">페이즈 수</p>
+              <p className="text-sm text-muted-foreground">{tPlan('phaseCount')}</p>
               <p className="text-lg font-semibold">
                 {planData.blueprints.length}개
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">총 일차</p>
+              <p className="text-sm text-muted-foreground">'tPlan('totalDays')'</p>
               <p className="text-lg font-semibold">
                 {planData.blueprints.reduce(
                   (sum, bp) => sum + bp.days.length,
@@ -615,6 +619,7 @@ function BlueprintEditorModal({
   onOpenChange,
   onSave,
 }: BlueprintEditorModalProps) {
+  const tToast = useTranslations('toast');
   const [dayTitle, setDayTitle] = useState(blueprint.dayTitle || "");
   const [notes, setNotes] = useState(blueprint.notes || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -661,11 +666,11 @@ function BlueprintEditorModal({
     setIsSaving(false);
 
     if (!result.success) {
-      toast.error(result.message || "루틴 블록 지정에 실패했습니다.");
+      toast.error(result.message || tToast('routineBlockAssignFailed'));
       return;
     }
 
-    toast.success("루틴 블록이 지정되었습니다.");
+    toast.success(tToast('routineBlockAssigned'));
     setSelectedBlockId(blockId);
     setIsBlockSelectorOpen(false);
     onSave();
@@ -687,12 +692,12 @@ function BlueprintEditorModal({
     setIsSaving(false);
 
     if (!result.success) {
-      toast.error(result.message || "루틴 블록 해제에 실패했습니다.");
+      toast.error(result.message || tToast('routineBlockUnassignFailed'));
       setIsRemoveBlockOpen(false);
       return;
     }
 
-    toast.success("루틴 블록이 해제되었습니다.");
+    toast.success(tToast('routineBlockUnassigned'));
     setSelectedBlockId(null);
     setIsRemoveBlockOpen(false);
     onSave();
@@ -709,11 +714,11 @@ function BlueprintEditorModal({
     setIsSaving(false);
 
     if (!result.success) {
-      toast.error(result.message || "저장에 실패했습니다.");
+      toast.error(result.message || `${tToast('error')}: ${tToast('saved')}`);
       return;
     }
 
-    toast.success("저장되었습니다.");
+    toast.success(tToast('saved'));
     onOpenChange(false);
     onSave();
   };

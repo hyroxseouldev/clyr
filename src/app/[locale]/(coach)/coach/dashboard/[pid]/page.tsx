@@ -1,6 +1,23 @@
+import { getDashboardStatsAction, getRecentPurchasesAction } from "@/actions/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, DollarSign, TrendingUp, Calendar } from "lucide-react";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
+
+interface DashboardStats {
+  totalSales: number;
+  totalRevenue: number;
+  activeUsers: number;
+  completionRate: number;
+}
+
+interface RecentPurchase {
+  id: string;
+  userName: string;
+  date: Date;
+  amount: number;
+}
 
 const CoachDashboardPidPage = async ({
   params,
@@ -9,20 +26,24 @@ const CoachDashboardPidPage = async ({
 }) => {
   const { pid } = await params;
 
-  // 임시 데이터
-  const mockStats = {
-    totalSales: 156,
-    totalRevenue: 15600000,
-    activeUsers: 89,
-    completionRate: 68,
-  };
+  // Fetch real data
+  const [statsResult, purchasesResult] = await Promise.all([
+    getDashboardStatsAction(pid),
+    getRecentPurchasesAction(pid, 10),
+  ]);
 
-  const mockRecentActivity = [
-    { id: 1, type: "purchase", user: "홍길동", date: "2026-01-08", amount: 99000 },
-    { id: 2, type: "purchase", user: "김철수", date: "2026-01-07", amount: 99000 },
-    { id: 3, type: "completion", user: "이영희", date: "2026-01-07", week: 4 },
-    { id: 4, type: "purchase", user: "박민수", date: "2026-01-06", amount: 99000 },
-  ];
+  const stats: DashboardStats = statsResult.success
+    ? (statsResult.data as DashboardStats)
+    : {
+        totalSales: 0,
+        totalRevenue: 0,
+        activeUsers: 0,
+        completionRate: 0,
+      };
+
+  const recentPurchases: RecentPurchase[] = purchasesResult.success
+    ? (purchasesResult.data as RecentPurchase[])
+    : [];
 
   return (
     <div className="space-y-6">
@@ -40,10 +61,8 @@ const CoachDashboardPidPage = async ({
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockStats.totalSales}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+12%</span> 지난달 대비
-            </p>
+            <div className="text-2xl font-bold">{stats.totalSales}</div>
+            <p className="text-xs text-muted-foreground">건</p>
           </CardContent>
         </Card>
 
@@ -54,11 +73,8 @@ const CoachDashboardPidPage = async ({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {mockStats.totalRevenue.toLocaleString()}원
+              {stats.totalRevenue.toLocaleString()}원
             </div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+8%</span> 지난달 대비
-            </p>
           </CardContent>
         </Card>
 
@@ -68,10 +84,8 @@ const CoachDashboardPidPage = async ({
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockStats.activeUsers}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+5%</span> 지난달 대비
-            </p>
+            <div className="text-2xl font-bold">{stats.activeUsers}</div>
+            <p className="text-xs text-muted-foreground">명</p>
           </CardContent>
         </Card>
 
@@ -81,10 +95,8 @@ const CoachDashboardPidPage = async ({
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockStats.completionRate}%</div>
-            <p className="text-xs text-muted-foreground">
-              평균 완료율
-            </p>
+            <div className="text-2xl font-bold">{stats.completionRate}%</div>
+            <p className="text-xs text-muted-foreground">평균 완료율</p>
           </CardContent>
         </Card>
       </div>
@@ -92,40 +104,42 @@ const CoachDashboardPidPage = async ({
       {/* 최근 활동 */}
       <Card>
         <CardHeader>
-          <CardTitle>최근 활동</CardTitle>
+          <CardTitle>최근 구매 내역</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {mockRecentActivity.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-center justify-between border-b pb-3 last:border-0"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                    {activity.type === "purchase" ? (
+          {recentPurchases.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
+              구매 내역이 없습니다.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {recentPurchases.map((purchase) => (
+                <div
+                  key={purchase.id}
+                  className="flex items-center justify-between border-b pb-3 last:border-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
                       <Users className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <Calendar className="h-4 w-4 text-blue-600" />
-                    )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">
+                        {purchase.userName}님이 구매함
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(purchase.date), "yyyy.MM.dd", {
+                          locale: ko,
+                        })}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium">
-                      {activity.type === "purchase"
-                        ? `${activity.user}님이 구매함`
-                        : `${activity.user}님이 ${activity.week}주차 완료`}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{activity.date}</p>
-                  </div>
-                </div>
-                {activity.type === "purchase" && activity.amount && (
                   <span className="text-sm font-semibold text-green-600">
-                    +{activity.amount.toLocaleString()}원
+                    +{purchase.amount.toLocaleString()}원
                   </span>
-                )}
-              </div>
-            ))}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

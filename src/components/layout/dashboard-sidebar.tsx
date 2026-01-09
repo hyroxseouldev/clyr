@@ -13,33 +13,38 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { DumbbellIcon } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import {
   InfoIcon,
   ShoppingCartIcon,
   Settings2Icon,
   UsersIcon,
+  LayoutDashboardIcon,
 } from "lucide-react";
 
 interface MenuItem {
-  title: string;
+  titleKey: string;
   url: string;
   iconName: string;
 }
 
 const DashboardSidebar = () => {
   const pathname = usePathname();
+  const t = useTranslations('dashboard');
+  const tCommon = useTranslations('common');
+
   const title = "Clyr Coach";
   const menuItems: MenuItem[] = [
     {
-      title: "대시보드",
+      titleKey: "title",
       url: "/coach/dashboard",
       iconName: "LayoutDashboard",
     },
     {
-      title: "설정",
+      titleKey: "settings",
       url: "/coach/settings",
       iconName: "Settings2",
     },
@@ -50,6 +55,7 @@ const DashboardSidebar = () => {
     ShoppingCart: ShoppingCartIcon,
     Users: UsersIcon,
     Settings2: Settings2Icon,
+    LayoutDashboard: LayoutDashboardIcon,
   };
   return (
     <>
@@ -67,7 +73,7 @@ const DashboardSidebar = () => {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>메뉴</SidebarGroupLabel>
+          <SidebarGroupLabel>{tCommon('filter')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
@@ -75,15 +81,15 @@ const DashboardSidebar = () => {
                   iconMap[item.iconName as keyof typeof iconMap] ||
                   DumbbellIcon;
                 return (
-                  <SidebarMenuItem key={item.title}>
+                  <SidebarMenuItem key={item.titleKey}>
                     <SidebarMenuButton
                       asChild
                       isActive={pathname === item.url}
-                      tooltip={item.title}
+                      tooltip={t(item.titleKey as any)}
                     >
                       <Link href={item.url}>
                         <IconComponent />
-                        <span>{item.title}</span>
+                        <span>{t(item.titleKey as any)}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

@@ -17,23 +17,28 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AsyncButton } from "@/components/common/async-button";
 import { changePasswordAction } from "@/actions/auth";
-
-const formSchema = z
-  .object({
-    currentPassword: z.string().min(1, "현재 비밀번호를 입력해주세요"),
-    newPassword: z.string().min(8, "비밀번호는 최소 8자 이상이어야 합니다"),
-    confirmPassword: z.string().min(8, "비밀번호는 최소 8자 이상이어야 합니다"),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "비밀번호가 일치하지 않습니다",
-    path: ["confirmPassword"],
-  });
+import { useTranslations } from "next-intl";
 
 export function PasswordChangeForm({
   onSuccess,
 }: {
   onSuccess?: () => void;
 }) {
+  const t = useTranslations('auth.resetPassword');
+  const tValidation = useTranslations('validation');
+  const tToast = useTranslations('toast');
+
+  const formSchema = z
+    .object({
+      currentPassword: z.string().min(1, tValidation('required')),
+      newPassword: z.string().min(8, tValidation('passwordMin')),
+      confirmPassword: z.string().min(8, tValidation('passwordMin')),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: tValidation('passwordMismatch'),
+      path: ["confirmPassword"],
+    });
+
   const [isLoading, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -53,11 +58,11 @@ export function PasswordChangeForm({
       });
 
       if (result.success) {
-        toast.success("비밀번호가 변경되었습니다.");
+        toast.success(tToast('passwordChanged'));
         form.reset();
         onSuccess?.();
       } else {
-        toast.error("비밀번호 변경 실패", {
+        toast.error(tToast('error'), {
           description: result.message,
         });
       }
@@ -89,10 +94,10 @@ export function PasswordChangeForm({
           name="newPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>새 비밀번호</FormLabel>
+              <FormLabel>{t('password')}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="새 비밀번호 (최소 8자)"
+                  placeholder={t('passwordPlaceholder')}
                   type="password"
                   {...field}
                 />
@@ -106,10 +111,10 @@ export function PasswordChangeForm({
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>새 비밀번호 확인</FormLabel>
+              <FormLabel>{t('confirmPassword')}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="새 비밀번호 확인"
+                  placeholder={t('confirmPasswordPlaceholder')}
                   type="password"
                   {...field}
                 />
@@ -123,7 +128,7 @@ export function PasswordChangeForm({
           className="w-full"
           isLoading={isLoading}
         >
-          비밀번호 변경
+          {t('submit')}
         </AsyncButton>
       </form>
     </Form>

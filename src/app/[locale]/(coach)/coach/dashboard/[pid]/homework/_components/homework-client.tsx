@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -51,6 +52,7 @@ interface HomeworkClientProps {
 }
 
 export function HomeworkClient({ programId, initialData }: HomeworkClientProps) {
+  const tToast = useTranslations('toast');
   const router = useRouter();
   const [pageData, setPageData] = useState<HomeworkPageData | null>(initialData);
 
@@ -100,7 +102,7 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
     if (result.success && result.data) {
       setSubmissions(result.data);
     } else {
-      toast.error(result.message || "숙제 제출 목록을 불러오는데 실패했습니다.");
+      toast.error(result.message || tToast('homeworkLoadFailed'));
     }
   };
 
@@ -153,11 +155,11 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
     setIsSaving(false);
 
     if (!result.success) {
-      toast.error(result.message || "코멘트 저장에 실패했습니다.");
+      toast.error(result.message || tToast('commentSaveFailed'));
       return;
     }
 
-    toast.success("코멘트가 저장되었습니다.");
+    toast.success(tToast('commentSaved'));
 
     // 로컬 상태 업데이트
     setSubmissions((prev) =>
@@ -183,11 +185,11 @@ export function HomeworkClient({ programId, initialData }: HomeworkClientProps) 
     const result = await toggleCoachCheckAction(logId);
 
     if (!result.success) {
-      toast.error(result.message || "확인 처리에 실패했습니다.");
+      toast.error(result.message || tToast('homeworkCheckFailed'));
       return;
     }
 
-    toast.success(result.data?.isCheckedByCoach ? "확인 완료" : "확인 해제");
+    toast.success(result.data?.isCheckedByCoach ? tToast('homeworkChecked') : tToast('homeworkUnchecked'));
 
     // 로컬 상태 업데이트
     setSubmissions((prev) =>

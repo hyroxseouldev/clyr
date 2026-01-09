@@ -20,12 +20,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { AsyncButton } from "@/components/common/async-button";
 import { requestPasswordResetAction } from "@/actions/auth";
-
-const formSchema = z.object({
-  email: z.string().email("올바른 이메일 형식을 입력해주세요"),
-});
+import { useTranslations } from "next-intl";
 
 export function ForgotPasswordForm() {
+  const t = useTranslations('auth.forgotPassword');
+  const tValidation = useTranslations('validation');
+  const tToast = useTranslations('toast');
+
+  const formSchema = z.object({
+    email: z.string().email(tValidation('email')),
+  });
+
   const [isLoading, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -40,10 +45,10 @@ export function ForgotPasswordForm() {
       const result = await requestPasswordResetAction(data.email);
 
       if (result.success) {
-        toast.success("비밀번호 재설정 링크가 발송되었습니다.");
+        toast.success(tToast('saved'));
         form.reset();
       } else {
-        toast.error("요청 실패", {
+        toast.error(tToast('error'), {
           description: result.message,
         });
       }
@@ -58,10 +63,10 @@ export function ForgotPasswordForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>이메일</FormLabel>
+              <FormLabel>{t('email')}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="example@email.com"
+                  placeholder={t('emailPlaceholder')}
                   type="email"
                   {...field}
                 />
@@ -72,11 +77,11 @@ export function ForgotPasswordForm() {
         />
 
         <CardDescription className="text-xs">
-          입력하신 이메일로 비밀번호 재설정 링크가 발송됩니다.
+          {t('description')}
         </CardDescription>
 
         <AsyncButton type="submit" className="w-full" isLoading={isLoading}>
-          비밀번호 재설정 링크 받기
+          {t('submit')}
         </AsyncButton>
       </form>
     </Form>

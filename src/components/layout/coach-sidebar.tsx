@@ -29,22 +29,26 @@ import {
   TrendingUpIcon,
   UserCircleIcon,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { getProgramByIdAction } from "@/actions";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { type LucideIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface MenuItem {
-  title: string;
+  titleKey: string;
   url: string;
   iconName: string;
 }
 
 const CoachSidebar = ({ programId }: { programId: string }) => {
+  const t = useTranslations('dashboard');
+  const tCommon = useTranslations('common');
+
   const [programTitle, setProgramTitle] = useState<string | null>(null);
   const pathname = usePathname();
-  const title = programTitle || "프로그램";
+  const title = programTitle || t('programs');
   const backUrl = "/coach/dashboard";
   const iconMap = {
     Info: InfoIcon,
@@ -70,52 +74,52 @@ const CoachSidebar = ({ programId }: { programId: string }) => {
   }, [programId]);
   const menuItems: MenuItem[] = [
     {
-      title: "홈",
+      titleKey: "home",
       url: `/coach/dashboard/${programId}`,
       iconName: "Home",
     },
     {
-      title: "프로그램 설명",
+      titleKey: "programInfo",
       url: `/coach/dashboard/${programId}/info`,
       iconName: "Info",
     },
     {
-      title: "프로필 편집",
+      titleKey: "profileEdit",
       url: `/coach/dashboard/${programId}/profile`,
       iconName: "UserCircle",
     },
     {
-      title: "운동 플랜 관리",
+      titleKey: "workoutPlan",
       url: `/coach/dashboard/${programId}/plan`,
       iconName: "Calendar",
     },
     {
-      title: "운동 루틴 관리",
+      titleKey: "workoutRoutine",
       url: `/coach/dashboard/${programId}/workout-routine`,
       iconName: "ClipboardList",
     },
     {
-      title: "운동 라이브러리",
+      titleKey: "workoutLibrary",
       url: `/coach/dashboard/${programId}/workout-library`,
       iconName: "BookOpen",
     },
     {
-      title: "숙제 관리",
+      titleKey: "homework",
       url: `/coach/dashboard/${programId}/homework`,
       iconName: "ClipboardCheck",
     },
     {
-      title: "판매 현황",
+      titleKey: "purchases",
       url: `/coach/dashboard/${programId}/purchases`,
       iconName: "TrendingUp",
     },
     {
-      title: "회원 관리",
+      titleKey: "memberManagement",
       url: `/coach/dashboard/${programId}/members`,
       iconName: "Users",
     },
     {
-      title: "설정",
+      titleKey: "settings",
       url: `/coach/dashboard/${programId}/settings`,
       iconName: "Settings2",
     },
@@ -142,7 +146,7 @@ const CoachSidebar = ({ programId }: { programId: string }) => {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>메뉴</SidebarGroupLabel>
+          <SidebarGroupLabel>{tCommon('filter')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
@@ -150,15 +154,15 @@ const CoachSidebar = ({ programId }: { programId: string }) => {
                   iconMap[item.iconName as keyof typeof iconMap] ||
                   DumbbellIcon;
                 return (
-                  <SidebarMenuItem key={item.title}>
+                  <SidebarMenuItem key={item.titleKey}>
                     <SidebarMenuButton
                       asChild
                       isActive={pathname === item.url}
-                      tooltip={item.title}
+                      tooltip={t(item.titleKey as any)}
                     >
                       <Link href={item.url}>
                         <IconComponent />
-                        <span>{item.title}</span>
+                        <span>{t(item.titleKey as any)}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

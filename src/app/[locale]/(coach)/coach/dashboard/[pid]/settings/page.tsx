@@ -11,7 +11,7 @@ import {
   TrashIcon,
   DollarSignIcon,
 } from "lucide-react";
-import SettingTab from "@/app/(coach)/coach/dashboard/[pid]/_components/setting-tab";
+import SettingTab from "@/app/[locale]/(coach)/coach/dashboard/[pid]/_components/setting-tab";
 import { getProgramByIdAction } from "@/actions";
 /**
  * 프로그램 설정 페이지

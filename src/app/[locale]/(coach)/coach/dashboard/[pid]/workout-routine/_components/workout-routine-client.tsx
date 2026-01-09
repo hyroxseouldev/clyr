@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -87,6 +88,8 @@ export function WorkoutRoutineClient({
   initialData,
   pageSize,
 }: WorkoutRoutineClientProps) {
+  const tToast = useTranslations('toast');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") || "");
@@ -161,7 +164,7 @@ export function WorkoutRoutineClient({
   // 새 블록 생성
   const handleCreateBlock = async () => {
     if (!newBlockName.trim()) {
-      toast.error("블록 이름을 입력해주세요");
+      toast.error(tCommon('required'));
       return;
     }
 
@@ -175,11 +178,11 @@ export function WorkoutRoutineClient({
     setIsCreating(false);
 
     if (!result.success) {
-      toast.error(result.message || "생성에 실패했습니다");
+      toast.error(result.message || `${tToast('error')}: ${tCommon('submit')}`);
       return;
     }
 
-    toast.success("루틴 블록이 생성되었습니다");
+    toast.success(tToast('created'));
     setIsCreateModalOpen(false);
     setNewBlockName("");
     setNewBlockFormat("STRENGTH");
@@ -231,11 +234,11 @@ export function WorkoutRoutineClient({
     setIsSaving(false);
 
     if (!result.success) {
-      toast.error(result.message || "저장에 실패했습니다");
+      toast.error(result.message || `${tToast('error')}: ${tCommon('save')}`);
       return;
     }
 
-    toast.success("저장되었습니다");
+    toast.success(tToast('saved'));
     setIsEditMode(false);
     router.refresh();
   };
@@ -247,11 +250,11 @@ export function WorkoutRoutineClient({
     const result = await deleteRoutineBlockAction(selectedBlockId);
 
     if (!result.success) {
-      toast.error(result.message || "삭제에 실패했습니다");
+      toast.error(result.message || `${tToast('error')}: ${tCommon('delete')}`);
       return;
     }
 
-    toast.success("삭제되었습니다");
+    toast.success(tToast('deleted'));
     setSelectedBlockId(null);
     router.refresh();
   };
@@ -287,7 +290,7 @@ export function WorkoutRoutineClient({
   // 운동 추가
   const handleAddExercise = async () => {
     if (!selectedBlockId || !selectedExerciseId) {
-      toast.error("운동을 선택해주세요");
+      toast.error(tCommon('required'));
       return;
     }
 
@@ -297,11 +300,11 @@ export function WorkoutRoutineClient({
     });
 
     if (!result.success) {
-      toast.error(result.message || "추가에 실패했습니다");
+      toast.error(result.message || `${tToast('error')}: ${tCommon('submit')}`);
       return;
     }
 
-    toast.success("운동이 추가되었습니다");
+    toast.success(tToast('created'));
     setSelectedExerciseId(null);
     setIsAddExerciseModalOpen(false);
     setExerciseSearch("");
@@ -311,7 +314,7 @@ export function WorkoutRoutineClient({
   // 루틴 아이템 삭제
   const handleDeleteRoutineItem = async (itemId: string) => {
     // TODO: deleteRoutineItemAction 호출 필요
-    toast.success("운동이 제거되었습니다");
+    toast.success(tToast('deleted'));
     router.refresh();
   };
 

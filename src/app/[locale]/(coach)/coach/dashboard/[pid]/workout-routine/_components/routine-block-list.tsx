@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -59,6 +60,8 @@ export function RoutineBlockList({
   initialData,
   pageSize,
 }: RoutineBlockListProps) {
+  const tToast = useTranslations('toast');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") || "");
@@ -113,7 +116,7 @@ export function RoutineBlockList({
   // 새 블록 생성
   const handleCreateBlock = async () => {
     if (!newBlockName.trim()) {
-      toast.error("블록 이름을 입력해주세요");
+      toast.error(tCommon('required'));
       return;
     }
 
@@ -127,11 +130,11 @@ export function RoutineBlockList({
     setIsCreating(false);
 
     if (!result.success) {
-      toast.error(result.message || "생성에 실패했습니다");
+      toast.error(result.message || `${tToast('error')}: ${tCommon('submit')}`);
       return;
     }
 
-    toast.success("루틴 블록이 생성되었습니다");
+    toast.success(tToast('created'));
     setIsCreateModalOpen(false);
     setNewBlockName("");
     setNewBlockFormat("STRENGTH");

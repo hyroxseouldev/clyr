@@ -25,17 +25,22 @@ import { signInWithEmailAndPassword } from "@/actions/auth";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { AsyncButton } from "@/components/common/async-button";
-import Link from "next/link";
-
-const formSchema = z.object({
-  email: z.string().email("올바른 이메일 형식을 입력해주세요"),
-  password: z.string().min(8, "비밀번호는 최소 8자 이상이어야 합니다"),
-});
+import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const t = useTranslations('auth.signIn');
+  const tValidation = useTranslations('validation');
+  const tToast = useTranslations('toast');
+
+  const formSchema = z.object({
+    email: z.string().email(tValidation('email')),
+    password: z.string().min(8, tValidation('passwordMin')),
+  });
+
   const [isLoading, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -62,7 +67,7 @@ export function LoginForm({
       }
 
       // 성공 시 로직 (사실 redirect 때문에 실행되지 않을 확률이 높지만 기록용으로 둠)
-      toast.success("로그인되었습니다.");
+      toast.success(tToast('loginSuccess'));
     });
   };
 
@@ -70,9 +75,9 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>로그인</CardTitle>
+          <CardTitle>{t('title')}</CardTitle>
           <CardDescription>
-            이메일과 비밀번호를 입력하여 로그인하세요
+            {t('description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -86,10 +91,10 @@ export function LoginForm({
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>이메일</FormLabel>
+                    <FormLabel>{t('email')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="example@email.com"
+                        placeholder={t('emailPlaceholder')}
                         type="email"
                         {...field}
                       />
@@ -104,17 +109,17 @@ export function LoginForm({
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                      <FormLabel>비밀번호</FormLabel>
+                      <FormLabel>{t('password')}</FormLabel>
                       <Link
                         href="/forgot-password"
                         className="text-xs text-primary hover:underline"
                       >
-                        비밀번호 찾기
+                        {t('forgotPassword')}
                       </Link>
                     </div>
                     <FormControl>
                       <Input
-                        placeholder="••••••••"
+                        placeholder={t('passwordPlaceholder')}
                         type="password"
                         {...field}
                       />
@@ -126,12 +131,12 @@ export function LoginForm({
 
               {/* 계정이 없으면 회원가입 페이지로 이동 */}
               <FormDescription className="text-center text-muted-foreground">
-                계정이 없으신가요?{" "}
+                {t('noAccount')}{" "}
                 <Link
                   href="/signup"
                   className="text-primary text-underline underline-offset-4 hover:text-primary/80"
                 >
-                  회원가입
+                  {t('signUp')}
                 </Link>
               </FormDescription>
 
@@ -140,7 +145,7 @@ export function LoginForm({
                 className="w-full"
                 isLoading={isLoading}
               >
-                로그인
+                {t('submit')}
               </AsyncButton>
             </form>
           </Form>

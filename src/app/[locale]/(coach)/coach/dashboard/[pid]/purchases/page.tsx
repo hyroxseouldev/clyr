@@ -1,6 +1,6 @@
 import { getProgramMonthlySalesAction, getProgramOrdersWithPaginationAction } from "@/actions/order";
-import MonthlySalesChart from "@/app/(coach)/coach/dashboard/[pid]/_components/monthly-sales-chart";
-import OrderList from "@/app/(coach)/coach/dashboard/[pid]/_components/order-list";
+import MonthlySalesChart from "@/app/[locale]/(coach)/coach/dashboard/[pid]/_components/monthly-sales-chart";
+import OrderList from "@/app/[locale]/(coach)/coach/dashboard/[pid]/_components/order-list";
 import { Spinner } from "@/components/ui/spinner";
 
 /**

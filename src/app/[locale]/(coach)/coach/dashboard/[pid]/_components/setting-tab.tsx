@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { AlertTriangleIcon, TrashIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,7 @@ type SettingTabProps = {
 };
 
 export default function SettingTab({ programId, program }: SettingTabProps) {
+  const tToast = useTranslations('toast');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [deleteDialog, setDeleteDialog] = useState({
@@ -46,7 +48,7 @@ export default function SettingTab({ programId, program }: SettingTabProps) {
 
   const confirmDelete = () => {
     if (deleteDialog.confirmedTitle !== program.title) {
-      toast.error("프로그램 제목이 일치하지 않습니다.");
+      toast.error(tToast('programTitleMismatch'));
       return;
     }
 
@@ -54,10 +56,10 @@ export default function SettingTab({ programId, program }: SettingTabProps) {
       const result = await deleteProgramAction(programId);
 
       if (result.success) {
-        toast.success("프로그램이 삭제되었습니다.");
+        toast.success(tToast('programDeleted'));
         router.push("/coach/dashboard");
       } else {
-        toast.error("삭제 실패", { description: result.message });
+        toast.error(tToast('programDeleteFailed'), { description: result.message });
       }
 
       setDeleteDialog({ open: false, confirmedTitle: "" });

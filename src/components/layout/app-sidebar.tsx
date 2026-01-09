@@ -8,12 +8,14 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { LogOutIcon } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { usePathname } from "next/navigation";
 import UserAvatarDropdown from "@/components/auth/user-avatar-dropdown";
 import CoachSidebar from "@/components/layout/coach-sidebar";
 import DashboardSidebar from "@/components/layout/dashboard-sidebar";
 import { ModeToggle } from "@/components/theme/mode-toggle";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { useTranslations } from "next-intl";
 
 interface AppSidebarProps {
   user?: {
@@ -26,6 +28,8 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
+  const t = useTranslations('auth.signOut');
+
   // 경로에서 프로그램 ID 추출
   const programIdMatch = pathname.match(/^\/coach\/dashboard\/([^/]+)/);
   const programId = programIdMatch ? programIdMatch[1] : null;
@@ -39,6 +43,12 @@ export default function AppSidebar({ user }: AppSidebarProps) {
       )}
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <div className="flex items-center gap-2 px-2 py-2">
+              <ModeToggle />
+              <LanguageSwitcher />
+            </div>
+          </SidebarMenuItem>
           {user && (
             <SidebarMenuItem>
               <div className="flex items-center gap-2 px-2 py-2">
@@ -52,10 +62,10 @@ export default function AppSidebar({ user }: AppSidebarProps) {
             </SidebarMenuItem>
           )}
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="로그아웃">
+            <SidebarMenuButton asChild tooltip={t('title')}>
               <Link href="/signout">
                 <LogOutIcon />
-                <span>로그아웃</span>
+                <span>{t('button')}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

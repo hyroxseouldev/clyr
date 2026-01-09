@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -88,6 +89,7 @@ export function MemberDetailClient({
   workoutLogs,
   coachComments,
 }: MemberDetailClientProps) {
+  const tToast = useTranslations('toast');
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"enrollment" | "performance">("enrollment");
   const [isUpdating, setIsUpdating] = useState(false);
@@ -104,10 +106,10 @@ export function MemberDetailClient({
 
       if (!response.ok) throw new Error("상태 변경 실패");
 
-      toast.success("수강 상태가 변경되었습니다.");
+      toast.success(tToast('statusChanged'));
       router.refresh();
     } catch (error) {
-      toast.error("상태 변경에 실패했습니다.");
+      toast.error(tToast('statusChangeFailed'));
       console.error(error);
     } finally {
       setIsUpdating(false);
@@ -130,10 +132,10 @@ export function MemberDetailClient({
 
       if (!response.ok) throw new Error("기간 연장 실패");
 
-      toast.success(`${days}일 연장되었습니다.`);
+      toast.success(tToast('periodExtended', { days }));
       router.refresh();
     } catch (error) {
-      toast.error("기간 연장에 실패했습니다.");
+      toast.error(tToast('periodExtendFailed'));
       console.error(error);
     } finally {
       setIsUpdating(false);
