@@ -18,7 +18,7 @@ import {
   UsersIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { Program } from "@/db/schema";
 import { useTransition } from "react";
 import { Spinner } from "@/components/ui/spinner";

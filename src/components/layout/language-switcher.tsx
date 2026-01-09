@@ -27,11 +27,8 @@ export function LanguageSwitcher() {
 
   const switchLocale = (newLocale: string) => {
     startTransition(() => {
-      // 현재 경로에서 로케일만 교체
-      const segments = pathname.split("/");
-      segments[1] = newLocale; // [locale]은 인덱스 1에 위치
-      const newPathname = segments.join("/");
-      router.push(newPathname);
+      // next-intl의 router.replace를 사용하여 로케일 변경
+      router.replace(pathname, { locale: newLocale });
     });
   };
 

@@ -20,7 +20,7 @@ import {
   getMyCoachProfileAction,
 } from "@/actions/auth";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { TiptapForm } from "@/components/form";

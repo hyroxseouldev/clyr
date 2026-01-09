@@ -28,12 +28,14 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
-  const t = useTranslations('auth.signOut');
+  const t = useTranslations("auth.signOut");
+  // 수정 전: ^/coach/dashboard/([^/]+)
+  // 수정 후: ^/(?:[a-z]{2}/)?coach/dashboard/([^/]+)
 
-  // 경로에서 프로그램 ID 추출
-  const programIdMatch = pathname.match(/^\/coach\/dashboard\/([^/]+)/);
+  const programIdMatch = pathname.match(
+    /(?:\/[a-z]{2})?\/coach\/dashboard\/([^/]+)/
+  );
   const programId = programIdMatch ? programIdMatch[1] : null;
-
   return (
     <Sidebar collapsible="icon">
       {programId ? (
@@ -62,10 +64,10 @@ export default function AppSidebar({ user }: AppSidebarProps) {
             </SidebarMenuItem>
           )}
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip={t('title')}>
+            <SidebarMenuButton asChild tooltip={t("title")}>
               <Link href="/signout">
                 <LogOutIcon />
-                <span>{t('button')}</span>
+                <span>{t("button")}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { useTransition } from "react";
 import { updateAccountAction } from "@/actions/account";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { ImageForm } from "@/components/form";
