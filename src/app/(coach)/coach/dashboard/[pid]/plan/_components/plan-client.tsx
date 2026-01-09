@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +56,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
   const [selectedPhase, setSelectedPhase] = useState<number>(
     initialData?.blueprints[0]?.phaseNumber || 1
   );
+  const [viewMode, setViewMode] = useState<"grid" | "calendar">("grid");
 
   // 페이즈 생성 모달
   const [isCreatePhaseOpen, setIsCreatePhaseOpen] = useState(false);
@@ -275,39 +276,52 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
         </CardContent>
       </Card>
 
-      {/* 페이즈 탭 */}
+      {/* 뷰 모드 및 페이즈 탭 */}
       {planData.blueprints.length > 0 ? (
-        <Tabs
-          value={selectedPhase.toString()}
-          onValueChange={(v) => setSelectedPhase(parseInt(v))}
-        >
+        <div className="space-y-6">
+          {/* 뷰 모드 토글 및 페이즈 선택 */}
           <div className="flex items-center justify-between">
-            <TabsList>
-              {planData.blueprints.map((phase) => (
-                <TabsTrigger
-                  key={phase.phaseNumber}
-                  value={phase.phaseNumber.toString()}
-                >
-                  Phase {phase.phaseNumber}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            {/* 페이즈 삭제 버튼 */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleDeletePhase(selectedPhase)}
-              className="text-destructive hover:text-destructive"
+            <Tabs
+              value={selectedPhase.toString()}
+              onValueChange={(v) => setSelectedPhase(parseInt(v))}
             >
-              <Trash2 className="h-4 w-4 mr-2" />
-              페이즈 삭제
-            </Button>
+              <TabsList>
+                {planData.blueprints.map((phase) => (
+                  <TabsTrigger
+                    key={phase.phaseNumber}
+                    value={phase.phaseNumber.toString()}
+                  >
+                    Phase {phase.phaseNumber}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
+            <div className="flex items-center gap-2">
+              {/* 뷰 모드 토글 */}
+              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "grid" | "calendar")}>
+                <TabsList>
+                  <TabsTrigger value="grid">그리드</TabsTrigger>
+                  <TabsTrigger value="calendar">캘린더</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              {/* 페이즈 삭제 버튼 */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDeletePhase(selectedPhase)}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                페이즈 삭제
+              </Button>
+            </div>
           </div>
 
-          {/* 일차 그리드 */}
-          {selectedPhaseData && (
-            <div className="mt-6">
+          {/* 그리드 뷰 */}
+          {viewMode === "grid" && selectedPhaseData && (
+            <div>
               <div className="mb-4">
                 <h3 className="text-lg font-semibold">
                   Phase {selectedPhaseData.phaseNumber} -{" "}
@@ -376,7 +390,16 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
               </div>
             </div>
           )}
-        </Tabs>
+
+          {/* 캘린더 뷰 */}
+          {viewMode === "calendar" && selectedPhaseData && (
+            <CalendarView
+              phaseData={selectedPhaseData}
+              onDayClick={handleBlueprintClick}
+              getDayTypeLabel={getDayTypeLabel}
+            />
+          )}
+        </div>
       ) : (
         <Card>
           <CardContent className="py-12 text-center">
@@ -435,6 +458,137 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// 캘린더 뷰 컴포넌트
+interface CalendarViewProps {
+  phaseData: ProgramBlueprintGroupedByPhase;
+  onDayClick: (blueprint: ProgramBlueprintWithBlock) => void;
+  getDayTypeLabel: (blueprint: ProgramBlueprintWithBlock) => {
+    label: string;
+    variant: "default" | "secondary";
+  };
+}
+
+function CalendarView({
+  phaseData,
+  onDayClick,
+  getDayTypeLabel,
+}: CalendarViewProps) {
+  // 일차를 주차별로 그룹화 (7일 단위)
+  const weeks: ProgramBlueprintWithBlock[][] = [];
+  for (let i = 0; i < phaseData.days.length; i += 7) {
+    weeks.push(phaseData.days.slice(i, i + 7));
+  }
+
+  // 요일 표시
+  const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
+
+  return (
+    <div className="space-y-6">
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold">
+          Phase {phaseData.phaseNumber} - 캘린더 뷰
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          주차별 캘린더에서 운동 일정을 확인하세요
+        </p>
+      </div>
+
+      {weeks.map((week, weekIndex) => (
+        <Card key={weekIndex}>
+          <CardHeader>
+            <CardTitle className="text-base">
+              {weekIndex + 1}주차
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                (Day {weekIndex * 7 + 1} - Day {Math.min((weekIndex + 1) * 7, phaseData.days.length)})
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* 캘린더 헤더 */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {weekDays.map((day) => (
+                <div
+                  key={day}
+                  className="text-center text-sm font-medium text-muted-foreground py-2"
+                >
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* 캘린더 그리드 */}
+            <div className="grid grid-cols-7 gap-1">
+              {week.map((blueprint) => {
+                const dayType = getDayTypeLabel(blueprint);
+                const isRestDay = !blueprint.routineBlockId;
+
+                return (
+                  <div
+                    key={blueprint.id}
+                    onClick={() => onDayClick(blueprint)}
+                    className={`
+                      min-h-[120px] p-2 rounded-md border cursor-pointer
+                      transition-all hover:shadow-md hover:border-primary/50
+                      ${isRestDay ? "bg-muted/50 border-muted" : "bg-background"}
+                    `}
+                  >
+                    <div className="space-y-1">
+                      {/* Day 번호 */}
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="text-xs">
+                          D{blueprint.dayNumber}
+                        </Badge>
+                        {isRestDay && (
+                          <Badge variant="secondary" className="text-xs">
+                            휴식
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* 일차 제목 */}
+                      <p className="text-xs font-medium line-clamp-2 mt-1">
+                        {blueprint.dayTitle || `Day ${blueprint.dayNumber}`}
+                      </p>
+
+                      {/* 루틴 블록 정보 */}
+                      {blueprint.routineBlockName && (
+                        <div className="mt-auto">
+                          <div className="flex items-center gap-1">
+                            <Dumbbell className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <p className="text-xs text-muted-foreground line-clamp-1">
+                              {blueprint.routineBlockName}
+                            </p>
+                          </div>
+                          {blueprint.notes && (
+                            <div className="flex items-start gap-1 mt-1">
+                              <FileText className="h-3 w-3 text-muted-foreground flex-shrink-0 mt-0.5" />
+                              <p className="text-xs text-muted-foreground line-clamp-2">
+                                {blueprint.notes}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* 빈 셀 채우기 (7일이 안 되는 경우) */}
+              {Array.from({ length: 7 - week.length }).map((_, emptyIndex) => (
+                <div
+                  key={`empty-${emptyIndex}`}
+                  className="min-h-[120px] p-2 rounded-md border border-dashed border-muted bg-muted/30"
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
