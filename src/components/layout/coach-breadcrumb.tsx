@@ -4,13 +4,14 @@ import { usePathname } from "@/i18n/routing";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Fragment } from "react";
 import { Link } from "@/i18n/routing";
+import { ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // 경로 표시용 라벨 맵
 const PATH_LABELS: Record<string, string> = {
@@ -79,13 +80,22 @@ export function CoachBreadcrumb() {
 
           return (
             <Fragment key={item.href}>
-              {index > 0 && <BreadcrumbSeparator />}
+              {index > 0 && (
+                <BreadcrumbSeparator>
+                  <ChevronRight className="h-4 w-4" />
+                </BreadcrumbSeparator>
+              )}
               <BreadcrumbItem>
                 {item.isLast ? (
                   <BreadcrumbPage>{item.label}</BreadcrumbPage>
                 ) : (
-                  <Link href={item.href}>
-                    <BreadcrumbLink>{item.label}</BreadcrumbLink>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "text-sm font-medium transition-colors hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
                   </Link>
                 )}
               </BreadcrumbItem>

@@ -28,7 +28,7 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
-  const t = useTranslations("auth.signOut");
+  const t = useTranslations("account");
   // 수정 전: ^/coach/dashboard/([^/]+)
   // 수정 후: ^/(?:[a-z]{2}/)?coach/dashboard/([^/]+)
 
@@ -64,10 +64,10 @@ export default function AppSidebar({ user }: AppSidebarProps) {
             </SidebarMenuItem>
           )}
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip={t("title")}>
+            <SidebarMenuButton asChild tooltip={t("signOut")}>
               <Link href="/signout">
                 <LogOutIcon />
-                <span>{t("button")}</span>
+                <span>{t("signOut")}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

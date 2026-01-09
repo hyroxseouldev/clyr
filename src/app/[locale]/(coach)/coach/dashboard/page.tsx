@@ -8,7 +8,13 @@ import {
   EmptyContent,
 } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FolderCodeIcon, PlusIcon, UsersIcon, PackageIcon } from "lucide-react";
 import { ProgramCard } from "@/components/program/program-card";
@@ -25,20 +31,20 @@ import { getTranslations } from "next-intl/server";
  */
 export default async function CoachDashboardPage() {
   const { data: programs } = await getMyProgramsAction();
-  const t = await getTranslations('dashboard');
+  const t = await getTranslations("dashboard");
 
   return (
     <div className="space-y-6">
       {/* 헤더 섹션 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">{t('managePrograms')}</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("managePrograms")}</p>
         </div>
         <Button asChild size="default">
           <Link href="/coach/dashboard/new">
             <PlusIcon className="mr-2 size-4" />
-            {t('newProgram')}
+            {t("newProgram")}
           </Link>
         </Button>
       </div>
@@ -52,16 +58,14 @@ export default async function CoachDashboardPage() {
                 <EmptyMedia variant="icon">
                   <FolderCodeIcon className="size-12" />
                 </EmptyMedia>
-                <EmptyTitle>{t('noPrograms')}</EmptyTitle>
-                <EmptyDescription>
-                  {t('noProgramsDesc')}
-                </EmptyDescription>
+                <EmptyTitle>{t("noPrograms")}</EmptyTitle>
+                <EmptyDescription>{t("noProgramsDesc")}</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
                 <Button asChild>
                   <Link href="/coach/dashboard/new">
                     <PlusIcon className="mr-2 size-4" />
-                    {t('createProgram')}
+                    {t("createProgram")}
                   </Link>
                 </Button>
               </EmptyContent>
@@ -77,36 +81,48 @@ export default async function CoachDashboardPage() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t('totalPrograms')}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {t("totalPrograms")}
+                </CardTitle>
                 <PackageIcon className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{programs.length}</div>
-                <p className="text-xs text-muted-foreground">{t('activePrograms')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("activePrograms")}
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t('subscriptionPrograms')}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {t("subscriptionPrograms")}
+                </CardTitle>
                 <UsersIcon className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {programs.filter((p) => p.type === "SUBSCRIPTION").length}
                 </div>
-                <p className="text-xs text-muted-foreground">{t('monthlySubscription')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("monthlySubscription")}
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t('singlePrograms')}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {t("singlePrograms")}
+                </CardTitle>
                 <PackageIcon className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {programs.filter((p) => p.type === "SINGLE").length}
                 </div>
-                <p className="text-xs text-muted-foreground">{t('oneTimePurchase')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("oneTimePurchase")}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -115,8 +131,10 @@ export default async function CoachDashboardPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">
-                {t('myPrograms')}{" "}
-                <span className="text-muted-foreground">({programs.length})</span>
+                {t("myPrograms")}{" "}
+                <span className="text-muted-foreground">
+                  ({programs.length})
+                </span>
               </h2>
             </div>
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">

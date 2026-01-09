@@ -7,7 +7,7 @@ import { getRequestConfig } from 'next-intl/server';
 import { routing } from './routing';
 
 export default getRequestConfig(async ({ requestLocale }) => {
-  // `requestLocale`이 없으면 기본 로케일 사용
+  // `requestLocale`이 항상 필요하고, 유효성 검사
   let locale = await requestLocale;
 
   // 유효하지 않은 로케일이면 기본 로케일로 대체

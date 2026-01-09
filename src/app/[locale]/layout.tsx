@@ -27,19 +27,19 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }>): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'seo' });
+  const t = await getTranslations({ locale, namespace: "seo" });
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clyr.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://clyr.com";
   const canonicalUrl = `${baseUrl}/${locale}`;
 
   return {
-    title: t('title'),
-    description: t('description'),
-    keywords: t('keywords'),
-    applicationName: t('siteName'),
-    authors: [{ name: t('siteName') }],
-    creator: t('siteName'),
-    publisher: t('siteName'),
+    title: t("title"),
+    description: t("description"),
+    keywords: t("keywords"),
+    applicationName: t("siteName"),
+    authors: [{ name: t("siteName") }],
+    creator: t("siteName"),
+    publisher: t("siteName"),
     metadataBase: new URL(baseUrl),
     alternates: {
       canonical: canonicalUrl,
@@ -49,17 +49,17 @@ export async function generateMetadata({
       },
     },
     openGraph: {
-      type: 'website',
+      type: "website",
       locale: locale,
       url: canonicalUrl,
-      title: t('title'),
-      description: t('description'),
-      siteName: t('siteName'),
+      title: t("title"),
+      description: t("description"),
+      siteName: t("siteName"),
     },
     twitter: {
-      card: 'summary',
-      title: t('title'),
-      description: t('description'),
+      card: "summary",
+      title: t("title"),
+      description: t("description"),
     },
     robots: {
       index: true,
@@ -88,14 +88,14 @@ export default async function LocaleLayout({
   }
 
   // 로케일에 맞는 메시지 가져오기
-  const messages = await getMessages();
+  const messages = await getMessages({ locale });
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <NextIntlClientProvider messages={messages}>
+      <NextIntlClientProvider messages={messages} locale={locale}>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -104,9 +104,10 @@ export default async function LocaleLayout({
           >
             {children}
           </ThemeProvider>
-        </NextIntlClientProvider>
-        <Toaster />
-      </body>
+
+          <Toaster />
+        </body>
+      </NextIntlClientProvider>
     </html>
   );
 }
