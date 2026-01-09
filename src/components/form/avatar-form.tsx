@@ -19,6 +19,7 @@ import { Upload, X, User } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useTranslations } from "next-intl";
 
 interface AvatarFormProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -65,6 +66,7 @@ export function AvatarForm<
   required = false,
   size = "lg",
 }: AvatarFormProps<TFieldValues, TName>) {
+  const t = useTranslations("imageForm");
   const currentValue = form.watch(name);
 
   // 사이즈별 크기 설정
@@ -177,7 +179,7 @@ export function AvatarForm<
                   <div className="h-full w-full flex flex-col items-center justify-center p-4 text-center">
                     <User className="h-8 w-8 text-muted-foreground mb-2" />
                     <p className="text-xs text-muted-foreground">
-                      {size === "sm" ? "" : "클릭하여 이미지 선택"}
+                      {size === "sm" ? "" : t("clickToSelect")}
                     </p>
                   </div>
                 )}
@@ -196,7 +198,7 @@ export function AvatarForm<
                     onClick={handleUploadSuccess}
                     disabled={loading || files.some((f) => f.errors.length > 0)}
                   >
-                    {loading ? "업로드 중..." : "업로드"}
+                    {loading ? t("uploading") : t("upload")}
                   </Button>
                   {errors.length > 0 && (
                     <p className="text-sm text-destructive">
@@ -209,14 +211,14 @@ export function AvatarForm<
               {/* 크기 가이드 */}
               {!currentValue && files.length === 0 && (
                 <p className="text-xs text-muted-foreground">
-                  권장: 정방형 1:1 비율, 최대 {(maxFileSize / 1024 / 1024).toFixed(0)}MB
+                  {t("recommendation", { size: (maxFileSize / 1024 / 1024).toFixed(0) })}
                 </p>
               )}
 
               {/* 성공 메시지 */}
               {isSuccess && currentValue && (
                 <p className="text-sm text-green-600 dark:text-green-400">
-                  ✓ 이미지가 업로드되었습니다
+                  ✓ {t("uploadSuccess")}
                 </p>
               )}
             </div>

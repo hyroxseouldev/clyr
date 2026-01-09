@@ -13,12 +13,16 @@ import {
   type FieldPath,
   type FieldValues,
 } from "react-hook-form";
-import { useSupabaseUpload, sanitizeFileName } from "@/hooks/use-supabase-upload";
+import {
+  useSupabaseUpload,
+  sanitizeFileName,
+} from "@/hooks/use-supabase-upload";
 import { Button } from "@/components/ui/button";
 import { Upload, X, FileImage } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useTranslations } from "next-intl";
 
 interface ImageFormProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -63,6 +67,7 @@ export function ImageForm<
   className,
   required = false,
 }: ImageFormProps<TFieldValues, TName>) {
+  const t = useTranslations("imageForm");
   const currentValue = form.watch(name);
 
   // Supabase 업로드 훅
@@ -131,7 +136,7 @@ export function ImageForm<
               {isSuccess && (
                 <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                   <p className="text-sm text-green-700 dark:text-green-400">
-                    이미지가 업로드되었습니다.
+                    {t("uploadSuccess")}
                   </p>
                   <X className="h-4 w-4 text-green-700 dark:text-green-400" />
                 </div>
@@ -174,18 +179,21 @@ export function ImageForm<
                       <div className="flex flex-col items-center gap-y-2">
                         <Upload className="h-8 w-8 text-muted-foreground" />
                         <p className="text-sm text-muted-foreground">
-                          이미지를 드래그하거나 클릭하여 선택하세요
+                          {t("dragDropHint")}
                         </p>
                         {maxFileSize && (
                           <p className="text-xs text-muted-foreground">
-                            최대 파일 크기: {(maxFileSize / 1024 / 1024).toFixed(0)}MB
+                            {t("maxFileSize", {
+                              size: (maxFileSize / 1024 / 1024).toFixed(0),
+                            })}
                           </p>
                         )}
                       </div>
                     ) : (
                       // 파일이 선택된 상태
                       <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/50">
-                        {files[0].type.startsWith("image/") && files[0].preview ? (
+                        {files[0].type.startsWith("image/") &&
+                        files[0].preview ? (
                           <div className="h-16 w-16 rounded border overflow-hidden shrink-0 bg-muted">
                             <img
                               src={files[0].preview}
@@ -223,11 +231,11 @@ export function ImageForm<
                     disabled={loading || files.some((f) => f.errors.length > 0)}
                   >
                     {loading ? (
-                      <>업로드 중...</>
+                      <>{t("uploading")}</>
                     ) : (
                       <>
                         <Upload className="h-4 w-4 mr-2" />
-                        업로드
+                        {t("upload")}
                       </>
                     )}
                   </Button>

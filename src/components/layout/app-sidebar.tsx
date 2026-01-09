@@ -8,8 +8,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { LogOutIcon } from "lucide-react";
-import { Link } from "@/i18n/routing";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from "@/i18n/routing";
 import UserAvatarDropdown from "@/components/auth/user-avatar-dropdown";
 import CoachSidebar from "@/components/layout/coach-sidebar";
 import DashboardSidebar from "@/components/layout/dashboard-sidebar";
@@ -27,12 +26,9 @@ interface AppSidebarProps {
 export default function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
   const t = useTranslations("account");
-  // 수정 전: ^/coach/dashboard/([^/]+)
-  // 수정 후: ^/(?:[a-z]{2}/)?coach/dashboard/([^/]+)
 
-  const programIdMatch = pathname.match(
-    /(?:\/[a-z]{2})?\/coach\/dashboard\/([^/]+)/
-  );
+  // usePathname from next-intl/navigation already returns pathname without locale prefix
+  const programIdMatch = pathname.match(/\/coach\/dashboard\/([^/]+)/);
   const programId = programIdMatch ? programIdMatch[1] : null;
   return (
     <Sidebar collapsible="icon">

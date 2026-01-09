@@ -34,10 +34,10 @@ function isValidUUID(str: string): boolean {
 const CoachDashboardPidPage = async ({
   params,
 }: {
-  params: { pid: string };
+  params: { pid: string; locale: string };
 }) => {
-  const { pid } = await params;
-  const t = await getTranslations("dashboard");
+  const { pid, locale } = await params;
+  const t = await getTranslations({ locale: locale, namespace: "dashboard" });
 
   // UUID 유효성 검사 - "new" 같은 특정 경로 처리
   if (!isValidUUID(pid)) {
@@ -153,8 +153,9 @@ const CoachDashboardPidPage = async ({
                     </div>
                     <div>
                       <p className="text-sm font-medium">
-                        {purchase.userName}
-                        {t("recentPurchases.userPurchased")}
+                        {`${purchase.userName} ${t(
+                          "recentPurchases.userPurchased"
+                        )}`}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(purchase.date), "yyyy.MM.dd")}

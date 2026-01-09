@@ -33,8 +33,8 @@ export function CoachProfileForm({
 }: {
   initialData?: CoachProfile | null;
 }) {
-  const t = useTranslations('profile');
-  const tAccount = useTranslations('account');
+  const t = useTranslations("profile");
+  const tAccount = useTranslations("account");
   const [isLoading, startTransition] = useTransition();
   const router = useRouter();
   const [isEditMode, setIsEditMode] = useState(!!initialData);
@@ -117,12 +117,10 @@ export function CoachProfileForm({
         : await createCoachProfileAction(data);
 
       if (result.success) {
-        toast.success(
-          isEditMode ? t('profileUpdated') : t('profileCreated')
-        );
+        toast.success(isEditMode ? t("profileUpdated") : t("profileCreated"));
         router.refresh();
       } else {
-        toast.error(tAccount('failed'), { description: result.message });
+        toast.error(tAccount("failed"), { description: result.message });
       }
     });
   };
@@ -133,7 +131,7 @@ export function CoachProfileForm({
         {/* 프로필 이미지 */}
         <AvatarForm
           name="profileImageUrl"
-          label={t('profileImage')}
+          label={t("profileImage")}
           form={form}
           bucketName="public-assets"
           path="coach/profile"
@@ -145,9 +143,9 @@ export function CoachProfileForm({
           name="nickname"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('nickname')}</FormLabel>
+              <FormLabel>{t("nickname")}</FormLabel>
               <FormControl>
-                <Input placeholder={t('nicknamePlaceholder')} {...field} />
+                <Input placeholder={t("nicknamePlaceholder")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -159,12 +157,9 @@ export function CoachProfileForm({
           name="introduction"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('introduction')}</FormLabel>
+              <FormLabel>{t("introduction")}</FormLabel>
               <FormControl>
-                <Input
-                  placeholder={t('introductionPlaceholder')}
-                  {...field}
-                />
+                <Input placeholder={t("introductionPlaceholder")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -173,9 +168,9 @@ export function CoachProfileForm({
 
         <TiptapForm
           name="experience"
-          label={t('experience')}
+          label={t("experience")}
           form={form}
-          placeholder={t('experiencePlaceholder')}
+          placeholder={t("experiencePlaceholder")}
           minHeight="150px"
         />
 
@@ -184,10 +179,10 @@ export function CoachProfileForm({
           name="certifications"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('certifications')}</FormLabel>
+              <FormLabel>{t("certifications")}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="NASM-CPT, 생활스포츠지도사, ..."
+                  placeholder={t("certificationsPlaceholder")}
                   {...field}
                 />
               </FormControl>
@@ -201,7 +196,7 @@ export function CoachProfileForm({
           name="contactNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('contactNumber')}</FormLabel>
+              <FormLabel>{t("contactNumber")}</FormLabel>
               <FormControl>
                 <Input placeholder="010-1234-5678" {...field} />
               </FormControl>
@@ -211,14 +206,14 @@ export function CoachProfileForm({
         />
 
         <div className="space-y-4 border rounded-lg p-4">
-          <h3 className="font-medium">{t('snsLinks')}</h3>
+          <h3 className="font-medium">{t("snsLinks")}</h3>
 
           <FormField
             control={form.control}
             name="instagram"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('instagram')}</FormLabel>
+                <FormLabel>{t("instagram")}</FormLabel>
                 <FormControl>
                   <Input placeholder="@username" {...field} />
                 </FormControl>
@@ -232,7 +227,7 @@ export function CoachProfileForm({
             name="youtube"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('youtube')}</FormLabel>
+                <FormLabel>{t("youtube")}</FormLabel>
                 <FormControl>
                   <Input placeholder="https://youtube.com/..." {...field} />
                 </FormControl>
@@ -246,7 +241,7 @@ export function CoachProfileForm({
             name="blog"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('blog')}</FormLabel>
+                <FormLabel>{t("blog")}</FormLabel>
                 <FormControl>
                   <Input placeholder="https://blog.naver.com/..." {...field} />
                 </FormControl>
@@ -258,7 +253,7 @@ export function CoachProfileForm({
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? <Spinner className="mr-2" /> : null}
-          {isEditMode ? t('updateProfile') : t('createProfile')}
+          {isEditMode ? t("updateProfile") : t("createProfile")}
         </Button>
       </form>
     </Form>

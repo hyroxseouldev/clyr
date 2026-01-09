@@ -23,10 +23,8 @@ export default async function SettingsPage({
       {/* 헤더 섹션 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">설정</h1>
-          <p className="text-muted-foreground">
-            계정 및 애플리케이션 설정을 관리하세요.
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("pageDescription")}</p>
         </div>
       </div>
 
@@ -36,10 +34,8 @@ export default async function SettingsPage({
         <Card className="cursor-pointer hover:shadow-md transition-shadow">
           <CardHeader>
             <UserIcon className="size-8 mb-2 text-primary" />
-            <CardTitle>프로필</CardTitle>
-            <CardDescription>
-              이름, 이메일, 프로필 사진을 관리하세요.
-            </CardDescription>
+            <CardTitle>{t("profile")}</CardTitle>
+            <CardDescription>{t("profileDesc")}</CardDescription>
           </CardHeader>
         </Card>
 
@@ -47,10 +43,8 @@ export default async function SettingsPage({
         <Card className="cursor-pointer hover:shadow-md transition-shadow">
           <CardHeader>
             <BellIcon className="size-8 mb-2 text-primary" />
-            <CardTitle>알림</CardTitle>
-            <CardDescription>
-              이메일 및 푸시 알림 설정을 관리하세요.
-            </CardDescription>
+            <CardTitle>{t("notifications")}</CardTitle>
+            <CardDescription>{t("notificationsDesc")}</CardDescription>
           </CardHeader>
         </Card>
 
@@ -58,10 +52,8 @@ export default async function SettingsPage({
         <Card className="cursor-pointer hover:shadow-md transition-shadow">
           <CardHeader>
             <ShieldIcon className="size-8 mb-2 text-primary" />
-            <CardTitle>보안</CardTitle>
-            <CardDescription>
-              비밀번호 변경 및 2단계 인증을 설정하세요.
-            </CardDescription>
+            <CardTitle>{t("security")}</CardTitle>
+            <CardDescription>{t("securityDesc")}</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -70,13 +62,11 @@ export default async function SettingsPage({
       <Card>
         <CardHeader>
           <Settings2Icon className="size-8 mb-2 text-muted-foreground" />
-          <CardTitle>설정 기능 준비 중</CardTitle>
-          <CardDescription>다양한 설정 기능을 준비 중입니다.</CardDescription>
+          <CardTitle>{t("comingSoonTitle")}</CardTitle>
+          <CardDescription>{t("comingSoonDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
-            프로필 수정, 알림 설정, 보안 설정 등의 기능이 곧 추가될 예정입니다.
-          </p>
+          <p className="text-muted-foreground">{t("comingSoonMessage")}</p>
         </CardContent>
       </Card>
     </div>

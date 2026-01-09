@@ -13,8 +13,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { DumbbellIcon } from "lucide-react";
-import { Link } from "@/i18n/routing";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 
 import {
@@ -80,11 +79,13 @@ const DashboardSidebar = () => {
                 const IconComponent =
                   iconMap[item.iconName as keyof typeof iconMap] ||
                   DumbbellIcon;
+                // pathname from next-intl/navigation already excludes locale prefix
+                const isActive = pathname === item.url;
                 return (
                   <SidebarMenuItem key={item.titleKey}>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === item.url}
+                      isActive={isActive}
                       tooltip={t(item.titleKey as any)}
                     >
                       <Link href={item.url}>

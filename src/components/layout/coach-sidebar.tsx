@@ -29,10 +29,9 @@ import {
   TrendingUpIcon,
   UserCircleIcon,
 } from "lucide-react";
-import { Link } from "@/i18n/routing";
+import { Link, usePathname } from "@/i18n/routing";
 import { getProgramByIdAction } from "@/actions";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -153,11 +152,13 @@ const CoachSidebar = ({ programId }: { programId: string }) => {
                 const IconComponent =
                   iconMap[item.iconName as keyof typeof iconMap] ||
                   DumbbellIcon;
+                // pathname from next-intl/navigation already excludes locale prefix
+                const isActive = pathname === item.url;
                 return (
                   <SidebarMenuItem key={item.titleKey}>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === item.url}
+                      isActive={isActive}
                       tooltip={t(item.titleKey as any)}
                     >
                       <Link href={item.url}>

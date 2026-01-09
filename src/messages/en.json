@@ -302,6 +302,7 @@
     "introduction": "Introduction",
     "experience": "Coaching Experience",
     "certifications": "Certifications (comma-separated)",
+    "certificationsPlaceholder": "NASM-CPT, CrossFit Level 1, ... etc",
     "contactNumber": "Contact Number",
     "snsLinks": "SNS Links",
     "instagram": "Instagram",
@@ -391,6 +392,14 @@
     "yes": "Yes",
     "no": "No",
     "total": "Total {count}"
+  },
+  "imageForm": {
+    "uploadSuccess": "Image uploaded successfully.",
+    "dragDropHint": "Drag and drop an image or click to select",
+    "clickToSelect": "Click to select image",
+    "recommendation": "Recommended: Square 1:1 ratio, max {size}MB",
+    "uploading": "Uploading...",
+    "upload": "Upload"
   },
   "program": {
     "title": "Program",
@@ -653,6 +662,16 @@
   },
   "settings": {
     "title": "Settings",
+    "pageDescription": "Manage your account and application settings.",
+    "profile": "Profile",
+    "profileDesc": "Manage your name, email, and profile photo.",
+    "notifications": "Notifications",
+    "notificationsDesc": "Manage email and push notification settings.",
+    "security": "Security",
+    "securityDesc": "Change password and set up two-factor authentication.",
+    "comingSoonTitle": "Settings Coming Soon",
+    "comingSoonDesc": "Various settings features are being prepared.",
+    "comingSoonMessage": "Profile editing, notification settings, security settings, and more will be added soon.",
     "description": "Program management and dangerous operations",
     "dangerZone": "Danger Zone",
     "dangerZoneDesc": "These actions cannot be undone. Proceed with caution.",
@@ -671,6 +690,19 @@
     "deleteConfirmQuestion": "Are you sure you want to delete?",
     "delete": "Delete",
     "cancel": "Cancel"
+  },
+  "breadcrumb": {
+    "dashboard": "Dashboard",
+    "new": "New Program",
+    "info": "Program Info",
+    "profile": "Edit Profile",
+    "plan": "Workout Plan",
+    "workout-routine": "Workout Routine",
+    "workout-library": "Workout Library",
+    "homework": "Homework",
+    "purchases": "Sales",
+    "members": "Member Management",
+    "settings": "Settings"
   },
   "workoutLibrary": {
     "title": "Workout Library",

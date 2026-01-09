@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getMyCoachProfileAction } from "@/actions/auth";
 import { getTranslations } from "next-intl/server";
 
-const CoachProfilePage = async () => {
+const CoachProfilePage = async ({ params }: { params: { locale: string } }) => {
+  const { locale } = await params;
   const result = await getMyCoachProfileAction();
   const initialData = result.success ? result.data : null;
-  const t = await getTranslations("onboarding");
+  const t = await getTranslations({ locale: locale, namespace: "onboarding" });
 
   return (
     <div className="flex justify-center items-center min-h-screen p-4">

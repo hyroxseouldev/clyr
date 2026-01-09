@@ -302,6 +302,7 @@
     "introduction": "한줄 소개",
     "experience": "코칭 경력",
     "certifications": "자격증 (쉼표로 구분)",
+    "certificationsPlaceholder": "NASM-CPT, 생활스포츠지도사, ... 등",
     "contactNumber": "연락처",
     "snsLinks": "SNS 링크",
     "instagram": "인스타그램",
@@ -391,6 +392,14 @@
     "yes": "예",
     "no": "아니오",
     "total": "총 {count}개"
+  },
+  "imageForm": {
+    "uploadSuccess": "이미지가 업로드되었습니다.",
+    "dragDropHint": "이미지를 드래그하거나 클릭하여 선택하세요",
+    "clickToSelect": "클릭하여 이미지 선택",
+    "recommendation": "권장: 정방형 1:1 비율, 최대 {size}MB",
+    "uploading": "업로드 중...",
+    "upload": "업로드"
   },
   "program": {
     "title": "프로그램",
@@ -724,6 +733,16 @@
   },
   "settings": {
     "title": "설정",
+    "pageDescription": "계정 및 애플리케이션 설정을 관리하세요.",
+    "profile": "프로필",
+    "profileDesc": "이름, 이메일, 프로필 사진을 관리하세요.",
+    "notifications": "알림",
+    "notificationsDesc": "이메일 및 푸시 알림 설정을 관리하세요.",
+    "security": "보안",
+    "securityDesc": "비밀번호 변경 및 2단계 인증을 설정하세요.",
+    "comingSoonTitle": "설정 기능 준비 중",
+    "comingSoonDesc": "다양한 설정 기능을 준비 중입니다.",
+    "comingSoonMessage": "프로필 수정, 알림 설정, 보안 설정 등의 기능이 곧 추가될 예정입니다.",
     "description": "프로그램 관리 및 위험한 작업",
     "dangerZone": "위험 영역",
     "dangerZoneDesc": "이 작업은 되돌릴 수 없습니다. 신중하게 진행해주세요.",
@@ -742,6 +761,19 @@
     "deleteConfirmQuestion": "정말 삭제하시겠습니까?",
     "delete": "삭제",
     "cancel": "취소"
+  },
+  "breadcrumb": {
+    "dashboard": "대시보드",
+    "new": "새 프로그램",
+    "info": "프로그램 설명",
+    "profile": "프로필 편집",
+    "plan": "운동 플랜 관리",
+    "workout-routine": "운동 루틴 관리",
+    "workout-library": "운동 라이브러리",
+    "homework": "숙제 관리",
+    "purchases": "판매 현황",
+    "members": "회원 관리",
+    "settings": "설정"
   },
   "workoutLibrary": {
     "title": "워크아웃 라이브러리",
