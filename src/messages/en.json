@@ -476,7 +476,8 @@
     "editDayDesc": "Set day title, coach notes, and routine block",
     "noPhase": "No phases yet",
     "createPhaseHint": "Create a new phase to start the program",
-    "cannotLoadPlan": "Cannot load plan data"
+    "cannotLoadPlan": "Cannot load plan data",
+    "cancel": "Cancel"
   },
   "onboarding": {
     "title": "Create Coach Profile",
@@ -689,7 +690,14 @@
     "deleteConfirmWarning": "This action cannot be undone!",
     "deleteConfirmQuestion": "Are you sure you want to delete?",
     "delete": "Delete",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "basicInfo": "Basic Info",
+    "basicInfoDesc": "Manage your profile image, name, introduction, and other basic information.",
+    "priceSettings": "Price Settings",
+    "priceSettingsDesc": "Set program prices and payment options.",
+    "programManagement": "Program Management",
+    "programManagementDesc": "Manage program content, weeks, and workouts.",
+    "featuresComingSoon": "Additional Features Coming Soon"
   },
   "breadcrumb": {
     "dashboard": "Dashboard",
