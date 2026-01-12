@@ -50,7 +50,7 @@ export default async function CoachDashboardPage({
           <p className="text-muted-foreground">{t("managePrograms")}</p>
         </div>
         <Button asChild size="default">
-          <Link href="/coach/dashboard/new" locale={locale}>
+          <Link href="/coach/new" locale={locale}>
             <PlusIcon className="mr-2 size-4" />
             {t("newProgram")}
           </Link>
@@ -71,7 +71,7 @@ export default async function CoachDashboardPage({
               </EmptyHeader>
               <EmptyContent>
                 <Button asChild>
-                  <Link href="/coach/dashboard/new" locale={locale}>
+                  <Link href="/coach/new" locale={locale}>
                     <PlusIcon className="mr-2 size-4" />
                     {t("createProgram")}
                   </Link>
