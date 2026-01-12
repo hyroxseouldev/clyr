@@ -81,12 +81,11 @@ export async function deleteProgramAction(programId: string) {
   try {
     await deleteProgramQuery(programId);
 
-    revalidatePath("/dashboard/programs");
-    // 리스트 페이지로 이동시키고 싶다면 redirect 사용
-    // redirect("/dashboard/programs");
+    revalidatePath("/coach/dashboard");
+    revalidatePath(`/coach/dashboard/${programId}`);
     return { success: true };
   } catch (error) {
-    return { success: false, message: "삭제에 실패했습니다." };
+    return { success: false, message: "deleteFailed" };
   }
 }
 

@@ -60,7 +60,7 @@ export default function SettingTab({ programId, program }: SettingTabProps) {
         toast.success(tToast('programDeleted'));
         router.push("/coach/dashboard");
       } else {
-        toast.error(tToast('programDeleteFailed'), { description: result.message });
+        toast.error(tToast(result.message || 'deleteFailed'));
       }
 
       setDeleteDialog({ open: false, confirmedTitle: "" });
@@ -98,28 +98,10 @@ export default function SettingTab({ programId, program }: SettingTabProps) {
                   {t('deleteProgramDesc')}
                 </p>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  {t('deleteProgramConfirm')}
-                </label>
-                <Input
-                  value={deleteDialog.confirmedTitle}
-                  onChange={(e) =>
-                    setDeleteDialog((prev) => ({
-                      ...prev,
-                      confirmedTitle: e.target.value,
-                    }))
-                  }
-                  placeholder={program.title}
-                  className="bg-background"
-                />
-              </div>
               <Button
                 variant="destructive"
                 onClick={handleDeleteClick}
-                disabled={
-                  isPending || deleteDialog.confirmedTitle !== program.title
-                }
+                disabled={isPending}
                 className="w-full sm:w-auto"
               >
                 {isPending ? (
@@ -150,8 +132,27 @@ export default function SettingTab({ programId, program }: SettingTabProps) {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {t('deleteConfirmDesc', { title: program.title })}
-              <br />
-              <br />
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">
+                {t('deleteProgramConfirm')}
+              </label>
+              <Input
+                value={deleteDialog.confirmedTitle}
+                onChange={(e) =>
+                  setDeleteDialog((prev) => ({
+                    ...prev,
+                    confirmedTitle: e.target.value,
+                  }))
+                }
+                placeholder={program.title}
+                className="bg-background mt-2"
+                autoFocus
+              />
+            </div>
+            <div className="text-sm">
               {t('deletedData')}:
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>{t('deletedWeeks', { weeks: program.durationWeeks })}</li>
@@ -159,20 +160,20 @@ export default function SettingTab({ programId, program }: SettingTabProps) {
                 <li>{t('deletedOrders')}</li>
                 <li>{t('deletedEnrollments')}</li>
               </ul>
-              <br />
-              <strong className="text-destructive">
+              <strong className="text-destructive mt-3 block">
                 {t('deleteConfirmWarning')}
               </strong>
-              <br />
-              <br />
-              {t('deleteConfirmQuestion')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+            </div>
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              disabled={deleteDialog.confirmedTitle !== program.title}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('delete')}
             </AlertDialogAction>

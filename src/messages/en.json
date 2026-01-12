@@ -364,6 +364,7 @@
     "routineBlockUnassignFailed": "Failed to unassign routine block",
     "programDeleted": "Program deleted successfully",
     "programDeleteFailed": "Failed to delete",
+    "deleteFailed": "Failed to delete program",
     "programTitleMismatch": "Program title does not match",
     "homeworkLoaded": "Homework submissions loaded",
     "homeworkLoadFailed": "Failed to load homework submissions",

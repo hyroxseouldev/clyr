@@ -364,6 +364,7 @@
     "routineBlockUnassignFailed": "루틴 블록 해제에 실패했습니다",
     "programDeleted": "프로그램이 삭제되었습니다",
     "programDeleteFailed": "삭제 실패",
+    "deleteFailed": "프로그램 삭제에 실패했습니다",
     "programTitleMismatch": "프로그램 제목이 일치하지 않습니다",
     "homeworkLoaded": "숙제 제출 목록을 불러왔습니다",
     "homeworkLoadFailed": "숙제 제출 목록을 불러오는데 실패했습니다",
