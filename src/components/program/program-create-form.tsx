@@ -65,13 +65,13 @@ export function ProgramCreateForm() {
   const onSubmit = async (values: FormValues) => {
     startTransition(async () => {
       const result = await createProgramAction(values, []);
-      if (result && "error" in result) {
-        toast.error(result.error as string);
+      if (!result?.success && result?.message) {
+        toast.error(t(result.message as any));
         return;
       }
-      if (result && "success" in result && result.success) {
+      if (result?.success) {
         toast.success(t("success"));
-        router.push(`../${result.id}`);
+        router.push(`/coach/dashboard/${result.id}`);
       }
     });
   };

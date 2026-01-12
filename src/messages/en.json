@@ -156,7 +156,9 @@
       "daysPerWeek": "Days Per Week",
       "submit": "Create Program",
       "creating": "Creating...",
-      "success": "Program created successfully"
+      "success": "Program created successfully",
+      "unauthorized": "Unauthorized user.",
+      "createFailed": "Failed to create program."
     }
   },
   "payment": {

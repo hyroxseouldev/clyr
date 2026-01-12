@@ -156,7 +156,9 @@
       "daysPerWeek": "주당 운동 일수",
       "submit": "프로그램 생성하기",
       "creating": "생성 중...",
-      "success": "프로그램 생성 성공"
+      "success": "프로그램 생성 성공",
+      "unauthorized": "인증되지 않은 사용자입니다.",
+      "createFailed": "프로그램 생성에 실패했습니다."
     }
   },
   "payment": {

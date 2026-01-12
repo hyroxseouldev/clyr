@@ -48,7 +48,7 @@ export async function createProgramAction(programData: any, weeksData: any[]) {
   const userId = await getUserId();
 
   if (!userId) {
-    return { success: false, message: "인증되지 않은 사용자입니다." };
+    return { success: false, message: "unauthorized" };
   }
   try {
     const newProgram = await createProgramWithWeeksQuery(
@@ -59,7 +59,7 @@ export async function createProgramAction(programData: any, weeksData: any[]) {
     revalidatePath("/dashboard/programs");
     return { success: true, id: newProgram.id };
   } catch (error) {
-    return { success: false, message: "프로그램 생성에 실패했습니다." };
+    return { success: false, message: "createFailed" };
   }
 }
 
