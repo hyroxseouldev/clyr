@@ -159,10 +159,23 @@ export const programBlueprints = pgTable("program_blueprints", {
   phaseNumber: integer("phase_number").notNull(),
   dayNumber: integer("day_number").notNull(),
   dayTitle: text("day_title"),
-  routineBlockId: uuid("routine_block_id").references(() => routineBlocks.id),
+  routineBlockId: uuid("routine_block_id").references(() => routineBlocks.id), // @deprecated - Use blueprint_routine_blocks join table instead
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// [blueprintRoutineBlocks] Join table for many-to-many relationship between blueprints and routine blocks
+export const blueprintRoutineBlocks = pgTable("blueprint_routine_blocks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  blueprintId: uuid("blueprint_id")
+    .references(() => programBlueprints.id, { onDelete: "cascade" })
+    .notNull(),
+  routineBlockId: uuid("routine_block_id")
+    .references(() => routineBlocks.id, { onDelete: "cascade" })
+    .notNull(),
+  orderIndex: integer("order_index").notNull(), // For ordering blocks within a day
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ==========================================
@@ -393,6 +406,7 @@ export const routineBlocksRelations = relations(
     }),
     items: many(routineItems),
     blueprints: many(programBlueprints),
+    blueprintRoutineBlocks: many(blueprintRoutineBlocks), // many-to-many via join table
   })
 );
 
@@ -408,6 +422,21 @@ export const routineItemsRelations = relations(routineItems, ({ one }) => ({
   }),
 }));
 
+// blueprintRoutineBlocks 관계 (join table)
+export const blueprintRoutineBlocksRelations = relations(
+  blueprintRoutineBlocks,
+  ({ one }) => ({
+    blueprint: one(programBlueprints, {
+      fields: [blueprintRoutineBlocks.blueprintId],
+      references: [programBlueprints.id],
+    }),
+    routineBlock: one(routineBlocks, {
+      fields: [blueprintRoutineBlocks.routineBlockId],
+      references: [routineBlocks.id],
+    }),
+  })
+);
+
 // programBlueprints 관계
 export const programBlueprintsRelations = relations(
   programBlueprints,
@@ -420,6 +449,7 @@ export const programBlueprintsRelations = relations(
       fields: [programBlueprints.routineBlockId],
       references: [routineBlocks.id],
     }),
+    routineBlocks: many(blueprintRoutineBlocks), // many-to-many via join table
     workoutLogs: many(workoutLogs),
   })
 );
@@ -469,6 +499,7 @@ export type UserProfile = InferSelectModel<typeof userProfile>;
 export type WorkoutLibrary = InferSelectModel<typeof workoutLibrary>;
 export type RoutineBlock = InferSelectModel<typeof routineBlocks>;
 export type RoutineItem = InferSelectModel<typeof routineItems>;
+export type BlueprintRoutineBlock = InferSelectModel<typeof blueprintRoutineBlocks>;
 export type Program = InferSelectModel<typeof programs>;
 export type ProgramBlueprint = InferSelectModel<typeof programBlueprints>;
 export type ProgramWeek = InferSelectModel<typeof programWeeks>;
@@ -485,6 +516,7 @@ export type NewUserProfile = InferInsertModel<typeof userProfile>;
 export type NewWorkoutLibrary = InferInsertModel<typeof workoutLibrary>;
 export type NewRoutineBlock = InferInsertModel<typeof routineBlocks>;
 export type NewRoutineItem = InferInsertModel<typeof routineItems>;
+export type NewBlueprintRoutineBlock = InferInsertModel<typeof blueprintRoutineBlocks>;
 export type NewProgram = InferInsertModel<typeof programs>;
 export type NewProgramBlueprint = InferInsertModel<typeof programBlueprints>;
 export type NewProgramWeek = InferInsertModel<typeof programWeeks>;

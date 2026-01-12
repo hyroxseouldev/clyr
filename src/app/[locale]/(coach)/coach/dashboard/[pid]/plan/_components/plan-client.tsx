@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "@/i18n/routing";
 import {
   Card,
@@ -29,6 +29,8 @@ import {
   FileText,
   Trash2,
   Search,
+  GripVertical,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
@@ -44,6 +46,7 @@ import type {
   ProgramBlueprintGroupedByPhase,
   ProgramBlueprintWithBlock,
 } from "@/db/queries/program-blueprint";
+import { cn } from "@/lib/utils";
 import type { RoutineBlockWithItems } from "@/db/queries/routine-block";
 
 interface PlanClientProps {
@@ -166,13 +169,13 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
     setIsBlueprintModalOpen(true);
   };
 
-  // 루틴 블록이 없는 날은 "휴식일"로 표시
+  // 루틴 블록이 없는 날은 "휴식일"로 표시 (support multiple blocks)
   const getDayTypeLabel = (blueprint: ProgramBlueprintWithBlock) => {
-    if (!blueprint.routineBlockId) {
+    if (!blueprint.routineBlocks || blueprint.routineBlocks.length === 0) {
       return { label: tPlan('restDay'), variant: "secondary" as const };
     }
     return {
-      label: blueprint.routineBlockFormat || tPlan('workout'),
+      label: blueprint.routineBlocks[0].workoutFormat || tPlan('workout'),
       variant: "default" as const,
     };
   };
@@ -367,14 +370,16 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        {blueprint.routineBlockName ? (
+                        {blueprint.routineBlocks && blueprint.routineBlocks.length > 0 ? (
                           <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Dumbbell className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">
-                                {blueprint.routineBlockName}
-                              </span>
-                            </div>
+                            {blueprint.routineBlocks.map((block) => (
+                              <div key={block.id} className="flex items-center gap-2 text-sm">
+                                <Dumbbell className="h-4 w-4 text-muted-foreground shrink-0" />
+                                <span className="font-medium truncate">
+                                  {block.name}
+                                </span>
+                              </div>
+                            ))}
                             {blueprint.notes && (
                               <div className="flex items-start gap-2 text-sm text-muted-foreground">
                                 <FileText className="h-4 w-4 mt-0.5 shrink-0" />
@@ -533,7 +538,7 @@ function CalendarView({
             <div className="grid grid-cols-7 gap-1">
               {week.map((blueprint) => {
                 const dayType = getDayTypeLabel(blueprint);
-                const isRestDay = !blueprint.routineBlockId;
+                const isRestDay = !blueprint.routineBlocks || blueprint.routineBlocks.length === 0;
 
                 return (
                   <div
@@ -565,15 +570,22 @@ function CalendarView({
                         {blueprint.dayTitle || `Day ${blueprint.dayNumber}`}
                       </p>
 
-                      {/* 루틴 블록 정보 */}
-                      {blueprint.routineBlockName && (
+                      {/* 루틴 블록 정보 (support multiple blocks) */}
+                      {blueprint.routineBlocks && blueprint.routineBlocks.length > 0 && (
                         <div className="mt-auto">
-                          <div className="flex items-center gap-1">
-                            <Dumbbell className="h-3 w-3 text-muted-foreground shrink-0" />
-                            <p className="text-xs text-muted-foreground line-clamp-1">
-                              {blueprint.routineBlockName}
+                          {blueprint.routineBlocks.slice(0, 2).map((block) => (
+                            <div key={block.id} className="flex items-center gap-1">
+                              <Dumbbell className="h-3 w-3 text-muted-foreground shrink-0" />
+                              <p className="text-xs text-muted-foreground line-clamp-1">
+                                {block.name}
+                              </p>
+                            </div>
+                          ))}
+                          {blueprint.routineBlocks.length > 2 && (
+                            <p className="text-xs text-muted-foreground">
+                              +{blueprint.routineBlocks.length - 2} more
                             </p>
-                          </div>
+                          )}
                           {blueprint.notes && (
                             <div className="flex items-start gap-1 mt-1">
                               <FileText className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
@@ -630,16 +642,17 @@ function BlueprintEditorModal({
   // 루틴 블록 해제 확인 모달
   const [isRemoveBlockOpen, setIsRemoveBlockOpen] = useState(false);
 
-  // 루틴 블록 선택
+  // 루틴 블록 선택 (support multiple blocks)
   const [isBlockSelectorOpen, setIsBlockSelectorOpen] = useState(false);
   const [routineBlocks, setRoutineBlocks] = useState<RoutineBlockWithItems[]>(
     []
   );
   const [blockSearch, setBlockSearch] = useState("");
   const [isLoadingBlocks, setIsLoadingBlocks] = useState(false);
-  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(
-    blueprint.routineBlockId || null
+  const [selectedBlockIds, setSelectedBlockIds] = useState<string[]>(
+    blueprint.routineBlocks?.map((rb) => rb.id) || []
   );
+  const [draggedBlockId, setDraggedBlockId] = useState<string | null>(null);
 
   // 루틴 블록 목록 로드
   const loadRoutineBlocks = async () => {
@@ -652,18 +665,27 @@ function BlueprintEditorModal({
     }
   };
 
+  // Fix Issue 1: Load routine blocks when modal opens
+  useEffect(() => {
+    if (open && routineBlocks.length === 0) {
+      loadRoutineBlocks();
+    }
+  }, [open]);
+
   // 루틴 블록 선택 모달이 열릴 때 블록 목록 로드
   const handleBlockSelectorOpen = () => {
     loadRoutineBlocks();
     setIsBlockSelectorOpen(true);
   };
 
-  // 루틴 블록 선택 핸들러
-  const handleBlockSelect = async (blockId: string) => {
+  // 루틴 블록 추가 핸들러 (add to array)
+  const handleBlockAdd = async (blockId: string) => {
     setIsSaving(true);
 
+    const newBlockIds = [...selectedBlockIds, blockId];
+
     const result = await updateProgramBlueprintAction(blueprint.id, {
-      routineBlockId: blockId || null,
+      routineBlockIds: newBlockIds,
     });
 
     setIsSaving(false);
@@ -674,22 +696,44 @@ function BlueprintEditorModal({
     }
 
     toast.success(tToast('routineBlockAssigned'));
-    setSelectedBlockId(blockId);
+    setSelectedBlockIds(newBlockIds);
     setIsBlockSelectorOpen(false);
     onSave();
   };
 
-  // 루틴 블록 제거 핸들러
-  const handleBlockRemove = () => {
+  // 루틴 블록 제거 핸들러 (remove from array)
+  const handleBlockRemove = async (blockId: string) => {
+    setIsSaving(true);
+
+    const newBlockIds = selectedBlockIds.filter((id) => id !== blockId);
+
+    const result = await updateProgramBlueprintAction(blueprint.id, {
+      routineBlockIds: newBlockIds,
+    });
+
+    setIsSaving(false);
+
+    if (!result.success) {
+      toast.error(result.message || tToast('routineBlockUnassignFailed'));
+      return;
+    }
+
+    toast.success(tToast('routineBlockUnassigned'));
+    setSelectedBlockIds(newBlockIds);
+    onSave();
+  };
+
+  // 루틴 블록 모두 제거 핸들러
+  const handleClearAllBlocks = () => {
     setIsRemoveBlockOpen(true);
   };
 
-  // 루틴 블록 제거 확인 핸들러
-  const confirmBlockRemove = async () => {
+  // 루틴 블록 모두 제거 확인 핸들러
+  const confirmClearAllBlocks = async () => {
     setIsSaving(true);
 
     const result = await updateProgramBlueprintAction(blueprint.id, {
-      routineBlockId: null,
+      routineBlockIds: [],
     });
 
     setIsSaving(false);
@@ -701,8 +745,57 @@ function BlueprintEditorModal({
     }
 
     toast.success(tToast('routineBlockUnassigned'));
-    setSelectedBlockId(null);
+    setSelectedBlockIds([]);
     setIsRemoveBlockOpen(false);
+    onSave();
+  };
+
+  // Drag and drop handlers (native HTML5 API)
+  const handleDragStart = (blockId: string) => {
+    setDraggedBlockId(blockId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetBlockId: string) => {
+    e.preventDefault();
+    if (!draggedBlockId || draggedBlockId === targetBlockId) {
+      setDraggedBlockId(null);
+      return;
+    }
+
+    const oldIndex = selectedBlockIds.indexOf(draggedBlockId);
+    const newIndex = selectedBlockIds.indexOf(targetBlockId);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      setDraggedBlockId(null);
+      return;
+    }
+
+    // Reorder array
+    const newIds = [...selectedBlockIds];
+    const [removed] = newIds.splice(oldIndex, 1);
+    newIds.splice(newIndex, 0, removed);
+
+    setIsSaving(true);
+
+    const result = await updateProgramBlueprintAction(blueprint.id, {
+      routineBlockIds: newIds,
+    });
+
+    setIsSaving(false);
+
+    if (!result.success) {
+      toast.error(result.message || tToast('routineBlockAssignFailed'));
+      setDraggedBlockId(null);
+      return;
+    }
+
+    setSelectedBlockIds(newIds);
+    setDraggedBlockId(null);
     onSave();
   };
 
@@ -726,13 +819,17 @@ function BlueprintEditorModal({
     onSave();
   };
 
-  // 필터링된 루틴 블록 목록
-  const filteredBlocks = routineBlocks.filter((block) =>
-    block.name.toLowerCase().includes(blockSearch.toLowerCase())
+  // 필터링된 루틴 블록 목록 (exclude already selected)
+  const filteredBlocks = routineBlocks.filter(
+    (block) =>
+      !selectedBlockIds.includes(block.id) &&
+      block.name.toLowerCase().includes(blockSearch.toLowerCase())
   );
 
-  // 선택된 블록 정보
-  const selectedBlock = routineBlocks.find((b) => b.id === selectedBlockId);
+  // 선택된 블록들 정보
+  const selectedBlocks = selectedBlockIds
+    .map((id) => routineBlocks.find((b) => b.id === id))
+    .filter((b): b is RoutineBlockWithItems => b !== undefined);
 
   return (
     <>
@@ -766,16 +863,16 @@ function BlueprintEditorModal({
               />
             </div>
 
-            {/* 루틴 블록 지정 */}
+            {/* 루틴 블록 지정 (support multiple blocks with drag-and-drop) */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>{tPlan('routineBlock')}</Label>
                 <div className="flex gap-2">
-                  {selectedBlockId && (
+                  {selectedBlockIds.length > 0 && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleBlockRemove}
+                      onClick={handleClearAllBlocks}
                       disabled={isSaving}
                       className="text-destructive hover:text-destructive"
                     >
@@ -787,21 +884,56 @@ function BlueprintEditorModal({
                     size="sm"
                     onClick={handleBlockSelectorOpen}
                   >
-                    {selectedBlockId ? tPlan('change') : tPlan('select')}
+                    {selectedBlockIds.length > 0 ? tPlan('change') : tPlan('select')}
                   </Button>
                 </div>
               </div>
 
-              {selectedBlock ? (
-                <div className="p-3 bg-muted rounded-md">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Dumbbell className="h-4 w-4 text-muted-foreground" />
-                    <p className="text-sm font-medium">{selectedBlock.name}</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {tPlan('exerciseCount', { count: selectedBlock.itemCount })} •{" "}
-                    {selectedBlock.workoutFormat}
-                  </p>
+              {selectedBlocks.length > 0 ? (
+                <div className="space-y-2">
+                  {selectedBlocks.map((block, index) => {
+                    const blockId = selectedBlockIds[index];
+                    const isDragging = draggedBlockId === blockId;
+
+                    return (
+                      <div
+                        key={blockId}
+                        draggable
+                        onDragStart={() => handleDragStart(blockId)}
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, blockId)}
+                        className={cn(
+                          "p-3 rounded-md flex items-center gap-2 transition-all",
+                          isDragging ? "opacity-50" : "bg-muted",
+                          !isDragging && "cursor-move hover:bg-muted/80"
+                        )}
+                      >
+                        <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Dumbbell className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <p className="text-sm font-medium truncate">{block.name}</p>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {tPlan('exerciseCount', { count: block.itemCount })} •{" "}
+                            {block.workoutFormat}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleBlockRemove(blockId)}
+                          disabled={isSaving}
+                          className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="p-3 bg-muted rounded-md text-center">
@@ -874,7 +1006,7 @@ function BlueprintEditorModal({
                 <Card
                   key={block.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => handleBlockSelect(block.id)}
+                  onClick={() => handleBlockAdd(block.id)}
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
@@ -927,7 +1059,7 @@ function BlueprintEditorModal({
           <div className="flex gap-2">
             <Button
               variant="destructive"
-              onClick={confirmBlockRemove}
+              onClick={confirmClearAllBlocks}
               disabled={isSaving}
               className="flex-1"
             >

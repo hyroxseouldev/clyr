@@ -9,6 +9,9 @@ import {
   deleteProgramBlueprintQuery,
   createPhaseBlueprintsQuery,
   deletePhaseBlueprintsQuery,
+  addRoutineBlockToBlueprintQuery,
+  removeRoutineBlocksFromBlueprintQuery,
+  updateRoutineBlockOrderQuery,
 } from "@/db/queries/program-blueprint";
 import { getProgramByIdQuery } from "@/db/queries/program";
 import { getUserId } from "@/actions/auth";
@@ -173,7 +176,8 @@ export async function updateProgramBlueprintAction(
   id: string,
   data: {
     dayTitle?: string | null;
-    routineBlockId?: string | null;
+    routineBlockId?: string | null; // Legacy single block support
+    routineBlockIds?: string[] | null; // New multiple blocks support
     notes?: string | null;
   }
 ) {
@@ -187,7 +191,28 @@ export async function updateProgramBlueprintAction(
   }
 
   try {
-    const updated = await updateProgramBlueprintQuery(id, data);
+    // Update basic fields
+    const updated = await updateProgramBlueprintQuery(id, {
+      dayTitle: data.dayTitle,
+      notes: data.notes,
+    });
+
+    // Handle routine blocks if provided
+    if (data.routineBlockIds !== undefined) {
+      // Remove existing routine blocks from join table
+      await removeRoutineBlocksFromBlueprintQuery(id);
+
+      // Add new routine blocks with order
+      if (data.routineBlockIds && data.routineBlockIds.length > 0) {
+        for (let i = 0; i < data.routineBlockIds.length; i++) {
+          await addRoutineBlockToBlueprintQuery({
+            blueprintId: id,
+            routineBlockId: data.routineBlockIds[i],
+            orderIndex: i,
+          });
+        }
+      }
+    }
 
     revalidatePath("/coach/dashboard/[pid]/plan");
     return {

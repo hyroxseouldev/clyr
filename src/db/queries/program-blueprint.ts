@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { programBlueprints, routineBlocks, programs } from "@/db/schema";
+import { programBlueprints, routineBlocks, programs, blueprintRoutineBlocks } from "@/db/schema";
 import { eq, and, asc, desc } from "drizzle-orm";
 
 /**
@@ -14,9 +14,17 @@ export interface ProgramBlueprintWithBlock {
   phaseNumber: number;
   dayNumber: number;
   dayTitle: string | null;
+  // Legacy single block support (deprecated, kept for backward compatibility)
   routineBlockId: string | null;
   routineBlockName: string | null;
   routineBlockFormat: string | null;
+  // New multiple blocks support
+  routineBlocks: Array<{
+    id: string;
+    name: string;
+    workoutFormat: string;
+    orderIndex: number;
+  }>;
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -47,9 +55,9 @@ export async function getProgramBlueprintsQuery(
       phaseNumber: programBlueprints.phaseNumber,
       dayNumber: programBlueprints.dayNumber,
       dayTitle: programBlueprints.dayTitle,
-      routineBlockId: programBlueprints.routineBlockId,
-      routineBlockName: routineBlocks.name,
-      routineBlockFormat: routineBlocks.workoutFormat,
+      routineBlockId: programBlueprints.routineBlockId, // Legacy support
+      routineBlockName: routineBlocks.name, // Legacy support
+      routineBlockFormat: routineBlocks.workoutFormat, // Legacy support
       notes: programBlueprints.notes,
       createdAt: programBlueprints.createdAt,
       updatedAt: programBlueprints.updatedAt,
@@ -59,7 +67,29 @@ export async function getProgramBlueprintsQuery(
     .where(eq(programBlueprints.programId, programId))
     .orderBy(asc(programBlueprints.phaseNumber), asc(programBlueprints.dayNumber));
 
-  return blueprints as ProgramBlueprintWithBlock[];
+  // Fetch routine blocks from join table for each blueprint
+  const blueprintsWithBlocks = await Promise.all(
+    blueprints.map(async (blueprint) => {
+      const blocks = await db
+        .select({
+          id: routineBlocks.id,
+          name: routineBlocks.name,
+          workoutFormat: routineBlocks.workoutFormat,
+          orderIndex: blueprintRoutineBlocks.orderIndex,
+        })
+        .from(blueprintRoutineBlocks)
+        .innerJoin(routineBlocks, eq(blueprintRoutineBlocks.routineBlockId, routineBlocks.id))
+        .where(eq(blueprintRoutineBlocks.blueprintId, blueprint.id))
+        .orderBy(asc(blueprintRoutineBlocks.orderIndex));
+
+      return {
+        ...blueprint,
+        routineBlocks: blocks,
+      };
+    })
+  );
+
+  return blueprintsWithBlocks as ProgramBlueprintWithBlock[];
 }
 
 /**
@@ -124,9 +154,9 @@ export async function getProgramBlueprintByPhaseAndDayQuery(
       phaseNumber: programBlueprints.phaseNumber,
       dayNumber: programBlueprints.dayNumber,
       dayTitle: programBlueprints.dayTitle,
-      routineBlockId: programBlueprints.routineBlockId,
-      routineBlockName: routineBlocks.name,
-      routineBlockFormat: routineBlocks.workoutFormat,
+      routineBlockId: programBlueprints.routineBlockId, // Legacy support
+      routineBlockName: routineBlocks.name, // Legacy support
+      routineBlockFormat: routineBlocks.workoutFormat, // Legacy support
       notes: programBlueprints.notes,
       createdAt: programBlueprints.createdAt,
       updatedAt: programBlueprints.updatedAt,
@@ -141,7 +171,27 @@ export async function getProgramBlueprintByPhaseAndDayQuery(
       )
     );
 
-  return (blueprint as ProgramBlueprintWithBlock) || null;
+  if (!blueprint) {
+    return null;
+  }
+
+  // Fetch routine blocks from join table
+  const blocks = await db
+    .select({
+      id: routineBlocks.id,
+      name: routineBlocks.name,
+      workoutFormat: routineBlocks.workoutFormat,
+      orderIndex: blueprintRoutineBlocks.orderIndex,
+    })
+    .from(blueprintRoutineBlocks)
+    .innerJoin(routineBlocks, eq(blueprintRoutineBlocks.routineBlockId, routineBlocks.id))
+    .where(eq(blueprintRoutineBlocks.blueprintId, blueprint.id))
+    .orderBy(asc(blueprintRoutineBlocks.orderIndex));
+
+  return {
+    ...blueprint,
+    routineBlocks: blocks,
+  } as ProgramBlueprintWithBlock;
 }
 
 /**
@@ -242,4 +292,70 @@ export async function getProgramTotalDaysQuery(programId: string): Promise<numbe
     .limit(1);
 
   return result[0]?.count || 0;
+}
+
+/**
+ * ==========================================
+ * BLUEPRINT ROUTINE BLOCKS (JOIN TABLE) QUERIES
+ * ==========================================
+ */
+
+/**
+ * Add routine block to blueprint
+ */
+export async function addRoutineBlockToBlueprintQuery(data: {
+  blueprintId: string;
+  routineBlockId: string;
+  orderIndex: number;
+}) {
+  const [join] = await db.insert(blueprintRoutineBlocks).values(data).returning();
+  return join;
+}
+
+/**
+ * Remove routine block from blueprint
+ */
+export async function removeRoutineBlockFromBlueprintQuery(
+  blueprintId: string,
+  routineBlockId: string
+) {
+  await db
+    .delete(blueprintRoutineBlocks)
+    .where(
+      and(
+        eq(blueprintRoutineBlocks.blueprintId, blueprintId),
+        eq(blueprintRoutineBlocks.routineBlockId, routineBlockId)
+      )
+    );
+}
+
+/**
+ * Remove all routine blocks from blueprint
+ */
+export async function removeRoutineBlocksFromBlueprintQuery(blueprintId: string) {
+  await db
+    .delete(blueprintRoutineBlocks)
+    .where(eq(blueprintRoutineBlocks.blueprintId, blueprintId));
+}
+
+/**
+ * Update routine block order for blueprint
+ */
+export async function updateRoutineBlockOrderQuery(
+  blueprintId: string,
+  updates: Array<{ routineBlockId: string; orderIndex: number }>
+) {
+  await db.transaction(async (tx) => {
+    for (const update of updates) {
+      await tx
+        .update(blueprintRoutineBlocks)
+        .set({ orderIndex: update.orderIndex })
+        .where(
+          and(
+            eq(blueprintRoutineBlocks.blueprintId, blueprintId),
+            eq(blueprintRoutineBlocks.routineBlockId, update.routineBlockId)
+          )
+        );
+    }
+  });
 }
