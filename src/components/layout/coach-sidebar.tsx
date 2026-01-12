@@ -83,11 +83,6 @@ const CoachSidebar = ({ programId }: { programId: string }) => {
       iconName: "Info",
     },
     {
-      titleKey: "profileEdit",
-      url: `/coach/dashboard/${programId}/profile`,
-      iconName: "UserCircle",
-    },
-    {
       titleKey: "workoutPlan",
       url: `/coach/dashboard/${programId}/plan`,
       iconName: "Calendar",

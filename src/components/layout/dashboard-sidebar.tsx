@@ -22,6 +22,7 @@ import {
   Settings2Icon,
   UsersIcon,
   LayoutDashboardIcon,
+  UserCircleIcon,
 } from "lucide-react";
 
 interface MenuItem {
@@ -43,6 +44,11 @@ const DashboardSidebar = () => {
       iconName: "LayoutDashboard",
     },
     {
+      titleKey: "profile",
+      url: "/coach/profile",
+      iconName: "UserCircle",
+    },
+    {
       titleKey: "settings",
       url: "/coach/settings",
       iconName: "Settings2",
@@ -55,6 +61,7 @@ const DashboardSidebar = () => {
     Users: UsersIcon,
     Settings2: Settings2Icon,
     LayoutDashboard: LayoutDashboardIcon,
+    UserCircle: UserCircleIcon,
   };
   return (
     <>
