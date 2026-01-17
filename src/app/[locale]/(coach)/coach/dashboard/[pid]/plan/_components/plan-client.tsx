@@ -44,6 +44,7 @@ import {
   Search,
   GripVertical,
   X,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
@@ -102,7 +103,8 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
 
   // 일차 추가/삭제 관련
   const [isAddingDay, setIsAddingDay] = useState(false);
-  const [dayToDelete, setDayToDelete] = useState<ProgramBlueprintWithSections | null>(null);
+  const [dayToDelete, setDayToDelete] =
+    useState<ProgramBlueprintWithSections | null>(null);
   const [isDeleteDayOpen, setIsDeleteDayOpen] = useState(false);
 
   const selectedPhaseData = planData?.blueprints.find(
@@ -223,7 +225,10 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
   const confirmDeleteDay = async () => {
     if (!dayToDelete) return;
 
-    const result = await deleteProgramBlueprintAction(dayToDelete.id, programId);
+    const result = await deleteProgramBlueprintAction(
+      dayToDelete.id,
+      programId
+    );
 
     if (!result.success) {
       toast.error(result.message || tToast("deleteDayFailed"));
@@ -474,13 +479,18 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                   >
                     <CardContent className="flex flex-col items-center justify-center min-h-[120px] text-muted-foreground hover:text-foreground transition-colors">
                       {isAddingDay ? (
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-current" />
+                        // 얇게
+                        <Loader2 className="h-8 w-8 mb-1.5 animate-spin text-muted-foreground stroke-1" />
                       ) : (
                         <>
                           <Plus className="h-9 w-9 mb-1.5" />
-                          <p className="font-medium text-sm">{tPlan("addNewDay")}</p>
+                          <p className="font-medium text-sm">
+                            {tPlan("addNewDay")}
+                          </p>
                           <p className="text-xs">
-                            {tPlan("addNewDayDesc", { current: selectedPhaseData.days.length })}
+                            {tPlan("addNewDayDesc", {
+                              current: selectedPhaseData.days.length,
+                            })}
                           </p>
                         </>
                       )}
@@ -651,57 +661,82 @@ function CalendarView({ phaseData, onDayClick }: CalendarViewProps) {
 
             {/* 캘린더 그리드 */}
             <div className="grid grid-cols-7 gap-1">
-              {week.map((blueprint) => {
-                const hasNotes = !!blueprint.notes;
+              {/* 첫 번째 Day의 dayNumber 기준으로 앞에 빈 셀 추가 */}
+              {week.length > 0 && (
+                <>
+                  {Array.from({ length: (week[0].dayNumber - 1) % 7 }).map(
+                    (_, emptyIndex) => (
+                      <div
+                        key={`empty-before-${emptyIndex}`}
+                        className="min-h-[120px] p-2 rounded-md border border-dashed border-muted bg-muted/30"
+                      />
+                    )
+                  )}
+                  {week.map((blueprint) => {
+                    const sectionCount = blueprint.sections?.length || 0;
+                    const hasSections = sectionCount > 0;
 
-                return (
-                  <div
-                    key={blueprint.id}
-                    onClick={() => onDayClick(blueprint)}
-                    className={`
-                      min-h-[120px] p-2 rounded-md border cursor-pointer
-                      transition-all hover:shadow-md hover:border-primary/50
-                      ${
-                        !hasNotes ? "bg-muted/50 border-muted" : "bg-background"
-                      }
-                    `}
-                  >
-                    <div className="space-y-1">
-                      {/* Day 번호 */}
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="text-xs">
-                          D{blueprint.dayNumber}
-                        </Badge>
-                      </div>
-
-                      {/* 일차 제목 */}
-                      <p className="text-xs font-medium line-clamp-2 mt-1">
-                        {blueprint.dayTitle || `Day ${blueprint.dayNumber}`}
-                      </p>
-
-                      {/* 코치 노트 */}
-                      {blueprint.notes && (
-                        <div className="mt-auto">
-                          <div className="flex items-start gap-1 mt-1">
-                            <FileText className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {blueprint.notes}
-                            </p>
+                    return (
+                      <div
+                        key={blueprint.id}
+                        onClick={() => onDayClick(blueprint)}
+                        className={`
+                          min-h-[120px] p-2 rounded-md border cursor-pointer
+                          transition-all hover:shadow-md hover:border-primary/50
+                          ${
+                            !hasSections
+                              ? "bg-muted/50 border-muted"
+                              : "bg-background"
+                          }
+                        `}
+                      >
+                        <div className="space-y-1">
+                          {/* Day 번호 */}
+                          <div className="flex items-center justify-between">
+                            <Badge variant="outline" className="text-xs">
+                              D{blueprint.dayNumber}
+                            </Badge>
+                            <Badge
+                              variant="outline"
+                              className="text-xs text-muted-foreground"
+                            >
+                              {sectionCount}섹션
+                            </Badge>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
 
-              {/* 빈 셀 채우기 (7일이 안 되는 경우) */}
-              {Array.from({ length: 7 - week.length }).map((_, emptyIndex) => (
-                <div
-                  key={`empty-${emptyIndex}`}
-                  className="min-h-[120px] p-2 rounded-md border border-dashed border-muted bg-muted/30"
-                />
-              ))}
+                          {/* 일차 제목 */}
+                          <p className="text-xs font-medium line-clamp-2 mt-1">
+                            {blueprint.dayTitle || `Day ${blueprint.dayNumber}`}
+                          </p>
+
+                          {/* 코치 노트 */}
+                          {blueprint.notes && (
+                            <div className="mt-auto">
+                              <div className="flex items-start gap-1 mt-1">
+                                <FileText className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                  {blueprint.notes}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              )}
+
+              {/* 빈 셀 채우기 (마지막 Day 이후) */}
+              {week.length > 0 &&
+                Array.from({
+                  length: 7 - (((week[0].dayNumber - 1) % 7) + week.length),
+                }).map((_, emptyIndex) => (
+                  <div
+                    key={`empty-after-${emptyIndex}`}
+                    className="min-h-[120px] p-2 rounded-md border border-dashed border-muted bg-muted/30"
+                  />
+                ))}
             </div>
           </CardContent>
         </Card>

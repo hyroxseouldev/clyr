@@ -449,7 +449,7 @@
     "calendarView": "Phase {phase} - 캘린더 뷰",
     "calendarViewDesc": "주차별 캘린더에서 운동 일정을 확인하세요",
     "week": "{week}주차",
-    "weekDays": ["일", "월", "화", "수", "목", "금", "토"],
+    "weekDays": ["월", "화", "수", "목", "금", "토", "일"],
     "restDay": "휴식",
     "rest": "휴식",
     "workout": "운동",
