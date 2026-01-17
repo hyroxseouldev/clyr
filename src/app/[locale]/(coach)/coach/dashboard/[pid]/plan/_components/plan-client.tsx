@@ -2,6 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "@/i18n/routing";
+import dynamic from "next/dynamic";
+
+// Dynamic import TiptapEditor to avoid SSR issues
+const TiptapEditor = dynamic(
+  () => import("@/components/tiptap").then((mod) => mod.TiptapEditor),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="border border-input rounded-md p-4 min-h-[150px] bg-muted animate-pulse" />
+    ),
+  }
+);
 import {
   Card,
   CardContent,
@@ -22,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SessionTitleInput } from "@/components/ui/session-title-input";
 import {
   Plus,
   Calendar,
@@ -41,6 +54,13 @@ import {
   getProgramPlanDataAction,
 } from "@/actions/program-blueprint";
 import { getRoutineBlocksAction } from "@/actions/routine-block";
+import {
+  createBlueprintSectionAction,
+  updateBlueprintSectionAction,
+  deleteBlueprintSectionAction,
+  reorderBlueprintSectionsAction,
+  getBlueprintSectionsAction,
+} from "@/actions/blueprint-sections";
 import type {
   ProgramPlanData,
   ProgramBlueprintGroupedByPhase,
@@ -55,9 +75,9 @@ interface PlanClientProps {
 }
 
 export function PlanClient({ programId, initialData }: PlanClientProps) {
-  const tToast = useTranslations('toast');
-  const tPlan = useTranslations('plan');
-  const tCommon = useTranslations('common');
+  const tToast = useTranslations("toast");
+  const tPlan = useTranslations("plan");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const [planData, setPlanData] = useState<ProgramPlanData | null>(initialData);
   const [selectedPhase, setSelectedPhase] = useState<number>(
@@ -95,7 +115,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
   // 페이즈 생성 핸들러
   const handleCreatePhase = async () => {
     if (planData?.blueprints.some((bp) => bp.phaseNumber === newPhaseNumber)) {
-      toast.error(tToast('phaseExists'));
+      toast.error(tToast("phaseExists"));
       return;
     }
 
@@ -110,11 +130,11 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
     setIsCreatingPhase(false);
 
     if (!result.success) {
-      toast.error(result.message || tToast('phaseCreateFailed'));
+      toast.error(result.message || tToast("phaseCreateFailed"));
       return;
     }
 
-    toast.success(tToast('phaseCreated'));
+    toast.success(tToast("phaseCreated"));
     setIsCreatePhaseOpen(false);
 
     // 데이터 다시 로드
@@ -138,13 +158,13 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
     const result = await deletePhaseAction(programId, phaseToDelete);
 
     if (!result.success) {
-      toast.error(result.message || tToast('phaseDeleteFailed'));
+      toast.error(result.message || tToast("phaseDeleteFailed"));
       setIsDeletePhaseOpen(false);
       setPhaseToDelete(null);
       return;
     }
 
-    toast.success(tToast('phaseDeleted'));
+    toast.success(tToast("phaseDeleted"));
 
     // 데이터 다시 로드
     await refreshPlanData();
@@ -169,25 +189,12 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
     setIsBlueprintModalOpen(true);
   };
 
-  // 루틴 블록이 없는 날은 "휴식일"로 표시 (support multiple blocks)
-  const getDayTypeLabel = (blueprint: ProgramBlueprintWithBlock) => {
-    if (!blueprint.routineBlocks || blueprint.routineBlocks.length === 0) {
-      return { label: tPlan('restDay'), variant: "secondary" as const };
-    }
-    return {
-      label: blueprint.routineBlocks[0].workoutFormat || tPlan('workout'),
-      variant: "default" as const,
-    };
-  };
-
   if (!planData) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-lg font-medium">
-            {tPlan('cannotLoadPlan')}
-          </p>
+          <p className="text-lg font-medium">{tPlan("cannotLoadPlan")}</p>
         </div>
       </div>
     );
@@ -199,28 +206,27 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">
-            {planData.programTitle} - {tPlan('title')}
+            {planData.programTitle} - {tPlan("title")}
           </h1>
           <p className="text-muted-foreground">
-            {tPlan('subtitle', { weeks: planData.durationWeeks })}
+            {tPlan("subtitle", { weeks: planData.durationWeeks })}
           </p>
         </div>
         <Dialog open={isCreatePhaseOpen} onOpenChange={setIsCreatePhaseOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />{tPlan('createPhase')}
+              <Plus className="h-4 w-4 mr-2" />
+              {tPlan("createPhase")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{tPlan('createPhase')}</DialogTitle>
-              <DialogDescription>
-                {tPlan('createPhaseDesc')}
-              </DialogDescription>
+              <DialogTitle>{tPlan("createPhase")}</DialogTitle>
+              <DialogDescription>{tPlan("createPhaseDesc")}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>{tPlan('phaseNumber')}</Label>
+                <Label>{tPlan("phaseNumber")}</Label>
                 <Input
                   type="number"
                   min="1"
@@ -228,11 +234,11 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                   onChange={(e) =>
                     setNewPhaseNumber(parseInt(e.target.value) || 1)
                   }
-                  placeholder={tPlan('phaseNumberPlaceholder')}
+                  placeholder={tPlan("phaseNumberPlaceholder")}
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tPlan('dayCount')}</Label>
+                <Label>{tPlan("dayCount")}</Label>
                 <Input
                   type="number"
                   min="1"
@@ -241,7 +247,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                   onChange={(e) =>
                     setNewDayCount(parseInt(e.target.value) || 7)
                   }
-                  placeholder={tPlan('dayCountPlaceholder')}
+                  placeholder={tPlan("dayCountPlaceholder")}
                 />
               </div>
               <Button
@@ -249,7 +255,9 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                 disabled={isCreatingPhase}
                 className="w-full"
               >
-                {isCreatingPhase ? tPlan('creating') : tPlan('createPhaseButton')}
+                {isCreatingPhase
+                  ? tPlan("creating")
+                  : tPlan("createPhaseButton")}
               </Button>
             </div>
           </DialogContent>
@@ -259,24 +267,29 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
       {/* 프로그램 정보 카드 */}
       <Card>
         <CardHeader>
-          <CardTitle>{tPlan('programInfo')}</CardTitle>
+          <CardTitle>{tPlan("programInfo")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <p className="text-sm text-muted-foreground">{tPlan('phaseCount')}</p>
+              <p className="text-sm text-muted-foreground">
+                {tPlan("phaseCount")}
+              </p>
               <p className="text-lg font-semibold">
-                {planData.blueprints.length}{tPlan('phaseUnit')}
+                {planData.blueprints.length}
+                {tPlan("phaseUnit")}
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">{tPlan('totalDays')}</p>
+              <p className="text-sm text-muted-foreground">
+                {tPlan("totalDays")}
+              </p>
               <p className="text-lg font-semibold">
                 {planData.blueprints.reduce(
                   (sum, bp) => sum + bp.days.length,
                   0
                 )}
-                {tPlan('dayUnit')}
+                {tPlan("dayUnit")}
               </p>
             </div>
           </div>
@@ -311,8 +324,12 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                 onValueChange={(v) => setViewMode(v as "grid" | "calendar")}
               >
                 <TabsList>
-                  <TabsTrigger value="grid">{tPlan('viewMode.grid')}</TabsTrigger>
-                  <TabsTrigger value="calendar">{tPlan('viewMode.calendar')}</TabsTrigger>
+                  <TabsTrigger value="grid">
+                    {tPlan("viewMode.grid")}
+                  </TabsTrigger>
+                  <TabsTrigger value="calendar">
+                    {tPlan("viewMode.calendar")}
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
 
@@ -324,7 +341,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                 className="text-destructive hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                {tPlan('deletePhase')}
+                {tPlan("deletePhase")}
               </Button>
             </div>
           </div>
@@ -334,70 +351,69 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
             <div>
               <div className="mb-4">
                 <h3 className="text-lg font-semibold">
-                  {tPlan('dayView', { phase: selectedPhaseData.phaseNumber, days: selectedPhaseData.days.length })}
+                  {tPlan("dayView", {
+                    phase: selectedPhaseData.phaseNumber,
+                    days: selectedPhaseData.days.length,
+                  })}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {tPlan('dayViewDesc')}
+                  {tPlan("dayViewDesc")}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {selectedPhaseData.days.map((blueprint) => {
-                  const dayType = getDayTypeLabel(blueprint);
-
-                  return (
-                    <Card
-                      key={blueprint.id}
-                      className="cursor-pointer hover:shadow-md transition-shadow"
-                      onClick={() => handleBlueprintClick(blueprint)}
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Badge variant="outline">
-                                Day {blueprint.dayNumber}
-                              </Badge>
-                              <Badge variant={dayType.variant}>
-                                {dayType.label}
-                              </Badge>
-                            </div>
-                            <CardTitle className="text-base line-clamp-2">
-                              {blueprint.dayTitle ||
-                                `Day ${blueprint.dayNumber}`}
-                            </CardTitle>
+                {selectedPhaseData.days.map((blueprint) => (
+                  <Card
+                    key={blueprint.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => handleBlueprintClick(blueprint)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="outline">
+                              Day {blueprint.dayNumber}
+                            </Badge>
                           </div>
+                          <CardTitle className="text-base line-clamp-2">
+                            {blueprint.dayTitle || `Day ${blueprint.dayNumber}`}
+                          </CardTitle>
                         </div>
-                      </CardHeader>
-                      <CardContent>
-                        {blueprint.routineBlocks && blueprint.routineBlocks.length > 0 ? (
-                          <div className="space-y-2">
-                            {blueprint.routineBlocks.map((block) => (
-                              <div key={block.id} className="flex items-center gap-2 text-sm">
-                                <Dumbbell className="h-4 w-4 text-muted-foreground shrink-0" />
-                                <span className="font-medium truncate">
-                                  {block.name}
-                                </span>
-                              </div>
-                            ))}
-                            {blueprint.notes && (
-                              <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                                <FileText className="h-4 w-4 mt-0.5 shrink-0" />
-                                <span className="line-clamp-2">
-                                  {blueprint.notes}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-sm text-muted-foreground">
-                            {tPlan('noRoutineBlock')}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {blueprint.routineBlocks &&
+                      blueprint.routineBlocks.length > 0 ? (
+                        <div className="space-y-2">
+                          {blueprint.routineBlocks.map((block) => (
+                            <div
+                              key={block.id}
+                              className="flex items-center gap-2 text-sm"
+                            >
+                              <Dumbbell className="h-4 w-4 text-muted-foreground shrink-0" />
+                              <span className="font-medium truncate">
+                                {block.name}
+                              </span>
+                            </div>
+                          ))}
+                          {blueprint.notes && (
+                            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                              <FileText className="h-4 w-4 mt-0.5 shrink-0" />
+                              <span className="line-clamp-2">
+                                {blueprint.notes}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          {tPlan("noRoutineBlock")}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
           )}
@@ -407,7 +423,6 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
             <CalendarView
               phaseData={selectedPhaseData}
               onDayClick={handleBlueprintClick}
-              getDayTypeLabel={getDayTypeLabel}
             />
           )}
         </div>
@@ -415,9 +430,9 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
         <Card>
           <CardContent className="py-12 text-center">
             <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-lg font-medium">{tPlan('noPhase')}</p>
+            <p className="text-lg font-medium">{tPlan("noPhase")}</p>
             <p className="text-sm text-muted-foreground mt-2">
-              {tPlan('createPhaseHint')}
+              {tPlan("createPhaseHint")}
             </p>
           </CardContent>
         </Card>
@@ -439,12 +454,12 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
       <Dialog open={isDeletePhaseOpen} onOpenChange={setIsDeletePhaseOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{tPlan('deletePhase')}</DialogTitle>
+            <DialogTitle>{tPlan("deletePhase")}</DialogTitle>
             <DialogDescription>
-              {tPlan('deletePhaseConfirm', { phase: phaseToDelete ?? 0 })}
+              {tPlan("deletePhaseConfirm", { phase: phaseToDelete ?? 0 })}
               <br />
               <span className="text-destructive font-medium">
-                {tPlan('deletePhaseWarning')}
+                {tPlan("deletePhaseWarning")}
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -454,7 +469,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
               onClick={confirmDeletePhase}
               className="flex-1"
             >
-              {tPlan('confirmDelete')}
+              {tPlan("confirmDelete")}
             </Button>
             <Button
               variant="outline"
@@ -464,7 +479,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
               }}
               className="flex-1"
             >
-              {tPlan('cancel')}
+              {tPlan("cancel")}
             </Button>
           </div>
         </DialogContent>
@@ -477,18 +492,10 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
 interface CalendarViewProps {
   phaseData: ProgramBlueprintGroupedByPhase;
   onDayClick: (blueprint: ProgramBlueprintWithBlock) => void;
-  getDayTypeLabel: (blueprint: ProgramBlueprintWithBlock) => {
-    label: string;
-    variant: "default" | "secondary";
-  };
 }
 
-function CalendarView({
-  phaseData,
-  onDayClick,
-  getDayTypeLabel,
-}: CalendarViewProps) {
-  const tPlan = useTranslations('plan');
+function CalendarView({ phaseData, onDayClick }: CalendarViewProps) {
+  const tPlan = useTranslations("plan");
 
   // 일차를 주차별로 그룹화 (7일 단위)
   const weeks: ProgramBlueprintWithBlock[][] = [];
@@ -497,16 +504,16 @@ function CalendarView({
   }
 
   // 요일 표시
-  const weekDays = tPlan.raw('weekDays') as string[];
+  const weekDays = tPlan.raw("weekDays") as string[];
 
   return (
     <div className="space-y-6">
       <div className="mb-4">
         <h3 className="text-lg font-semibold">
-          {tPlan('calendarView', { phase: phaseData.phaseNumber })}
+          {tPlan("calendarView", { phase: phaseData.phaseNumber })}
         </h3>
         <p className="text-sm text-muted-foreground">
-          {tPlan('calendarViewDesc')}
+          {tPlan("calendarViewDesc")}
         </p>
       </div>
 
@@ -514,7 +521,7 @@ function CalendarView({
         <Card key={weekIndex}>
           <CardHeader>
             <CardTitle className="text-base">
-              {tPlan('week', { week: weekIndex + 1 })}
+              {tPlan("week", { week: weekIndex + 1 })}
               <span className="text-sm font-normal text-muted-foreground ml-2">
                 (Day {weekIndex * 7 + 1} - Day{" "}
                 {Math.min((weekIndex + 1) * 7, phaseData.days.length)})
@@ -537,8 +544,9 @@ function CalendarView({
             {/* 캘린더 그리드 */}
             <div className="grid grid-cols-7 gap-1">
               {week.map((blueprint) => {
-                const dayType = getDayTypeLabel(blueprint);
-                const isRestDay = !blueprint.routineBlocks || blueprint.routineBlocks.length === 0;
+                const isRestDay =
+                  !blueprint.routineBlocks ||
+                  blueprint.routineBlocks.length === 0;
 
                 return (
                   <div
@@ -560,7 +568,7 @@ function CalendarView({
                         </Badge>
                         {isRestDay && (
                           <Badge variant="secondary" className="text-xs">
-                            {tPlan('rest')}
+                            {tPlan("rest")}
                           </Badge>
                         )}
                       </div>
@@ -571,31 +579,37 @@ function CalendarView({
                       </p>
 
                       {/* 루틴 블록 정보 (support multiple blocks) */}
-                      {blueprint.routineBlocks && blueprint.routineBlocks.length > 0 && (
-                        <div className="mt-auto">
-                          {blueprint.routineBlocks.slice(0, 2).map((block) => (
-                            <div key={block.id} className="flex items-center gap-1">
-                              <Dumbbell className="h-3 w-3 text-muted-foreground shrink-0" />
-                              <p className="text-xs text-muted-foreground line-clamp-1">
-                                {block.name}
+                      {blueprint.routineBlocks &&
+                        blueprint.routineBlocks.length > 0 && (
+                          <div className="mt-auto">
+                            {blueprint.routineBlocks
+                              .slice(0, 2)
+                              .map((block) => (
+                                <div
+                                  key={block.id}
+                                  className="flex items-center gap-1"
+                                >
+                                  <Dumbbell className="h-3 w-3 text-muted-foreground shrink-0" />
+                                  <p className="text-xs text-muted-foreground line-clamp-1">
+                                    {block.name}
+                                  </p>
+                                </div>
+                              ))}
+                            {blueprint.routineBlocks.length > 2 && (
+                              <p className="text-xs text-muted-foreground">
+                                +{blueprint.routineBlocks.length - 2} more
                               </p>
-                            </div>
-                          ))}
-                          {blueprint.routineBlocks.length > 2 && (
-                            <p className="text-xs text-muted-foreground">
-                              +{blueprint.routineBlocks.length - 2} more
-                            </p>
-                          )}
-                          {blueprint.notes && (
-                            <div className="flex items-start gap-1 mt-1">
-                              <FileText className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
-                              <p className="text-xs text-muted-foreground line-clamp-2">
-                                {blueprint.notes}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                            )}
+                            {blueprint.notes && (
+                              <div className="flex items-start gap-1 mt-1">
+                                <FileText className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                  {blueprint.notes}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
                     </div>
                   </div>
                 );
@@ -632,9 +646,9 @@ function BlueprintEditorModal({
   onOpenChange,
   onSave,
 }: BlueprintEditorModalProps) {
-  const tToast = useTranslations('toast');
-  const tPlan = useTranslations('plan');
-  const tCommon = useTranslations('common');
+  const tToast = useTranslations("toast");
+  const tPlan = useTranslations("plan");
+  const tCommon = useTranslations("common");
   const [dayTitle, setDayTitle] = useState(blueprint.dayTitle || "");
   const [notes, setNotes] = useState(blueprint.notes || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -654,6 +668,21 @@ function BlueprintEditorModal({
   );
   const [draggedBlockId, setDraggedBlockId] = useState<string | null>(null);
 
+  // Sections management
+  const [sections, setSections] = useState<
+    Array<{ id: string; title: string; content: string; orderIndex: number }>
+  >(blueprint.sections || []);
+  const [isLoadingSections, setIsLoadingSections] = useState(false);
+  const [isSectionFormOpen, setIsSectionFormOpen] = useState(false);
+  const [editingSection, setEditingSection] = useState<{
+    id: string;
+    title: string;
+    content: string;
+  } | null>(null);
+  const [newSectionTitle, setNewSectionTitle] = useState("");
+  const [newSectionContent, setNewSectionContent] = useState("");
+  const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
+
   // 루틴 블록 목록 로드
   const loadRoutineBlocks = async () => {
     setIsLoadingBlocks(true);
@@ -671,6 +700,23 @@ function BlueprintEditorModal({
       loadRoutineBlocks();
     }
   }, [open]);
+
+  // Load sections when modal opens
+  useEffect(() => {
+    if (open) {
+      loadSections();
+    }
+  }, [open]);
+
+  const loadSections = async () => {
+    setIsLoadingSections(true);
+    const result = await getBlueprintSectionsAction(blueprint.id);
+    setIsLoadingSections(false);
+
+    if (result.success && result.data) {
+      setSections(result.data);
+    }
+  };
 
   // 루틴 블록 선택 모달이 열릴 때 블록 목록 로드
   const handleBlockSelectorOpen = () => {
@@ -691,11 +737,11 @@ function BlueprintEditorModal({
     setIsSaving(false);
 
     if (!result.success) {
-      toast.error(result.message || tToast('routineBlockAssignFailed'));
+      toast.error(result.message || tToast("routineBlockAssignFailed"));
       return;
     }
 
-    toast.success(tToast('routineBlockAssigned'));
+    toast.success(tToast("routineBlockAssigned"));
     setSelectedBlockIds(newBlockIds);
     setIsBlockSelectorOpen(false);
     onSave();
@@ -714,11 +760,11 @@ function BlueprintEditorModal({
     setIsSaving(false);
 
     if (!result.success) {
-      toast.error(result.message || tToast('routineBlockUnassignFailed'));
+      toast.error(result.message || tToast("routineBlockUnassignFailed"));
       return;
     }
 
-    toast.success(tToast('routineBlockUnassigned'));
+    toast.success(tToast("routineBlockUnassigned"));
     setSelectedBlockIds(newBlockIds);
     onSave();
   };
@@ -739,12 +785,12 @@ function BlueprintEditorModal({
     setIsSaving(false);
 
     if (!result.success) {
-      toast.error(result.message || tToast('routineBlockUnassignFailed'));
+      toast.error(result.message || tToast("routineBlockUnassignFailed"));
       setIsRemoveBlockOpen(false);
       return;
     }
 
-    toast.success(tToast('routineBlockUnassigned'));
+    toast.success(tToast("routineBlockUnassigned"));
     setSelectedBlockIds([]);
     setIsRemoveBlockOpen(false);
     onSave();
@@ -789,7 +835,7 @@ function BlueprintEditorModal({
     setIsSaving(false);
 
     if (!result.success) {
-      toast.error(result.message || tToast('routineBlockAssignFailed'));
+      toast.error(result.message || tToast("routineBlockAssignFailed"));
       setDraggedBlockId(null);
       return;
     }
@@ -797,6 +843,147 @@ function BlueprintEditorModal({
     setSelectedBlockIds(newIds);
     setDraggedBlockId(null);
     onSave();
+  };
+
+  // Section handlers
+  const handleAddSection = async () => {
+    if (!newSectionTitle.trim()) {
+      toast.error("제목을 입력해주세요.");
+      return;
+    }
+
+    setIsSaving(true);
+
+    const result = await createBlueprintSectionAction({
+      blueprintId: blueprint.id,
+      programId: programId,
+      title: newSectionTitle.trim(),
+      content: newSectionContent,
+    });
+
+    setIsSaving(false);
+
+    if (!result.success) {
+      toast.error(result.message || "섹션 추가에 실패했습니다.");
+      return;
+    }
+
+    toast.success("섹션이 추가되었습니다.");
+    setNewSectionTitle("");
+    setNewSectionContent("");
+    setIsSectionFormOpen(false);
+    loadSections();
+  };
+
+  const handleEditSection = (section: {
+    id: string;
+    title: string;
+    content: string;
+  }) => {
+    setEditingSection(section);
+    setNewSectionTitle(section.title);
+    setNewSectionContent(section.content);
+    setIsSectionFormOpen(true);
+  };
+
+  const handleUpdateSection = async () => {
+    if (!editingSection || !newSectionTitle.trim()) {
+      return;
+    }
+
+    setIsSaving(true);
+
+    const result = await updateBlueprintSectionAction(editingSection.id, {
+      title: newSectionTitle.trim(),
+      content: newSectionContent,
+    });
+
+    setIsSaving(false);
+
+    if (!result.success) {
+      toast.error(result.message || "섹션 수정에 실패했습니다.");
+      return;
+    }
+
+    toast.success("섹션이 수정되었습니다.");
+    setEditingSection(null);
+    setNewSectionTitle("");
+    setNewSectionContent("");
+    setIsSectionFormOpen(false);
+    loadSections();
+  };
+
+  const handleDeleteSection = async (sectionId: string) => {
+    setIsSaving(true);
+
+    const result = await deleteBlueprintSectionAction(
+      sectionId,
+      blueprint.id,
+      programId
+    );
+
+    setIsSaving(false);
+
+    if (!result.success) {
+      toast.error(result.message || "섹션 삭제에 실패했습니다.");
+      return;
+    }
+
+    toast.success("섹션이 삭제되었습니다.");
+    loadSections();
+  };
+
+  // Section drag and drop handlers
+  const handleSectionDragStart = (sectionId: string) => {
+    setDraggedSectionId(sectionId);
+  };
+
+  const handleSectionDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleSectionDrop = async (
+    e: React.DragEvent,
+    targetSectionId: string
+  ) => {
+    e.preventDefault();
+    if (!draggedSectionId || draggedSectionId === targetSectionId) {
+      setDraggedSectionId(null);
+      return;
+    }
+
+    const oldIndex = sections.findIndex((s) => s.id === draggedSectionId);
+    const newIndex = sections.findIndex((s) => s.id === targetSectionId);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      setDraggedSectionId(null);
+      return;
+    }
+
+    // Reorder array
+    const newSections = [...sections];
+    const [removed] = newSections.splice(oldIndex, 1);
+    newSections.splice(newIndex, 0, removed);
+
+    setIsSaving(true);
+
+    const result = await reorderBlueprintSectionsAction({
+      blueprintId: blueprint.id,
+      programId: programId,
+      sectionIds: newSections.map((s) => s.id),
+    });
+
+    setIsSaving(false);
+
+    if (!result.success) {
+      toast.error(result.message || "순서 변경에 실패했습니다.");
+      setDraggedSectionId(null);
+      return;
+    }
+
+    setSections(newSections);
+    setDraggedSectionId(null);
   };
 
   const handleSave = async () => {
@@ -810,11 +997,11 @@ function BlueprintEditorModal({
     setIsSaving(false);
 
     if (!result.success) {
-      toast.error(result.message || `${tToast('error')}: ${tToast('saved')}`);
+      toast.error(result.message || `${tToast("error")}: ${tToast("saved")}`);
       return;
     }
 
-    toast.success(tToast('saved'));
+    toast.success(tToast("saved"));
     onOpenChange(false);
     onSave();
   };
@@ -836,17 +1023,17 @@ function BlueprintEditorModal({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{tPlan('editDay', { day: blueprint.dayNumber })}</DialogTitle>
-            <DialogDescription>
-              {tPlan('editDayDesc')}
-            </DialogDescription>
+            <DialogTitle>
+              {tPlan("editDay", { day: blueprint.dayNumber })}
+            </DialogTitle>
+            <DialogDescription>{tPlan("editDayDesc")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {/* 일차 제목 */}
             <div className="space-y-2">
-              <Label>{tPlan('dayTitle')}</Label>
+              <Label>{tPlan("dayTitle")}</Label>
               <Input
-                placeholder={tPlan('dayTitlePlaceholder')}
+                placeholder={tPlan("dayTitlePlaceholder")}
                 value={dayTitle}
                 onChange={(e) => setDayTitle(e.target.value)}
               />
@@ -854,10 +1041,10 @@ function BlueprintEditorModal({
 
             {/* 코치 노트 */}
             <div className="space-y-2">
-              <Label>{tPlan('coachNotes')}</Label>
+              <Label>{tPlan("coachNotes")}</Label>
               <textarea
                 className="w-full min-h-[100px] px-3 py-2 text-sm rounded-md border border-input bg-background resize-y focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                placeholder={tPlan('coachNotesPlaceholder')}
+                placeholder={tPlan("coachNotesPlaceholder")}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />
@@ -866,7 +1053,7 @@ function BlueprintEditorModal({
             {/* 루틴 블록 지정 (support multiple blocks with drag-and-drop) */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>{tPlan('routineBlock')}</Label>
+                <Label>{tPlan("routineBlock")}</Label>
                 <div className="flex gap-2">
                   {selectedBlockIds.length > 0 && (
                     <Button
@@ -876,7 +1063,7 @@ function BlueprintEditorModal({
                       disabled={isSaving}
                       className="text-destructive hover:text-destructive"
                     >
-                      {tPlan('unassign')}
+                      {tPlan("unassign")}
                     </Button>
                   )}
                   <Button
@@ -884,7 +1071,9 @@ function BlueprintEditorModal({
                     size="sm"
                     onClick={handleBlockSelectorOpen}
                   >
-                    {selectedBlockIds.length > 0 ? tPlan('change') : tPlan('select')}
+                    {selectedBlockIds.length > 0
+                      ? tPlan("change")
+                      : tPlan("select")}
                   </Button>
                 </div>
               </div>
@@ -915,11 +1104,13 @@ function BlueprintEditorModal({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <Dumbbell className="h-4 w-4 text-muted-foreground shrink-0" />
-                            <p className="text-sm font-medium truncate">{block.name}</p>
+                            <p className="text-sm font-medium truncate">
+                              {block.name}
+                            </p>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {tPlan('exerciseCount', { count: block.itemCount })} •{" "}
-                            {block.workoutFormat}
+                            {tPlan("exerciseCount", { count: block.itemCount })}{" "}
+                            • {block.workoutFormat}
                           </p>
                         </div>
                         <Button
@@ -938,7 +1129,98 @@ function BlueprintEditorModal({
               ) : (
                 <div className="p-3 bg-muted rounded-md text-center">
                   <p className="text-sm text-muted-foreground">
-                    {tPlan('selectRoutineBlock')}
+                    {tPlan("selectRoutineBlock")}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Sections management */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>{tPlan("sections") || "섹션"}</Label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEditingSection(null);
+                    setNewSectionTitle("");
+                    setNewSectionContent("");
+                    setIsSectionFormOpen(true);
+                  }}
+                  disabled={isSaving}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {tPlan("addSection") || "섹션 추가"}
+                </Button>
+              </div>
+
+              {isLoadingSections ? (
+                <div className="p-3 bg-muted rounded-md text-center">
+                  <p className="text-sm text-muted-foreground">로딩 중...</p>
+                </div>
+              ) : sections.length > 0 ? (
+                <div className="space-y-2">
+                  {sections.map((section) => {
+                    const isDragging = draggedSectionId === section.id;
+
+                    return (
+                      <div
+                        key={section.id}
+                        draggable
+                        onDragStart={() => handleSectionDragStart(section.id)}
+                        onDragOver={handleSectionDragOver}
+                        onDrop={(e) => handleSectionDrop(e, section.id)}
+                        className={cn(
+                          "p-3 rounded-md border transition-all",
+                          isDragging ? "opacity-50" : "bg-muted",
+                          !isDragging && "cursor-move hover:bg-muted/80"
+                        )}
+                      >
+                        <div className="flex items-start gap-2">
+                          <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-medium truncate">
+                              {section.title}
+                            </h4>
+                            {section.content && (
+                              <div
+                                className="text-xs text-muted-foreground line-clamp-2 mt-1"
+                                dangerouslySetInnerHTML={{
+                                  __html: section.content,
+                                }}
+                              />
+                            )}
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditSection(section)}
+                              disabled={isSaving}
+                              className="h-8 w-8 p-0"
+                            >
+                              ✏️
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteSection(section.id)}
+                              disabled={isSaving}
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-3 bg-muted rounded-md text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {tPlan("noSections") || "추가된 섹션이 없습니다."}
                   </p>
                 </div>
               )}
@@ -951,14 +1233,14 @@ function BlueprintEditorModal({
                 disabled={isSaving}
                 className="flex-1"
               >
-                {isSaving ? tPlan('saving') : tPlan('saveButton')}
+                {isSaving ? tPlan("saving") : tPlan("saveButton")}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 className="flex-1"
               >
-                {tPlan('cancel')}
+                {tPlan("cancel")}
               </Button>
             </div>
           </div>
@@ -969,9 +1251,9 @@ function BlueprintEditorModal({
       <Dialog open={isBlockSelectorOpen} onOpenChange={setIsBlockSelectorOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>{tPlan('selectRoutineBlockTitle')}</DialogTitle>
+            <DialogTitle>{tPlan("selectRoutineBlockTitle")}</DialogTitle>
             <DialogDescription>
-              {tPlan('selectRoutineBlockDesc')}
+              {tPlan("selectRoutineBlockDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -979,7 +1261,7 @@ function BlueprintEditorModal({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={tPlan('searchBlock')}
+              placeholder={tPlan("searchBlock")}
               value={blockSearch}
               onChange={(e) => setBlockSearch(e.target.value)}
               className="pl-10"
@@ -990,15 +1272,17 @@ function BlueprintEditorModal({
           <div className="flex-1 overflow-y-auto space-y-2 mt-4">
             {isLoadingBlocks ? (
               <div className="text-center py-8">
-                <p className="text-sm text-muted-foreground">{tPlan('loadingBlocks')}</p>
+                <p className="text-sm text-muted-foreground">
+                  {tPlan("loadingBlocks")}
+                </p>
               </div>
             ) : filteredBlocks.length === 0 ? (
               <div className="text-center py-8">
                 <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-sm text-muted-foreground">
                   {blockSearch
-                    ? tPlan('noSearchResults')
-                    : tPlan('noBlocksFound')}
+                    ? tPlan("noSearchResults")
+                    : tPlan("noBlocksFound")}
                 </p>
               </div>
             ) : (
@@ -1016,7 +1300,9 @@ function BlueprintEditorModal({
                             {block.workoutFormat}
                           </Badge>
                           {block.isLeaderboardEnabled && (
-                            <Badge variant="default">{tPlan('leaderboard')}</Badge>
+                            <Badge variant="default">
+                              {tPlan("leaderboard")}
+                            </Badge>
                           )}
                         </div>
                         <CardTitle className="text-base">
@@ -1028,7 +1314,9 @@ function BlueprintEditorModal({
                   <CardContent>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Dumbbell className="h-4 w-4" />
-                      <span>{tPlan('exerciseCount', { count: block.itemCount })}</span>
+                      <span>
+                        {tPlan("exerciseCount", { count: block.itemCount })}
+                      </span>
                     </div>
                     {block.description && (
                       <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
@@ -1047,12 +1335,12 @@ function BlueprintEditorModal({
       <Dialog open={isRemoveBlockOpen} onOpenChange={setIsRemoveBlockOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{tPlan('unassignBlockTitle')}</DialogTitle>
+            <DialogTitle>{tPlan("unassignBlockTitle")}</DialogTitle>
             <DialogDescription>
-              {tPlan('unassignBlockConfirm')}
+              {tPlan("unassignBlockConfirm")}
               <br />
               <span className="text-destructive font-medium">
-                {tPlan('deletePhaseWarning')}
+                {tPlan("deletePhaseWarning")}
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -1063,7 +1351,7 @@ function BlueprintEditorModal({
               disabled={isSaving}
               className="flex-1"
             >
-              {isSaving ? tPlan('unassigning') : tPlan('unassign')}
+              {isSaving ? tPlan("unassigning") : tPlan("unassign")}
             </Button>
             <Button
               variant="outline"
@@ -1071,7 +1359,84 @@ function BlueprintEditorModal({
               disabled={isSaving}
               className="flex-1"
             >
-              {tPlan('cancel')}
+              {tPlan("cancel")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Section form dialog */}
+      <Dialog
+        open={isSectionFormOpen}
+        onOpenChange={(open) => {
+          setIsSectionFormOpen(open);
+          if (!open) {
+            // Reset form when dialog closes
+            setEditingSection(null);
+            setNewSectionTitle("");
+            setNewSectionContent("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>
+              {editingSection
+                ? tPlan("editSection") || "섹션 수정"
+                : tPlan("addSection") || "섹션 추가"}
+            </DialogTitle>
+            <DialogDescription>
+              {tPlan("sectionFormDesc") || "섹션의 제목과 내용을 입력하세요."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto space-y-4 mt-4">
+            {/* Section title */}
+            <SessionTitleInput
+              value={newSectionTitle}
+              onChange={setNewSectionTitle}
+              label={tPlan("sectionTitle") || "제목"}
+              disabled={isSaving}
+            />
+
+            {/* Section content (TipTap editor) */}
+            <div className="space-y-2">
+              <Label>{tPlan("sectionContent") || "내용"}</Label>
+              <TiptapEditor
+                content={newSectionContent}
+                onChange={setNewSectionContent}
+                placeholder={
+                  tPlan("sectionContentPlaceholder") || "내용을 입력하세요"
+                }
+                editable={!isSaving}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button
+              onClick={editingSection ? handleUpdateSection : handleAddSection}
+              disabled={isSaving || !newSectionTitle.trim()}
+              className="flex-1"
+            >
+              {isSaving
+                ? tPlan("saving") || "저장 중..."
+                : editingSection
+                ? tPlan("update") || "수정"
+                : tPlan("add") || "추가"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsSectionFormOpen(false);
+                setEditingSection(null);
+                setNewSectionTitle("");
+                setNewSectionContent("");
+              }}
+              disabled={isSaving}
+              className="flex-1"
+            >
+              {tPlan("cancel") || "취소"}
             </Button>
           </div>
         </DialogContent>

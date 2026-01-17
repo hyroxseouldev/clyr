@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { programBlueprints, routineBlocks, programs, blueprintRoutineBlocks } from "@/db/schema";
+import { programBlueprints, routineBlocks, programs, blueprintRoutineBlocks, blueprintSections, blueprintSectionItems } from "@/db/schema";
 import { eq, and, asc, desc } from "drizzle-orm";
 
 /**
@@ -23,6 +23,13 @@ export interface ProgramBlueprintWithBlock {
     id: string;
     name: string;
     workoutFormat: string;
+    orderIndex: number;
+  }>;
+  // Sections support
+  sections: Array<{
+    id: string;
+    title: string;
+    content: string;
     orderIndex: number;
   }>;
   notes: string | null;
@@ -82,9 +89,23 @@ export async function getProgramBlueprintsQuery(
         .where(eq(blueprintRoutineBlocks.blueprintId, blueprint.id))
         .orderBy(asc(blueprintRoutineBlocks.orderIndex));
 
+      // Fetch sections from join table for each blueprint
+      const sections = await db
+        .select({
+          id: blueprintSections.id,
+          title: blueprintSections.title,
+          content: blueprintSections.content,
+          orderIndex: blueprintSectionItems.orderIndex,
+        })
+        .from(blueprintSectionItems)
+        .innerJoin(blueprintSections, eq(blueprintSectionItems.sectionId, blueprintSections.id))
+        .where(eq(blueprintSectionItems.blueprintId, blueprint.id))
+        .orderBy(asc(blueprintSectionItems.orderIndex));
+
       return {
         ...blueprint,
         routineBlocks: blocks,
+        sections: sections,
       };
     })
   );
@@ -188,9 +209,23 @@ export async function getProgramBlueprintByPhaseAndDayQuery(
     .where(eq(blueprintRoutineBlocks.blueprintId, blueprint.id))
     .orderBy(asc(blueprintRoutineBlocks.orderIndex));
 
+  // Fetch sections from join table
+  const sections = await db
+    .select({
+      id: blueprintSections.id,
+      title: blueprintSections.title,
+      content: blueprintSections.content,
+      orderIndex: blueprintSectionItems.orderIndex,
+    })
+    .from(blueprintSectionItems)
+    .innerJoin(blueprintSections, eq(blueprintSectionItems.sectionId, blueprintSections.id))
+    .where(eq(blueprintSectionItems.blueprintId, blueprint.id))
+    .orderBy(asc(blueprintSectionItems.orderIndex));
+
   return {
     ...blueprint,
     routineBlocks: blocks,
+    sections: sections,
   } as ProgramBlueprintWithBlock;
 }
 

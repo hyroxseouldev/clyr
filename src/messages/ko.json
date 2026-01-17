@@ -481,7 +481,18 @@
     "noPhase": "아직 페이즈가 없습니다",
     "createPhaseHint": "새 페이즈를 만들어서 프로그램을 시작하세요",
     "cannotLoadPlan": "플랜 데이터를 불러올 수 없습니다",
-    "cancel": "취소"
+    "cancel": "취소",
+    "sections": "섹션",
+    "addSection": "섹션 추가",
+    "editSection": "섹션 수정",
+    "sectionFormDesc": "섹션의 제목과 내용을 입력하세요",
+    "sectionTitle": "제목",
+    "sectionTitlePlaceholder": "섹션 제목을 입력하세요",
+    "sectionContent": "내용",
+    "sectionContentPlaceholder": "내용을 입력하세요",
+    "noSections": "추가된 섹션이 없습니다",
+    "add": "추가",
+    "update": "수정"
   },
   "onboarding": {
     "title": "코치 프로필 생성",
@@ -596,6 +607,19 @@
       "EMOM": "EMOM (분당회수)",
       "CUSTOM": "Custom"
     }
+  },
+  "sessionTitle": {
+    "label": "세션 제목",
+    "presets": {
+      "warm_up": "웜업",
+      "cool_down": "쿨다운",
+      "aerobics": "유산소",
+      "main_workout": "본운동",
+      "accessory": "보조운동",
+      "custom": "직접 입력"
+    },
+    "customPlaceholder": "제목을 입력하세요",
+    "customRequired": "제목을 입력해주세요"
   },
   "memberDetail": {
     "enrollmentManagement": "수강 관리",

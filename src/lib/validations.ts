@@ -203,6 +203,25 @@ export const programBlueprintSchema = z.object({
 
 export type ProgramBlueprintInput = z.infer<typeof programBlueprintSchema>;
 
+// 블루프린트 섹션 스키마
+export function createBlueprintSectionSchema(t: (key: string) => string) {
+  return z.object({
+    blueprintId: z.string().min(1, t('blueprintIdRequired')),
+    programId: z.string().min(1, t('programIdRequired')),
+    title: z.string().min(1, t('sectionTitleRequired')),
+    content: z.string().optional(),
+  });
+}
+
+export const blueprintSectionSchema = z.object({
+  blueprintId: z.string().min(1, "블루프린트 ID를 입력해주세요"),
+  programId: z.string().min(1, "프로그램 ID를 입력해주세요"),
+  title: z.string().min(1, "섹션 제목을 입력해주세요"),
+  content: z.string().optional(),
+});
+
+export type BlueprintSectionInput = z.infer<typeof blueprintSectionSchema>;
+
 export const phaseSchema = z.object({
   programId: z.string().min(1, "프로그램 ID를 입력해주세요"),
   phaseNumber: z.number().min(1, "페이즈 번호를 입력해주세요"),

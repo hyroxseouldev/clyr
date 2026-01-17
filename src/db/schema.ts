@@ -178,6 +178,28 @@ export const blueprintRoutineBlocks = pgTable("blueprint_routine_blocks", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// [blueprintSections] Sections for blueprint content (many-to-many relationship)
+export const blueprintSections = pgTable("blueprint_sections", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  content: text("content").notNull(), // HTML from TipTap editor
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// [blueprintSectionItems] Join table linking sections to blueprints
+export const blueprintSectionItems = pgTable("blueprint_section_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  blueprintId: uuid("blueprint_id")
+    .references(() => programBlueprints.id, { onDelete: "cascade" })
+    .notNull(),
+  sectionId: uuid("section_id")
+    .references(() => blueprintSections.id, { onDelete: "cascade" })
+    .notNull(),
+  orderIndex: integer("order_index").notNull(), // For ordering sections within a blueprint
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ==========================================
 // 4. 상거래 및 수강 권한 (Commerce & Access)
 // ==========================================
@@ -437,6 +459,29 @@ export const blueprintRoutineBlocksRelations = relations(
   })
 );
 
+// blueprintSections 관계
+export const blueprintSectionsRelations = relations(
+  blueprintSections,
+  ({ many }) => ({
+    blueprints: many(blueprintSectionItems),
+  })
+);
+
+// blueprintSectionItems 관계 (join table)
+export const blueprintSectionItemsRelations = relations(
+  blueprintSectionItems,
+  ({ one }) => ({
+    blueprint: one(programBlueprints, {
+      fields: [blueprintSectionItems.blueprintId],
+      references: [programBlueprints.id],
+    }),
+    section: one(blueprintSections, {
+      fields: [blueprintSectionItems.sectionId],
+      references: [blueprintSections.id],
+    }),
+  })
+);
+
 // programBlueprints 관계
 export const programBlueprintsRelations = relations(
   programBlueprints,
@@ -450,6 +495,7 @@ export const programBlueprintsRelations = relations(
       references: [routineBlocks.id],
     }),
     routineBlocks: many(blueprintRoutineBlocks), // many-to-many via join table
+    sections: many(blueprintSectionItems), // many-to-many via join table
     workoutLogs: many(workoutLogs),
   })
 );
@@ -500,6 +546,8 @@ export type WorkoutLibrary = InferSelectModel<typeof workoutLibrary>;
 export type RoutineBlock = InferSelectModel<typeof routineBlocks>;
 export type RoutineItem = InferSelectModel<typeof routineItems>;
 export type BlueprintRoutineBlock = InferSelectModel<typeof blueprintRoutineBlocks>;
+export type BlueprintSection = InferSelectModel<typeof blueprintSections>;
+export type BlueprintSectionItem = InferSelectModel<typeof blueprintSectionItems>;
 export type Program = InferSelectModel<typeof programs>;
 export type ProgramBlueprint = InferSelectModel<typeof programBlueprints>;
 export type ProgramWeek = InferSelectModel<typeof programWeeks>;
@@ -517,6 +565,8 @@ export type NewWorkoutLibrary = InferInsertModel<typeof workoutLibrary>;
 export type NewRoutineBlock = InferInsertModel<typeof routineBlocks>;
 export type NewRoutineItem = InferInsertModel<typeof routineItems>;
 export type NewBlueprintRoutineBlock = InferInsertModel<typeof blueprintRoutineBlocks>;
+export type NewBlueprintSection = InferInsertModel<typeof blueprintSections>;
+export type NewBlueprintSectionItem = InferInsertModel<typeof blueprintSectionItems>;
 export type NewProgram = InferInsertModel<typeof programs>;
 export type NewProgramBlueprint = InferInsertModel<typeof programBlueprints>;
 export type NewProgramWeek = InferInsertModel<typeof programWeeks>;

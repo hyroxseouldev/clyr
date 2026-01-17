@@ -481,7 +481,18 @@
     "noPhase": "No phases yet",
     "createPhaseHint": "Create a new phase to start the program",
     "cannotLoadPlan": "Cannot load plan data",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "sections": "Sections",
+    "addSection": "Add Section",
+    "editSection": "Edit Section",
+    "sectionFormDesc": "Enter the section title and content",
+    "sectionTitle": "Title",
+    "sectionTitlePlaceholder": "Enter section title",
+    "sectionContent": "Content",
+    "sectionContentPlaceholder": "Enter content",
+    "noSections": "No sections added yet",
+    "add": "Add",
+    "update": "Update"
   },
   "onboarding": {
     "title": "Create Coach Profile",
@@ -578,6 +589,19 @@
       "confirm": "Confirm",
       "cancel": "Cancel"
     }
+  },
+  "sessionTitle": {
+    "label": "Session Title",
+    "presets": {
+      "warm_up": "Warm up",
+      "cool_down": "Cool down",
+      "aerobics": "Aerobics",
+      "main_workout": "Main workout",
+      "accessory": "Accessory",
+      "custom": "Custom input"
+    },
+    "customPlaceholder": "Enter title",
+    "customRequired": "Please enter a title"
   },
   "workoutLibrary": {
     "title": "Workout Library",

@@ -32,6 +32,38 @@ export function getWorkoutTypeLabel(type: string): string {
 }
 
 /**
+ * 세션 제목 프리셋 관련 상수
+ */
+export const SESSION_TITLE_PRESETS = {
+  WARM_UP: "warm_up",
+  COOL_DOWN: "cool_down",
+  AEROBICS: "aerobics",
+  MAIN_WORKOUT: "main_workout",
+  ACCESSORY: "accessory",
+  CUSTOM: "custom", // Special value for custom input
+} as const;
+
+export type SessionTitlePreset = typeof SESSION_TITLE_PRESETS[keyof typeof SESSION_TITLE_PRESETS];
+
+/**
+ * 세션 제목 프리셋 디스플레이 값 (DB에 저장되는 값)
+ */
+export const SESSION_TITLE_DISPLAY_VALUES: Record<string, string> = {
+  warm_up: "Warm up",
+  cool_down: "Cool down",
+  aerobics: "Aerobics",
+  main_workout: "Main workout",
+  accessory: "Accessory",
+};
+
+/**
+ * 세션 제목 프리셋 라벨 조회
+ */
+export function getSessionTitleDisplayValue(preset: string): string {
+  return SESSION_TITLE_DISPLAY_VALUES[preset] || preset;
+}
+
+/**
  * recommendation (코치 가이드) 데이터 구조
  *
  * workoutType별 가이드 필드:
