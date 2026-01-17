@@ -52,6 +52,8 @@ import {
   deletePhaseAction,
   updateProgramBlueprintAction,
   getProgramPlanDataAction,
+  addDayToPhaseAction,
+  deleteProgramBlueprintAction,
 } from "@/actions/program-blueprint";
 import { getRoutineBlocksAction } from "@/actions/routine-block";
 import {
@@ -99,6 +101,11 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
   // 페이즈 삭제 확인 모달
   const [isDeletePhaseOpen, setIsDeletePhaseOpen] = useState(false);
   const [phaseToDelete, setPhaseToDelete] = useState<number | null>(null);
+
+  // 일차 추가/삭제 관련
+  const [isAddingDay, setIsAddingDay] = useState(false);
+  const [dayToDelete, setDayToDelete] = useState<ProgramBlueprintWithBlock | null>(null);
+  const [isDeleteDayOpen, setIsDeleteDayOpen] = useState(false);
 
   const selectedPhaseData = planData?.blueprints.find(
     (bp) => bp.phaseNumber === selectedPhase
@@ -181,6 +188,54 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
 
     setIsDeletePhaseOpen(false);
     setPhaseToDelete(null);
+  };
+
+  // 일차 추가 핸들러
+  const handleAddDay = async () => {
+    if (!selectedPhaseData || selectedPhaseData.days.length >= 7) {
+      toast.error(tToast("maxDaysReached"));
+      return;
+    }
+
+    setIsAddingDay(true);
+
+    const result = await addDayToPhaseAction({
+      programId,
+      phaseNumber: selectedPhase,
+    });
+
+    setIsAddingDay(false);
+
+    if (!result.success) {
+      toast.error(result.message || tToast("addDayFailed"));
+      return;
+    }
+
+    toast.success(tToast("dayAdded"));
+    await refreshPlanData();
+  };
+
+  // 일차 삭제 핸들러
+  const handleDeleteDay = (blueprint: ProgramBlueprintWithBlock) => {
+    setDayToDelete(blueprint);
+    setIsDeleteDayOpen(true);
+  };
+
+  // 일차 삭제 확인 핸들러
+  const confirmDeleteDay = async () => {
+    if (!dayToDelete) return;
+
+    const result = await deleteProgramBlueprintAction(dayToDelete.id, programId);
+
+    if (!result.success) {
+      toast.error(result.message || tToast("deleteDayFailed"));
+      return;
+    }
+
+    toast.success(tToast("dayDeleted"));
+    await refreshPlanData();
+    setIsDeleteDayOpen(false);
+    setDayToDelete(null);
   };
 
   // 블루프린트 카드 클릭 핸들러
@@ -353,7 +408,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                 <h3 className="text-lg font-semibold">
                   {tPlan("dayView", {
                     phase: selectedPhaseData.phaseNumber,
-                    days: selectedPhaseData.days.length,
+                    days: Math.min(selectedPhaseData.days.length, 7),
                   })}
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -362,15 +417,29 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {selectedPhaseData.days.map((blueprint) => (
+                {/* 기존 일차 카드 (7일 제한) */}
+                {selectedPhaseData.days.slice(0, 7).map((blueprint) => (
                   <Card
                     key={blueprint.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    className="cursor-pointer hover:shadow-md transition-shadow relative group"
                     onClick={() => handleBlueprintClick(blueprint)}
                   >
+                    {/* 삭제 버튼 - hover 시 표시 */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteDay(blueprint);
+                      }}
+                      className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <div className="bg-white border-2 border-transparent text-destructive rounded-full p-1.5 hover:bg-destructive hover:text-white hover:border-destructive transition-colors">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </div>
+                    </button>
+
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
+                        <div className="flex-1 pr-8">
                           <div className="flex items-center gap-2 mb-2">
                             <Badge variant="outline">
                               Day {blueprint.dayNumber}
@@ -414,6 +483,28 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                     </CardContent>
                   </Card>
                 ))}
+
+                {/* 새 일차 추가 카드 (7일 미만일 때만) */}
+                {selectedPhaseData.days.length < 7 && (
+                  <Card
+                    className="cursor-pointer hover:shadow-md transition-shadow border-dashed"
+                    onClick={handleAddDay}
+                  >
+                    <CardContent className="flex flex-col items-center justify-center min-h-[120px] text-muted-foreground hover:text-foreground transition-colors">
+                      {isAddingDay ? (
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-current" />
+                      ) : (
+                        <>
+                          <Plus className="h-9 w-9 mb-1.5" />
+                          <p className="font-medium text-sm">{tPlan("addNewDay")}</p>
+                          <p className="text-xs">
+                            {tPlan("addNewDayDesc", { current: selectedPhaseData.days.length })}
+                          </p>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           )}
@@ -476,6 +567,41 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
               onClick={() => {
                 setIsDeletePhaseOpen(false);
                 setPhaseToDelete(null);
+              }}
+              className="flex-1"
+            >
+              {tPlan("cancel")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 일차 삭제 확인 Dialog */}
+      <Dialog open={isDeleteDayOpen} onOpenChange={setIsDeleteDayOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{tPlan("deleteDay")}</DialogTitle>
+            <DialogDescription>
+              {tPlan("deleteDayConfirm", { day: dayToDelete?.dayNumber ?? 0 })}
+              <br />
+              <span className="text-destructive font-medium">
+                {tPlan("deleteDayWarning")}
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2">
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteDay}
+              className="flex-1"
+            >
+              {tPlan("confirmDelete")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDeleteDayOpen(false);
+                setDayToDelete(null);
               }}
               className="flex-1"
             >

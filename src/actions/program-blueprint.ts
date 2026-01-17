@@ -1,6 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { db } from "@/db";
+import { programBlueprints } from "@/db/schema";
+import { eq, and, desc } from "drizzle-orm";
 import {
   getProgramPlanDataQuery,
   getProgramBlueprintByPhaseAndDayQuery,
@@ -354,5 +357,60 @@ export async function deletePhaseAction(
       success: false,
       message: "페이즈 삭제에 실패했습니다.",
     };
+  }
+}
+
+/**
+ * 페이즈에 일차 추가
+ */
+export async function addDayToPhaseAction(data: {
+  programId: string;
+  phaseNumber: number;
+}) {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // 프로그램 권한 확인
+    const program = await getProgramByIdQuery(data.programId);
+    if (!program || program.coachId !== userId) {
+      return { success: false, message: "접근 권한이 없습니다." };
+    }
+
+    // 현재 페이즈의 마지막 일차 조회
+    const blueprints = await db
+      .select()
+      .from(programBlueprints)
+      .where(
+        and(
+          eq(programBlueprints.programId, data.programId),
+          eq(programBlueprints.phaseNumber, data.phaseNumber)
+        )
+      )
+      .orderBy(desc(programBlueprints.dayNumber))
+      .limit(1);
+
+    const lastDayNumber = blueprints[0]?.dayNumber || 0;
+    const newDayNumber = lastDayNumber + 1;
+
+    // 최대 7일 제한
+    if (newDayNumber > 7) {
+      return { success: false, message: "최대 7일까지 추가 가능합니다." };
+    }
+
+    const blueprint = await createProgramBlueprintQuery({
+      programId: data.programId,
+      phaseNumber: data.phaseNumber,
+      dayNumber: newDayNumber,
+    });
+
+    revalidatePath("/coach/dashboard/[pid]/plan");
+    return { success: true, data: blueprint };
+  } catch (error) {
+    console.error("ADD_DAY_ERROR", error);
+    return { success: false, message: "일차 추가에 실패했습니다." };
   }
 }
