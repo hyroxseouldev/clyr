@@ -260,7 +260,7 @@ export async function updateEnrollmentStatusAction(
  */
 export async function extendEnrollmentAction(
   enrollmentId: string,
-  daysToAdd: number
+  endDate: string
 ) {
   const coachId = await getUserId();
 
@@ -269,18 +269,27 @@ export async function extendEnrollmentAction(
   }
 
   try {
-    // 간단 구현: 현재 endDate에서 daysToAdd만큼 추가
-    // 실제로는 enrollment를 먼저 조회해서 현재 endDate를 가져온 후 계산 필요
+    if (!endDate) {
+      return { success: false, message: "종료일은 필수 항목입니다." };
+    }
 
-    // 이 기능은 enrollments 테이블의 endDate를 직접 수정하는 쿼리가 필요함
-    // 현재 order.ts에 없으므로 나중에 추가 필요
+    const parsedEndDate = new Date(endDate);
+    if (isNaN(parsedEndDate.getTime())) {
+      return { success: false, message: "유효하지 않은 날짜 형식입니다." };
+    }
+
+    const updatedEnrollment = await updateEnrollmentEndDateQuery(
+      enrollmentId,
+      parsedEndDate
+    );
 
     revalidatePath("/coach/dashboard");
     revalidatePath("/coach/members");
 
     return {
       success: true,
-      message: `${daysToAdd}일 연장되었습니다.`,
+      data: updatedEnrollment,
+      message: "수강 기간이 연장되었습니다.",
     };
   } catch (error) {
     console.error("EXTEND_ENROLLMENT_ERROR", error);

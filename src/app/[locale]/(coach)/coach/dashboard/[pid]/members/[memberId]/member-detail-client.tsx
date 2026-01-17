@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
+import { updateEnrollmentStatusAction, extendEnrollmentAction } from "@/actions/member";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -93,13 +94,11 @@ export function MemberDetailClient({
   const handleStatusChange = async (newStatus: "ACTIVE" | "EXPIRED" | "PAUSED") => {
     setIsUpdating(true);
     try {
-      const response = await fetch(`/api/members/${member.id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      const result = await updateEnrollmentStatusAction(member.id, newStatus);
 
-      if (!response.ok) throw new Error("Failed to change status");
+      if (!result.success) {
+        throw new Error(result.message || "Failed to change status");
+      }
 
       toast.success(tToast('statusChanged'));
       router.refresh();
@@ -119,13 +118,14 @@ export function MemberDetailClient({
         ? addDays(new Date(member.endDate), days)
         : addDays(new Date(), days);
 
-      const response = await fetch(`/api/members/${member.id}/extend`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ endDate: newEndDate.toISOString() }),
-      });
+      const result = await extendEnrollmentAction(
+        member.id,
+        newEndDate.toISOString()
+      );
 
-      if (!response.ok) throw new Error("Failed to extend period");
+      if (!result.success) {
+        throw new Error(result.message || "Failed to extend period");
+      }
 
       toast.success(tToast('periodExtended', { days }));
       router.refresh();
