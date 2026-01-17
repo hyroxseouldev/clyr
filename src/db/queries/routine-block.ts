@@ -100,42 +100,60 @@ export async function getRoutineBlocksQuery({
     .limit(pageSize)
     .offset(offset);
 
-  // 각 블록의 itemCount 계산
+  // 각 블록의 itemCount 계산 (에러 처리 추가)
   const itemsWithCounts = await Promise.all(
     blocks.map(async (block) => {
-      const countResult = await db
-        .select({ count: sql<number>`COUNT(*)` })
-        .from(routineItems)
-        .where(eq(routineItems.blockId, block.id));
+      try {
+        const countResult = await db
+          .select({ count: sql<number>`COUNT(*)` })
+          .from(routineItems)
+          .where(eq(routineItems.blockId, block.id));
 
-      return {
-        ...block,
-        itemCount: Number(countResult[0]?.count || 0),
-      };
+        return {
+          ...block,
+          itemCount: Number(countResult[0]?.count || 0),
+        };
+      } catch (error) {
+        // 블록이 삭제되었거나 오류 발생 시 itemCount를 0으로 처리
+        console.warn(`Failed to count items for block ${block.id}:`, error);
+        return {
+          ...block,
+          itemCount: 0,
+        };
+      }
     })
   );
 
-  // 각 블록의 아이템 조회
+  // 각 블록의 아이템 조회 (에러 처리 추가)
   const itemsWithItems = await Promise.all(
     itemsWithCounts.map(async (block) => {
-      const items = await db
-        .select({
-          id: routineItems.id,
-          blockId: routineItems.blockId,
-          libraryId: routineItems.libraryId,
-          libraryTitle: workoutLibrary.title,
-          orderIndex: routineItems.orderIndex,
-          recommendation: routineItems.recommendation,
-        })
-        .from(routineItems)
-        .leftJoin(workoutLibrary, eq(routineItems.libraryId, workoutLibrary.id))
-        .where(eq(routineItems.blockId, block.id))
-        .orderBy(asc(routineItems.orderIndex));
+      try {
+        const items = await db
+          .select({
+            id: routineItems.id,
+            blockId: routineItems.blockId,
+            libraryId: routineItems.libraryId,
+            libraryTitle: workoutLibrary.title,
+            orderIndex: routineItems.orderIndex,
+            recommendation: routineItems.recommendation,
+          })
+          .from(routineItems)
+          .leftJoin(workoutLibrary, eq(routineItems.libraryId, workoutLibrary.id))
+          .where(eq(routineItems.blockId, block.id))
+          .orderBy(asc(routineItems.orderIndex));
 
-      return {
-        ...block,
-        items: items as RoutineBlockItem[],
-      };
+        return {
+          ...block,
+          items: items as RoutineBlockItem[],
+        };
+      } catch (error) {
+        // 블록이 삭제되었거나 오류 발생 시 빈 아이템 배열 반환
+        console.warn(`Failed to fetch items for block ${block.id}:`, error);
+        return {
+          ...block,
+          items: [],
+        };
+      }
     })
   );
 
