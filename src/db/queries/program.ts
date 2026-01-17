@@ -1,12 +1,15 @@
-import { eq, and, asc, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import {
   programs,
-  programWeeks,
-  workouts,
-  workoutSessions,
   enrollments,
 } from "@/db/schema";
 import { db } from "@/db"; // 설정된 db 인스턴스
+
+/**
+ * ==========================================
+ * PROGRAM QUERIES
+ * ==========================================
+ */
 
 /**
  * 특정 코치가 등록한 모든 프로그램 목록 조회
@@ -16,7 +19,6 @@ export const getProgramsByCoachQuery = async (coachId: string) => {
   return await db.query.programs.findMany({
     where: eq(programs.coachId, coachId),
     orderBy: [desc(programs.createdAt)],
-    // 필요하다면 수강생 수나 주차 정보 등 추가 관계(with)를 넣을 수 있습니다.
   });
 };
 
@@ -27,43 +29,6 @@ export const getProgramsByCoachQuery = async (coachId: string) => {
 export const getProgramByIdQuery = async (programId: string) => {
   return await db.query.programs.findFirst({
     where: eq(programs.id, programId),
-  });
-};
-
-export const createProgramWithWeeksQuery = async (
-  programData: any,
-  weeksData: any[]
-) => {
-  return await db.transaction(async (tx) => {
-    const [newProgram] = await tx
-      .insert(programs)
-      .values(programData)
-      .returning();
-    if (weeksData.length > 0) {
-      const formattedWeeks = weeksData.map((week) => ({
-        ...week,
-        programId: newProgram.id,
-      }));
-      await tx.insert(programWeeks).values(formattedWeeks);
-    }
-    return newProgram;
-  });
-};
-
-export const getProgramFullCurriculumQuery = async (programId: string) => {
-  return await db.query.programs.findFirst({
-    where: eq(programs.id, programId),
-    with: {
-      weeks: {
-        orderBy: [asc(programWeeks.weekNumber)],
-        with: {
-          workouts: {
-            orderBy: [asc(workouts.dayNumber)],
-            with: { sessions: { orderBy: [asc(workoutSessions.orderIndex)] } },
-          },
-        },
-      },
-    },
   });
 };
 
@@ -86,21 +51,12 @@ export const deleteProgramQuery = async (programId: string) => {
 };
 
 // 프로그램 slug 로 프로그램 정보 가져오기
-// 프로그램의 주차 정보도 함께 가져옵니다.
 // 코치 정보도 함께 들어갑니다
-export const getProgramWithWeeksBySlugQuery = async (slug: string) => {
+export const getProgramBySlugQuery = async (slug: string) => {
   return await db.query.programs.findFirst({
     where: eq(programs.slug, slug),
     with: {
       coach: true,
-      weeks: {
-        orderBy: [asc(programWeeks.weekNumber)],
-        with: {
-          workouts: {
-            orderBy: [asc(workouts.dayNumber)],
-          },
-        },
-      },
     },
   });
 };

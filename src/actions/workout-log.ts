@@ -13,7 +13,7 @@ import {
   getHomeworkStatsByProgramQuery,
 } from "@/db/queries/workout-log";
 import { getEnrollmentsByUserIdQuery } from "@/db/queries/order";
-import { getProgramFullCurriculumQuery } from "@/db/queries/program";
+import { getProgramByIdQuery } from "@/db/queries/program";
 import { db } from "@/db";
 import { programBlueprints } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -230,7 +230,7 @@ export async function getMemberWorkoutLogsByCoachAction(memberUserId: string) {
     const coachProgramIds: string[] = [];
 
     for (const enrollment of enrollments) {
-      const program = await getProgramFullCurriculumQuery(enrollment.programId);
+      const program = await getProgramByIdQuery(enrollment.programId);
       if (program && program.coachId === coachId) {
         coachProgramIds.push(enrollment.programId);
       }
@@ -267,7 +267,7 @@ export async function getMemberWorkoutLogsPageDataAction(programId: string, memb
 
   try {
     // 1. 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program) {
       return { success: false, message: "프로그램을 찾을 수 없습니다." };
@@ -325,7 +325,7 @@ export async function getHomeworkPageDataAction(programId: string) {
 
   try {
     // 1. 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program) {
       return { success: false, message: "프로그램을 찾을 수 없습니다." };
@@ -385,7 +385,7 @@ export async function getHomeworkSubmissionsAction(
 
   try {
     // 1. 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program) {
       return { success: false, message: "프로그램을 찾을 수 없습니다." };
@@ -432,7 +432,7 @@ export async function updateCoachCommentAction(logId: string, comment: string) {
 
     // 코치 권한 확인 (해당 일지의 프로그램 소유자인지)
     if (log.blueprint?.programId) {
-      const program = await getProgramFullCurriculumQuery(log.blueprint.programId);
+      const program = await getProgramByIdQuery(log.blueprint.programId);
 
       if (!program || program.coachId !== coachId) {
         return { success: false, message: "권한이 없습니다." };
@@ -475,7 +475,7 @@ export async function toggleCoachCheckAction(logId: string) {
 
     // 코치 권한 확인
     if (log.blueprint?.programId) {
-      const program = await getProgramFullCurriculumQuery(log.blueprint.programId);
+      const program = await getProgramByIdQuery(log.blueprint.programId);
 
       if (!program || program.coachId !== coachId) {
         return { success: false, message: "권한이 없습니다." };

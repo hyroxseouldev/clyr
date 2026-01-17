@@ -1,6 +1,6 @@
 "use server";
 
-import { getProgramFullCurriculumQuery } from "@/db/queries/program";
+import { getProgramByIdQuery } from "@/db/queries/program";
 import { getMemberStatsByProgramQuery } from "@/db/queries/member";
 import {
   getRecentOrdersByProgramIdQuery,
@@ -26,7 +26,7 @@ export async function getDashboardStatsAction(programId: string) {
 
   try {
     // 1. Verify program ownership
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program || program.coachId !== coachId) {
       return { success: false, message: "권한이 없습니다." };
@@ -80,7 +80,7 @@ export async function getRecentPurchasesAction(
 
   try {
     // Verify program ownership
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program || program.coachId !== coachId) {
       return { success: false, message: "권한이 없습니다." };

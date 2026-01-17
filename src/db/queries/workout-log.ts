@@ -134,7 +134,7 @@ export const getHomeworkSubmissionsByProgramAndDayQuery = async (
     )
     .orderBy(desc(workoutLogs.createdAt));
 
-  // Fetch related data separately (user, library, blueprint, routineBlock)
+  // Fetch related data separately (user, library, blueprint)
   const submissions = await Promise.all(
     results.map(async (row) => {
       const fullLog = await db.query.workoutLogs.findFirst({
@@ -142,11 +142,7 @@ export const getHomeworkSubmissionsByProgramAndDayQuery = async (
         with: {
           user: true,
           library: true,
-          blueprint: {
-            with: {
-              routineBlock: true,
-            },
-          },
+          blueprint: true,
         },
       });
 
@@ -165,12 +161,7 @@ export const getHomeworkSubmissionsByProgramAndDayQuery = async (
           createdAt: fullLog.user.createdAt,
         },
         library: fullLog.library,
-        blueprint: fullLog.blueprint
-          ? {
-              ...fullLog.blueprint,
-              routineBlock: fullLog.blueprint.routineBlock ?? null,
-            }
-          : null,
+        blueprint: fullLog.blueprint ?? null,
       } as HomeworkSubmission;
     })
   );
@@ -180,7 +171,7 @@ export const getHomeworkSubmissionsByProgramAndDayQuery = async (
 
 /**
  * 리더보드 정렬이 적용된 숙제 제출 목록 조회
- * workout_format에 따라 자동 정렬 (FOR_TIME: 오름차순, AMRAP: 내림차순 등)
+ * 제출 시간순 정렬 (최신순)
  */
 export const getHomeworkLeaderboardByProgramAndDayQuery = async (
   programId: string,
@@ -193,33 +184,10 @@ export const getHomeworkLeaderboardByProgramAndDayQuery = async (
     dayNumber
   );
 
-  // 루틴 블록의 workout_format에 따라 정렬
-  const workoutFormat = submissions[0]?.blueprint?.routineBlock?.workoutFormat;
-
-  if (!workoutFormat) {
-    return submissions;
-  }
-
-  // 정렬 로직
-  const sorted = [...submissions].sort((a, b) => {
-    switch (workoutFormat) {
-      case "FOR_TIME":
-        // 시간 기반: 짧을수록 좋음 (오름차순)
-        return (a.totalDuration ?? Infinity) - (b.totalDuration ?? Infinity);
-      case "AMRAP":
-      case "REPS":
-        // 횟수 기반: 많을수록 좋음 (내림차순)
-        return parseFloat(b.totalVolume) - parseFloat(a.totalVolume);
-      case "WEIGHT":
-        // 무게 기반: 무거울수록 좋음 (내림차순)
-        return parseFloat(b.maxWeight) - parseFloat(a.maxWeight);
-      default:
-        // 기본: 제출 시간순
-        return b.createdAt.getTime() - a.createdAt.getTime();
-    }
+  // 제출 시간순 정렬 (최신순)
+  return [...submissions].sort((a, b) => {
+    return b.createdAt.getTime() - a.createdAt.getTime();
   });
-
-  return sorted;
 };
 
 /**

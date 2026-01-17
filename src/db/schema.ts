@@ -90,38 +90,8 @@ export const workoutLibrary = pgTable("workout_library", {
 });
 
 // =============================================================
-// 3. PROGRAM & ROUTINE (어떻게 설계하는가 - 리더보드 핵심)
+// 3. PROGRAM (어떻게 설계하는가)
 // =============================================================
-
-export const routineBlocks = pgTable("routine_blocks", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  coachId: uuid("coach_id")
-    .references(() => account.id, { onDelete: "cascade" })
-    .notNull(),
-  name: text("name").notNull(),
-  /**
-   * [핵심] 리더보드 정렬 기준
-   * STRENGTH (중량), FOR_TIME (빠른순), AMRAP (회수순), EMOM (성공여부)
-   */
-  workoutFormat: text("workout_format").default("STRENGTH").notNull(),
-  targetValue: text("target_value"), // "20min", "5 rounds" 등 기준값
-  isLeaderboardEnabled: boolean("is_leaderboard_enabled").default(false), // 경쟁 활성화 여부
-  description: text("description"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-export const routineItems = pgTable("routine_items", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  blockId: uuid("block_id").references(() => routineBlocks.id, {
-    onDelete: "cascade",
-  }),
-  libraryId: uuid("library_id").references(() => workoutLibrary.id),
-  orderIndex: integer("order_index").notNull(),
-  recommendation: jsonb("recommendation"), // 코치의 가이드
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
 
 // [Programs] 운동 프로그램 (판매 상품 정보)
 export const programs = pgTable("programs", {
@@ -159,23 +129,9 @@ export const programBlueprints = pgTable("program_blueprints", {
   phaseNumber: integer("phase_number").notNull(),
   dayNumber: integer("day_number").notNull(),
   dayTitle: text("day_title"),
-  routineBlockId: uuid("routine_block_id").references(() => routineBlocks.id), // @deprecated - Use blueprint_routine_blocks join table instead
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// [blueprintRoutineBlocks] Join table for many-to-many relationship between blueprints and routine blocks
-export const blueprintRoutineBlocks = pgTable("blueprint_routine_blocks", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  blueprintId: uuid("blueprint_id")
-    .references(() => programBlueprints.id, { onDelete: "cascade" })
-    .notNull(),
-  routineBlockId: uuid("routine_block_id")
-    .references(() => routineBlocks.id, { onDelete: "cascade" })
-    .notNull(),
-  orderIndex: integer("order_index").notNull(), // For ordering blocks within a day
-  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // [blueprintSections] Sections for blueprint content (many-to-many relationship)
@@ -276,49 +232,7 @@ export const enrollments = pgTable("enrollments", {
 });
 
 // ==========================================
-// 5. 삭제 할것
-// ==========================================
-// [ProgramWeeks] 주차별 주제 (Section 단위)
-export const programWeeks = pgTable("program_weeks", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  programId: uuid("program_id")
-    .references(() => programs.id, { onDelete: "cascade" })
-    .notNull(),
-  weekNumber: integer("week_number").notNull(), // 1주차, 2주차...
-  title: text("title").notNull(), // 예: "1주차: 적응 및 기초 체력"
-  description: text("description"), // 주차별 가이드 설명
-});
-
-// [Workouts] 날짜별 상세 루틴 (Day 단위)
-export const workouts = pgTable("workouts", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  programId: uuid("program_id")
-    .references(() => programs.id, { onDelete: "cascade" })
-    .notNull(),
-  weekId: uuid("week_id")
-    .references(() => programWeeks.id, { onDelete: "cascade" })
-    .notNull(),
-
-  dayNumber: integer("day_number").notNull(), // 1일차, 2일차...
-  title: text("title").notNull(), // 예: "하체/코어 집중"
-  content: text("content"), // 일차별 상세 정보 (HTML)
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// [WorkoutSessions] Day 안의 개별 세션 (Detail 단위)
-export const workoutSessions = pgTable("workout_sessions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  workoutId: uuid("workout_id")
-    .references(() => workouts.id, { onDelete: "cascade" })
-    .notNull(),
-
-  title: text("title").notNull(), // 예: "본운동: 백 스쿼트"
-  content: text("content"), // 위지윅 에디터에서 온 상세 운동 가이드
-  orderIndex: integer("order_index").default(0).notNull(), // 표시 순서
-});
-
-// ==========================================
-// 6. 관계 정의 (Relations)
+// 5. 관계 정의 (Relations)
 // ==========================================
 
 export const accountRelations = relations(account, ({ one, many }) => ({
@@ -333,7 +247,6 @@ export const accountRelations = relations(account, ({ one, many }) => ({
   programs: many(programs),
   workoutLogs: many(workoutLogs),
   workoutLibrary: many(workoutLibrary),
-  routineBlocks: many(routineBlocks),
   ordersAsBuyer: many(orders, { relationName: "buyer" }),
   ordersAsCoach: many(orders, { relationName: "coach" }),
 }));
@@ -354,7 +267,6 @@ export const userProfileRelations = relations(userProfile, ({ one }) => ({
 
 export const programsRelations = relations(programs, ({ one, many }) => ({
   coach: one(account, { fields: [programs.coachId], references: [account.id] }),
-  weeks: many(programWeeks),
   enrollments: many(enrollments),
   workoutLogs: many(workoutLogs),
   blueprints: many(programBlueprints),
@@ -376,35 +288,6 @@ export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
   }),
 }));
 
-export const programWeeksRelations = relations(
-  programWeeks,
-  ({ one, many }) => ({
-    program: one(programs, {
-      fields: [programWeeks.programId],
-      references: [programs.id],
-    }),
-    workouts: many(workouts),
-  })
-);
-
-export const workoutsRelations = relations(workouts, ({ one, many }) => ({
-  week: one(programWeeks, {
-    fields: [workouts.weekId],
-    references: [programWeeks.id],
-  }),
-  sessions: many(workoutSessions),
-}));
-
-export const workoutSessionsRelations = relations(
-  workoutSessions,
-  ({ one }) => ({
-    workout: one(workouts, {
-      fields: [workoutSessions.workoutId],
-      references: [workouts.id],
-    }),
-  })
-);
-
 // workoutLibrary 관계
 export const workoutLibraryRelations = relations(
   workoutLibrary,
@@ -413,49 +296,7 @@ export const workoutLibraryRelations = relations(
       fields: [workoutLibrary.coachId],
       references: [account.id],
     }),
-    routineItems: many(routineItems),
     workoutLogs: many(workoutLogs),
-  })
-);
-
-// routineBlocks 관계
-export const routineBlocksRelations = relations(
-  routineBlocks,
-  ({ one, many }) => ({
-    coach: one(account, {
-      fields: [routineBlocks.coachId],
-      references: [account.id],
-    }),
-    items: many(routineItems),
-    blueprints: many(programBlueprints),
-    blueprintRoutineBlocks: many(blueprintRoutineBlocks), // many-to-many via join table
-  })
-);
-
-// routineItems 관계
-export const routineItemsRelations = relations(routineItems, ({ one }) => ({
-  block: one(routineBlocks, {
-    fields: [routineItems.blockId],
-    references: [routineBlocks.id],
-  }),
-  library: one(workoutLibrary, {
-    fields: [routineItems.libraryId],
-    references: [workoutLibrary.id],
-  }),
-}));
-
-// blueprintRoutineBlocks 관계 (join table)
-export const blueprintRoutineBlocksRelations = relations(
-  blueprintRoutineBlocks,
-  ({ one }) => ({
-    blueprint: one(programBlueprints, {
-      fields: [blueprintRoutineBlocks.blueprintId],
-      references: [programBlueprints.id],
-    }),
-    routineBlock: one(routineBlocks, {
-      fields: [blueprintRoutineBlocks.routineBlockId],
-      references: [routineBlocks.id],
-    }),
   })
 );
 
@@ -490,11 +331,6 @@ export const programBlueprintsRelations = relations(
       fields: [programBlueprints.programId],
       references: [programs.id],
     }),
-    routineBlock: one(routineBlocks, {
-      fields: [programBlueprints.routineBlockId],
-      references: [routineBlocks.id],
-    }),
-    routineBlocks: many(blueprintRoutineBlocks), // many-to-many via join table
     sections: many(blueprintSectionItems), // many-to-many via join table
     workoutLogs: many(workoutLogs),
   })
@@ -543,16 +379,10 @@ export type Account = InferSelectModel<typeof account>;
 export type CoachProfile = InferSelectModel<typeof coachProfile>;
 export type UserProfile = InferSelectModel<typeof userProfile>;
 export type WorkoutLibrary = InferSelectModel<typeof workoutLibrary>;
-export type RoutineBlock = InferSelectModel<typeof routineBlocks>;
-export type RoutineItem = InferSelectModel<typeof routineItems>;
-export type BlueprintRoutineBlock = InferSelectModel<typeof blueprintRoutineBlocks>;
 export type BlueprintSection = InferSelectModel<typeof blueprintSections>;
 export type BlueprintSectionItem = InferSelectModel<typeof blueprintSectionItems>;
 export type Program = InferSelectModel<typeof programs>;
 export type ProgramBlueprint = InferSelectModel<typeof programBlueprints>;
-export type ProgramWeek = InferSelectModel<typeof programWeeks>;
-export type Workout = InferSelectModel<typeof workouts>;
-export type WorkoutSession = InferSelectModel<typeof workoutSessions>;
 export type WorkoutLog = InferSelectModel<typeof workoutLogs>;
 export type Order = InferSelectModel<typeof orders>;
 export type Enrollment = InferSelectModel<typeof enrollments>;
@@ -562,16 +392,10 @@ export type NewAccount = InferInsertModel<typeof account>;
 export type NewCoachProfile = InferInsertModel<typeof coachProfile>;
 export type NewUserProfile = InferInsertModel<typeof userProfile>;
 export type NewWorkoutLibrary = InferInsertModel<typeof workoutLibrary>;
-export type NewRoutineBlock = InferInsertModel<typeof routineBlocks>;
-export type NewRoutineItem = InferInsertModel<typeof routineItems>;
-export type NewBlueprintRoutineBlock = InferInsertModel<typeof blueprintRoutineBlocks>;
 export type NewBlueprintSection = InferInsertModel<typeof blueprintSections>;
 export type NewBlueprintSectionItem = InferInsertModel<typeof blueprintSectionItems>;
 export type NewProgram = InferInsertModel<typeof programs>;
 export type NewProgramBlueprint = InferInsertModel<typeof programBlueprints>;
-export type NewProgramWeek = InferInsertModel<typeof programWeeks>;
-export type NewWorkout = InferInsertModel<typeof workouts>;
-export type NewWorkoutSession = InferInsertModel<typeof workoutSessions>;
 export type NewWorkoutLog = InferInsertModel<typeof workoutLogs>;
 export type NewOrder = InferInsertModel<typeof orders>;
 export type NewEnrollment = InferInsertModel<typeof enrollments>;

@@ -64,7 +64,7 @@ export function ProgramCreateForm() {
 
   const onSubmit = async (values: FormValues) => {
     startTransition(async () => {
-      const result = await createProgramAction(values, []);
+      const result = await createProgramAction(values);
       if (!result?.success && result?.message) {
         toast.error(t(result.message as any));
         return;

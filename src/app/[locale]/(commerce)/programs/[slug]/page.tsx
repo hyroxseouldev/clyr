@@ -144,47 +144,6 @@ const PublicCommercePage = async ({
                 />
               </section>
             )}
-
-            {/* 커리큘럼 */}
-            {program.weeks && program.weeks.length > 0 && (
-              <section>
-                <h2 className="text-2xl font-bold mb-4">{t('curriculum')}</h2>
-                <div className="space-y-3">
-                  {program.weeks.map((week) => (
-                    <Card key={week.id}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-sm">
-                            {week.weekNumber}
-                          </div>
-                          <CardTitle className="text-lg">
-                            {week.title}
-                          </CardTitle>
-                        </div>
-                      </CardHeader>
-                      {week.description && (
-                        <CardContent className="pt-0">
-                          <p className="text-sm text-gray-600">
-                            {week.description}
-                          </p>
-                        </CardContent>
-                      )}
-                      {week.workouts && week.workouts.length > 0 && (
-                        <CardContent className="pt-0">
-                          <div className="flex flex-wrap gap-2">
-                            {week.workouts.map((workout) => (
-                              <Badge key={workout.id} variant="outline">
-                                Day {workout.dayNumber}
-                              </Badge>
-                            ))}
-                          </div>
-                        </CardContent>
-                      )}
-                    </Card>
-                  ))}
-                </div>
-              </section>
-            )}
           </div>
 
           {/* 사이드바 */}

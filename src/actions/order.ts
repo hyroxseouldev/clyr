@@ -20,7 +20,7 @@ import {
   getProgramOrdersWithPaginationQuery,
   getOrderDetailByIdQuery,
 } from "@/db/queries/order";
-import { getProgramFullCurriculumQuery } from "@/db/queries/program";
+import { getProgramByIdQuery } from "@/db/queries/program";
 import { getUserId } from "@/actions/auth";
 
 /**
@@ -39,7 +39,7 @@ export async function createOrderAction(programId: string, amount: string) {
 
   try {
     // 프로그램 정보를 가져와서 coachId 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
     if (!program) {
       return { success: false, message: "프로그램을 찾을 수 없습니다." };
     }
@@ -342,7 +342,7 @@ export async function getProgramOrdersAndEnrollmentsAction(programId: string) {
 
   try {
     // 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
     if (!program) {
       return { success: false, message: "프로그램을 찾을 수 없습니다." };
     }
@@ -381,7 +381,7 @@ export async function updateEnrollmentStatusByCoachAction(
 
   try {
     // 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
     if (!program) {
       return { success: false, message: "프로그램을 찾을 수 없습니다." };
     }
@@ -423,7 +423,7 @@ export async function updateEnrollmentStartDateByCoachAction(
 
   try {
     // 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
     if (!program) {
       return { success: false, message: "프로그램을 찾을 수 없습니다." };
     }
@@ -469,7 +469,7 @@ export async function getProgramMonthlySalesAction(programId: string) {
 
   try {
     // 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
     if (!program) {
       return { success: false, message: "프로그램을 찾을 수 없습니다." };
     }
@@ -508,7 +508,7 @@ export async function getProgramOrdersWithPaginationAction(
 
   try {
     // 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
     if (!program) {
       return { success: false, message: "프로그램을 찾을 수 없습니다." };
     }

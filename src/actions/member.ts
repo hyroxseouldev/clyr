@@ -13,7 +13,7 @@ import {
   getMemberStatsByProgramQuery,
   searchMembersQuery,
 } from "@/db/queries/member";
-import { getProgramFullCurriculumQuery } from "@/db/queries/program";
+import { getProgramByIdQuery } from "@/db/queries/program";
 import { updateEnrollmentStatusQuery, updateEnrollmentStartDateQuery, updateEnrollmentEndDateQuery } from "@/db/queries/order";
 import { getUserId } from "@/actions/auth";
 
@@ -35,7 +35,7 @@ export async function getMembersByProgramAction(programId: string) {
 
   try {
     // 1. 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program) {
       return { success: false, message: "프로그램을 찾을 수 없습니다." };
@@ -70,7 +70,7 @@ export async function searchMembersAction(programId: string, searchTerm: string)
 
   try {
     // 1. 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program || program.coachId !== coachId) {
       return { success: false, message: "권한이 없습니다." };
@@ -107,7 +107,7 @@ export async function getMemberDetailAction(programId: string, memberId: string)
 
   try {
     // 1. 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program || program.coachId !== coachId) {
       return { success: false, message: "권한이 없습니다." };
@@ -142,7 +142,7 @@ export async function getMemberWorkoutLogsAction(programId: string, memberId: st
 
   try {
     // 1. 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program || program.coachId !== coachId) {
       return { success: false, message: "권한이 없습니다." };
@@ -173,7 +173,7 @@ export async function getMemberCoachCommentsAction(programId: string, memberId: 
 
   try {
     // 1. 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program || program.coachId !== coachId) {
       return { success: false, message: "권한이 없습니다." };
@@ -319,7 +319,7 @@ export async function getMemberPRHistoryAction(
 
   try {
     // 1. 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program || program.coachId !== coachId) {
       return { success: false, message: "권한이 없습니다." };
@@ -350,7 +350,7 @@ export async function getMemberCurrentPRsAction(programId: string, memberId: str
 
   try {
     // 1. 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program || program.coachId !== coachId) {
       return { success: false, message: "권한이 없습니다." };
@@ -387,7 +387,7 @@ export async function getExpiringMembersAction(programId: string, daysUntilExpir
 
   try {
     // 1. 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program || program.coachId !== coachId) {
       return { success: false, message: "권한이 없습니다." };
@@ -418,7 +418,7 @@ export async function getMemberStatsAction(programId: string) {
 
   try {
     // 1. 프로그램 소유자 확인
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program || program.coachId !== coachId) {
       return { success: false, message: "권한이 없습니다." };

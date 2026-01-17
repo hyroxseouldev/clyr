@@ -1,4 +1,4 @@
-import type { Account, WorkoutLog, ProgramBlueprint, RoutineBlock, WorkoutLibrary } from "@/db/schema";
+import type { Account, WorkoutLog, ProgramBlueprint, WorkoutLibrary } from "@/db/schema";
 
 /**
  * 숙제 관리 페이지용 제출 타입
@@ -26,9 +26,7 @@ export interface HomeworkSubmission {
     createdAt: Date;
   };
   library: WorkoutLibrary;
-  blueprint: (ProgramBlueprint & {
-    routineBlock: RoutineBlock | null;
-  }) | null;
+  blueprint: ProgramBlueprint | null;
 }
 
 /**

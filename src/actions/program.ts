@@ -2,15 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  createProgramWithWeeksQuery,
   updateProgramQuery,
   deleteProgramQuery,
   getProgramsByCoachQuery,
-  getProgramFullCurriculumQuery,
-  getProgramWithWeeksBySlugQuery,
+  getProgramByIdQuery,
+  getProgramBySlugQuery,
 } from "@/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { getUserId } from "@/actions/auth";
+import { db } from "@/db";
+import { programs } from "@/db/schema";
 
 /**
  * [READ] 현재 로그인한 유저(코치)의 프로그램 목록 가져오기
@@ -43,7 +44,7 @@ export async function getMyProgramsAction() {
 }
 
 // 프로그램 생성 액션
-export async function createProgramAction(programData: any, weeksData: any[]) {
+export async function createProgramAction(programData: any) {
   // 유저 ID ? 넣어야 되는데
   const userId = await getUserId();
 
@@ -51,12 +52,12 @@ export async function createProgramAction(programData: any, weeksData: any[]) {
     return { success: false, message: "unauthorized" };
   }
   try {
-    const newProgram = await createProgramWithWeeksQuery(
-      { ...programData, coachId: userId },
-      weeksData
-    );
+    const [newProgram] = await db
+      .insert(programs)
+      .values({ ...programData, coachId: userId })
+      .returning();
 
-    revalidatePath("/dashboard/programs");
+    revalidatePath("/coach/dashboard");
     return { success: true, id: newProgram.id };
   } catch (error) {
     return { success: false, message: "createFailed" };
@@ -68,8 +69,8 @@ export async function updateProgramAction(programId: string, updateData: any) {
   try {
     await updateProgramQuery(programId, updateData);
 
-    revalidatePath(`/dashboard/programs/${programId}`);
-    revalidatePath("/dashboard/programs");
+    revalidatePath(`/coach/dashboard/${programId}`);
+    revalidatePath("/coach/dashboard");
     return { success: true };
   } catch (error) {
     return { success: false, message: "수정에 실패했습니다." };
@@ -92,7 +93,7 @@ export async function deleteProgramAction(programId: string) {
 // 프로그램 ID로 프로그램 정보 가져오기
 export async function getProgramByIdAction(programId: string) {
   try {
-    const program = await getProgramFullCurriculumQuery(programId);
+    const program = await getProgramByIdQuery(programId);
 
     if (!program) {
       return { success: false, message: "프로그램을 찾을 수 없습니다." };
@@ -114,7 +115,7 @@ export async function getProgramByIdAction(programId: string) {
 // 프로그램 slug 로 프로그램 정보 가져오기
 export async function getProgramBySlugAction(slug: string) {
   try {
-    const program = await getProgramWithWeeksBySlugQuery(slug);
+    const program = await getProgramBySlugQuery(slug);
 
     if (!program) {
       return { success: false, message: "프로그램을 찾을 수 없습니다." };

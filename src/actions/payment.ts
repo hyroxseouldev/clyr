@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getProgramWithWeeksBySlugQuery } from "@/db/queries";
+import { getProgramBySlugQuery } from "@/db/queries";
 import {
   createOrderQuery,
   completeOrderAndCreateEnrollmentQuery,
@@ -37,7 +37,7 @@ export async function initPurchaseAction(programSlug: string) {
   }
 
   // 2. 프로그램 정보 조회
-  const program = await getProgramWithWeeksBySlugQuery(programSlug);
+  const program = await getProgramBySlugQuery(programSlug);
 
   if (!program) {
     return { success: false, error: "프로그램을 찾을 수 없습니다" };
@@ -97,7 +97,7 @@ export async function createPaymentAction({
 
   try {
     // 1. 프로그램 정보 조회 (가격 검증을 위해)
-    const program = await getProgramWithWeeksBySlugQuery(programId);
+    const program = await getProgramBySlugQuery(programId);
     if (!program) {
       return { success: false, error: "프로그램을 찾을 수 없습니다" };
     }
@@ -265,7 +265,7 @@ export async function processPaymentSuccessAction(params: {
 
   try {
     // 1. 프로그램 정보 조회
-    const program = await getProgramWithWeeksBySlugQuery(params.programId);
+    const program = await getProgramBySlugQuery(params.programId);
     if (!program) {
       return { success: false, error: "프로그램을 찾을 수 없습니다" };
     }
