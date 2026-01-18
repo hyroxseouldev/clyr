@@ -18,6 +18,19 @@ export interface BlueprintSectionWithOrder {
 }
 
 /**
+ * Get section item by ID (with blueprint)
+ */
+export async function getSectionItemByIdQuery(sectionItemId: string) {
+  return await db.query.blueprintSectionItems.findFirst({
+    where: eq(blueprintSectionItems.id, sectionItemId),
+    with: {
+      blueprint: true,
+      section: true,
+    },
+  });
+}
+
+/**
  * Get all sections for a blueprint (ordered)
  */
 export async function getBlueprintSectionsQuery(

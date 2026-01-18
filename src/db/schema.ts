@@ -7,6 +7,7 @@ import {
   jsonb,
   timestamp,
   numeric,
+  unique,
 } from "drizzle-orm/pg-core";
 import {
   relations,
@@ -156,6 +157,29 @@ export const blueprintSectionItems = pgTable("blueprint_section_items", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// [sectionRecords] 섹션 완료 기록 (숙제, 설문, 퀴즈 등)
+export const sectionRecords = pgTable("section_records", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .references(() => account.id, { onDelete: "cascade" })
+    .notNull(),
+  sectionId: uuid("section_id")
+    .references(() => blueprintSections.id, { onDelete: "cascade" })
+    .notNull(),
+  sectionItemId: uuid("section_item_id")
+    .references(() => blueprintSectionItems.id, { onDelete: "cascade" })
+    .notNull(), // 컨텍스트 저장 (프로그램/페이즈/일차 필터링용)
+  content: jsonb("content").default({}).$type<Record<string, unknown>>(),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+  coachComment: text("coach_comment"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  // sectionItemId별로 유니크 (같은 주차 재도전 시 업데이트)
+  // sectionId는 유니크 없음 (1주차 vs 4주차 같은 섹션 비교 가능)
+  uniqueConstraint: unique().on(table.userId, table.sectionItemId),
+}));
+
 // ==========================================
 // 4. 상거래 및 수강 권한 (Commerce & Access)
 // ==========================================
@@ -246,6 +270,7 @@ export const accountRelations = relations(account, ({ one, many }) => ({
   }),
   programs: many(programs),
   workoutLogs: many(workoutLogs),
+  sectionRecords: many(sectionRecords),
   workoutLibrary: many(workoutLibrary),
   ordersAsBuyer: many(orders, { relationName: "buyer" }),
   ordersAsCoach: many(orders, { relationName: "coach" }),
@@ -305,13 +330,14 @@ export const blueprintSectionsRelations = relations(
   blueprintSections,
   ({ many }) => ({
     blueprints: many(blueprintSectionItems),
+    sectionRecords: many(sectionRecords),
   })
 );
 
 // blueprintSectionItems 관계 (join table)
 export const blueprintSectionItemsRelations = relations(
   blueprintSectionItems,
-  ({ one }) => ({
+  ({ one, many }) => ({
     blueprint: one(programBlueprints, {
       fields: [blueprintSectionItems.blueprintId],
       references: [programBlueprints.id],
@@ -320,6 +346,7 @@ export const blueprintSectionItemsRelations = relations(
       fields: [blueprintSectionItems.sectionId],
       references: [blueprintSections.id],
     }),
+    sectionRecords: many(sectionRecords),
   })
 );
 
@@ -370,6 +397,22 @@ export const workoutLogsRelations = relations(workoutLogs, ({ one }) => ({
   }),
 }));
 
+// sectionRecords 관계
+export const sectionRecordsRelations = relations(sectionRecords, ({ one }) => ({
+  user: one(account, {
+    fields: [sectionRecords.userId],
+    references: [account.id],
+  }),
+  section: one(blueprintSections, {
+    fields: [sectionRecords.sectionId],
+    references: [blueprintSections.id],
+  }),
+  sectionItem: one(blueprintSectionItems, {
+    fields: [sectionRecords.sectionItemId],
+    references: [blueprintSectionItems.id],
+  }),
+}));
+
 // ==========================================
 // 6. Type Exports (타입 추출)
 // ==========================================
@@ -381,6 +424,7 @@ export type UserProfile = InferSelectModel<typeof userProfile>;
 export type WorkoutLibrary = InferSelectModel<typeof workoutLibrary>;
 export type BlueprintSection = InferSelectModel<typeof blueprintSections>;
 export type BlueprintSectionItem = InferSelectModel<typeof blueprintSectionItems>;
+export type SectionRecord = InferSelectModel<typeof sectionRecords>;
 export type Program = InferSelectModel<typeof programs>;
 export type ProgramBlueprint = InferSelectModel<typeof programBlueprints>;
 export type WorkoutLog = InferSelectModel<typeof workoutLogs>;
@@ -394,6 +438,7 @@ export type NewUserProfile = InferInsertModel<typeof userProfile>;
 export type NewWorkoutLibrary = InferInsertModel<typeof workoutLibrary>;
 export type NewBlueprintSection = InferInsertModel<typeof blueprintSections>;
 export type NewBlueprintSectionItem = InferInsertModel<typeof blueprintSectionItems>;
+export type NewSectionRecord = InferInsertModel<typeof sectionRecords>;
 export type NewProgram = InferInsertModel<typeof programs>;
 export type NewProgramBlueprint = InferInsertModel<typeof programBlueprints>;
 export type NewWorkoutLog = InferInsertModel<typeof workoutLogs>;
