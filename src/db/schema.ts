@@ -192,7 +192,7 @@ export const orders = pgTable("orders", {
     .references(() => account.id)
     .notNull(),
   programId: uuid("program_id")
-    .references(() => programs.id)
+    .references(() => programs.id, { onDelete: "cascade" })
     .notNull(),
   coachId: uuid("coach_id")
     .references(() => account.id)

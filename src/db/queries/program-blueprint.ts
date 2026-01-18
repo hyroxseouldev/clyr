@@ -39,14 +39,15 @@ export interface ProgramPlanData {
 }
 
 /**
- * 프로그램의 모든 블루프린트 조회
+ * 프로그램의 모든 블루프린트 조회 (단일 쿼리로 최적화)
  */
 export async function getProgramBlueprintsQuery(
   programId: string
 ): Promise<ProgramBlueprintWithSections[]> {
-  const blueprints = await db
+  // Single query with LEFT JOIN to fetch all blueprints with their sections
+  const results = await db
     .select({
-      id: programBlueprints.id,
+      blueprintId: programBlueprints.id,
       programId: programBlueprints.programId,
       phaseNumber: programBlueprints.phaseNumber,
       dayNumber: programBlueprints.dayNumber,
@@ -54,35 +55,60 @@ export async function getProgramBlueprintsQuery(
       notes: programBlueprints.notes,
       createdAt: programBlueprints.createdAt,
       updatedAt: programBlueprints.updatedAt,
+      // Section fields (nullable for LEFT JOIN)
+      sectionId: blueprintSections.id,
+      sectionTitle: blueprintSections.title,
+      sectionContent: blueprintSections.content,
+      orderIndex: blueprintSectionItems.orderIndex,
     })
     .from(programBlueprints)
+    .leftJoin(
+      blueprintSectionItems,
+      eq(blueprintSectionItems.blueprintId, programBlueprints.id)
+    )
+    .leftJoin(
+      blueprintSections,
+      eq(blueprintSections.id, blueprintSectionItems.sectionId)
+    )
     .where(eq(programBlueprints.programId, programId))
-    .orderBy(asc(programBlueprints.phaseNumber), asc(programBlueprints.dayNumber));
+    .orderBy(
+      asc(programBlueprints.phaseNumber),
+      asc(programBlueprints.dayNumber),
+      asc(blueprintSectionItems.orderIndex)
+    );
 
-  // Fetch sections from join table for each blueprint
-  const blueprintsWithSections = await Promise.all(
-    blueprints.map(async (blueprint) => {
-      // Fetch sections from join table for each blueprint
-      const sections = await db
-        .select({
-          id: blueprintSections.id,
-          title: blueprintSections.title,
-          content: blueprintSections.content,
-          orderIndex: blueprintSectionItems.orderIndex,
-        })
-        .from(blueprintSectionItems)
-        .innerJoin(blueprintSections, eq(blueprintSectionItems.sectionId, blueprintSections.id))
-        .where(eq(blueprintSectionItems.blueprintId, blueprint.id))
-        .orderBy(asc(blueprintSectionItems.orderIndex));
+  // Group sections by blueprint
+  const blueprintMap = new Map<string, ProgramBlueprintWithSections>();
 
-      return {
-        ...blueprint,
-        sections: sections,
-      };
-    })
-  );
+  for (const row of results) {
+    if (!blueprintMap.has(row.blueprintId)) {
+      blueprintMap.set(row.blueprintId, {
+        id: row.blueprintId,
+        programId: row.programId,
+        phaseNumber: row.phaseNumber,
+        dayNumber: row.dayNumber,
+        dayTitle: row.dayTitle,
+        sections: [],
+        notes: row.notes,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      });
+    }
 
-  return blueprintsWithSections as ProgramBlueprintWithSections[];
+    const blueprint = blueprintMap.get(row.blueprintId)!;
+
+    // Add section if exists
+    if (row.sectionId) {
+      blueprint.sections.push({
+        id: row.sectionId,
+        title: row.sectionTitle,
+        content: row.sectionContent,
+        orderIndex: row.orderIndex,
+      });
+    }
+  }
+
+  return Array.from(blueprintMap.values());
 }
 
 /**

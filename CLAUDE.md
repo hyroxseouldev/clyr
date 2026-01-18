@@ -46,12 +46,11 @@ npm run db:studio     # Open Drizzle Studio for database GUI
 The database follows a hierarchical program structure with reusable components:
 
 ```
-Account → [Programs, WorkoutLibrary, RoutineBlocks]
-Program → [ProgramWeeks, ProgramBlueprints, Orders]
-ProgramWeek → Workouts → WorkoutSessions
-RoutineBlock → RoutineItems → WorkoutLibrary
+Account → [Programs, WorkoutLibrary]
+Program → [ProgramBlueprints, BlueprintSections, Orders]
 Order → Enrollment (Access Control)
 WorkoutLog → [ProgramBlueprint, WorkoutLibrary]
+ProgramBlueprint → BlueprintSections → BlueprintSectionItems
 ```
 
 **Core tables:**
@@ -59,20 +58,19 @@ WorkoutLog → [ProgramBlueprint, WorkoutLibrary]
 - `coach_profile` - Coach-specific metadata (1:1 with account)
 - `user_profile` - User-specific metadata (1:1 with account)
 - `programs` - Fitness programs (type: SINGLE/SUBSCRIPTION)
-- `program_weeks` - Weekly curriculum
-- `workouts` - Daily workout routines
-- `workout_sessions` - Individual exercise sessions
+- `program_blueprints` - Daily workout plans with phase/day structure
+- `blueprint_sections` - Reusable sections for blueprints (many-to-many)
+- `blueprint_section_items` - Join table for blueprints and sections
 - `workout_library` - Reusable exercise library for coaches
-- `routine_blocks` - Reusable workout blocks with leaderboard formats
-- `routine_items` - Links routine blocks to workout library exercises
-- `orders` - Purchase records with Toss integration
+- `orders` - Purchase records with Toss integration (cascade delete on program)
 - `enrollments` - Access control and subscription management
 - `workout_logs` - User exercise tracking and leaderboard data
 
 **Key relationships:**
 - Coach creates programs (one-to-many)
 - Users enroll via orders
-- Routine blocks can reference multiple workout library items
+- Blueprints can reference multiple sections (many-to-many with order)
+- Sections are reusable across blueprints
 - Workout logs link user attempts to program blueprints or library items for leaderboards
 - Cascade deletions maintain data integrity
 
@@ -119,6 +117,50 @@ All mutations use Server Actions (`"use server"`):
 - Use Drizzle ORM for type-safe queries
 - Database transactions for complex operations
 - Keep queries pure (database only) - handle cache invalidation in Server Actions
+
+### Database Connection Management & Query Optimization
+
+**Connection Pool Configuration** (`src/db/index.ts`):
+```typescript
+const client = postgres(process.env.DATABASE_URL!, {
+  max: 20,              // Max concurrent connections
+  idle_timeout: 20,     // Close idle connections after 20s
+  connect_timeout: 10,  // Connection timeout
+  prepare: false,       // Disable prepared statements (serverless-friendly)
+});
+```
+
+**Critical: Avoid N+1 Query Problems**
+
+❌ **BAD** - N+1 queries exhaust connection pool:
+```typescript
+const blueprints = await getBlueprints(); // 1 query
+const results = await Promise.all(
+  blueprints.map(async (bp) => {
+    const sections = await getSections(bp.id); // N queries
+    return { ...bp, sections };
+  })
+);
+// Total: 1 + N queries → Connection pool exhaustion!
+```
+
+✅ **GOOD** - Single query with LEFT JOIN:
+```typescript
+const results = await db
+  .select({ /* blueprint + section fields */ })
+  .from(programBlueprints)
+  .leftJoin(blueprintSectionItems, /* ... */)
+  .leftJoin(blueprintSections, /* ... */);
+// Then group in memory using Map
+// Total: 1 query → Efficient connection usage
+```
+
+**Best Practices:**
+1. Use LEFT JOINs for related data instead of separate queries
+2. Avoid `Promise.all` with multiple database queries inside
+3. Group results in memory using Map/Set after single query
+4. Cascade deletes configured in schema (e.g., `onDelete: "cascade"`)
+5. Restart dev server after changing connection pool config
 
 ### Form Handling
 

@@ -69,6 +69,7 @@ import type {
   ProgramBlueprintWithSections,
 } from "@/db/queries/program-blueprint";
 import { cn } from "@/lib/utils";
+import { Spinner } from "@/components/ui/spinner";
 
 interface PlanClientProps {
   programId: string;
@@ -480,7 +481,7 @@ export function PlanClient({ programId, initialData }: PlanClientProps) {
                     <CardContent className="flex flex-col items-center justify-center min-h-[120px] text-muted-foreground hover:text-foreground transition-colors">
                       {isAddingDay ? (
                         // 얇게
-                        <Loader2 className="h-8 w-8 mb-1.5 animate-spin text-muted-foreground stroke-1" />
+                        <Spinner className="size-6 mb-1.5 animate-spin text-muted-foreground stroke-1" />
                       ) : (
                         <>
                           <Plus className="h-9 w-9 mb-1.5" />
