@@ -405,6 +405,16 @@
     "uploading": "업로드 중...",
     "upload": "업로드"
   },
+  "multiImageForm": {
+    "uploadSuccess": "이미지가 업로드되었습니다.",
+    "dragDropHint": "이미지를 드래그하거나 클릭하여 선택하세요 (최대 {maxFiles}장)",
+    "clickToSelect": "클릭하여 이미지 선택",
+    "maxFileSize": "최대 {size}MB",
+    "uploading": "업로드 중...",
+    "upload": "선택한 이미지 업로드",
+    "remove": "제거",
+    "addMore": "이미지 추가"
+  },
   "program": {
     "title": "프로그램",
     "create": "프로그램 만들기",

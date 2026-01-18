@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import { AsyncButton } from "@/components/common/async-button";
 import { useTransition } from "react";
 import { updateProgramAction } from "@/actions";
@@ -89,229 +90,250 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
         onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-8 pb-10 p-4 rounded-lg border"
       >
-        {/* 썸네일 이미지 업로드 */}
-        <ImageForm
-          name="thumbnailUrl"
-          label="썸네일 이미지"
-          form={form}
-          bucketName="public-assets"
-          path="program/thumbnails"
-          maxFileSize={5 * 1024 * 1024}
-        />
+        {/* ==================== 메인 ==================== */}
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold">메인</h2>
 
-        <div className="space-y-6 border rounded-lg p-4">
-          {/* 기본 정보 세션 */}
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>프로그램 제목</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="slug"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>슬러그 (URL)</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+          {/* 썸네일 이미지 업로드 */}
+          <ImageForm
+            name="thumbnailUrl"
+            label="썸네일 이미지"
+            form={form}
+            bucketName="public-assets"
+            path="program/thumbnails"
+            maxFileSize={5 * 1024 * 1024}
           />
 
-          {/* 판매 방식 - 읽기 전용 (disabled) */}
-          <FormField
-            control={form.control}
-            name="type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>판매 방식</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  disabled
-                >
-                  <FormControl>
-                    <SelectTrigger className="bg-muted">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="SINGLE">단건 판매</SelectItem>
-                    <SelectItem value="SUBSCRIPTION">구독형</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  판매 방식은 생성 시에만 설정할 수 있습니다 ({typeLabel})
-                </p>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>가격 (₩)</FormLabel>
-                <FormControl>
-                  <Input type="number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="difficulty"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>난이도</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="BEGINNER">입문</SelectItem>
-                    <SelectItem value="INTERMEDIATE">중급</SelectItem>
-                    <SelectItem value="ADVANCED">고급</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="durationWeeks"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>총 주차 (Weeks)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="daysPerWeek"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>주당 운동 일수</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="accessPeriodDays"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>수강 기간 (일 / 비워두면 평생소장)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === "" ? null : Number(e.target.value)
-                      )
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="shortDescription"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>요약 설명</FormLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    value={field.value ?? ""}
-                    rows={3}
-                    onChange={(e) => field.onChange(e.target.value || null)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <TiptapForm
-              name="description"
-              label="상세 설명"
-              form={form}
-              placeholder="프로그램에 대한 상세 설명을 입력하세요..."
-              minHeight="200px"
-            />
-
-          <div className="flex gap-6 border p-4 rounded-lg bg-slate-50">
+          <div className="space-y-6 border rounded-lg p-4">
+            {/* 기본 정보 세션 */}
             <FormField
               control={form.control}
-              name="isPublic"
+              name="title"
               render={({ field }) => (
-                <FormItem className="flex items-center gap-2 space-y-0">
-                  <FormLabel>공개 여부</FormLabel>
+                <FormItem>
+                  <FormLabel>프로그램 제목</FormLabel>
                   <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Input {...field} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
-              name="isForSale"
+              name="slug"
               render={({ field }) => (
-                <FormItem className="flex items-center gap-2 space-y-0">
-                  <FormLabel>판매 중</FormLabel>
+                <FormItem>
+                  <FormLabel>슬러그 (URL)</FormLabel>
                   <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Input {...field} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* 판매 방식 - 읽기 전용 (disabled) */}
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>판매 방식</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled
+                  >
+                    <FormControl>
+                      <SelectTrigger className="bg-muted">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="SINGLE">단건 판매</SelectItem>
+                      <SelectItem value="SUBSCRIPTION">구독형</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    판매 방식은 생성 시에만 설정할 수 있습니다 ({typeLabel})
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>가격 (₩)</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="difficulty"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>난이도</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="BEGINNER">입문</SelectItem>
+                      <SelectItem value="INTERMEDIATE">중급</SelectItem>
+                      <SelectItem value="ADVANCED">고급</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="durationWeeks"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>총 주차 (Weeks)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="daysPerWeek"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>주당 운동 일수</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="accessPeriodDays"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>수강 기간 (일 / 비워두면 평생소장)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === "" ? null : Number(e.target.value)
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="shortDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>요약 설명</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      value={field.value ?? ""}
+                      rows={3}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <TiptapForm
+                name="description"
+                label="상세 설명"
+                form={form}
+                placeholder="프로그램에 대한 상세 설명을 입력하세요..."
+                minHeight="200px"
+              />
+
+            <div className="flex gap-6 border p-4 rounded-lg bg-slate-50">
+              <FormField
+                control={form.control}
+                name="isPublic"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-2 space-y-0">
+                    <FormLabel>공개 여부</FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="isForSale"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-2 space-y-0">
+                    <FormLabel>판매 중</FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
+        </div>
+
+        <Separator className="my-8" />
+
+        {/* ==================== 프로그램 ==================== */}
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold">프로그램</h2>
+          <p className="text-muted-foreground">프로그램 설정 (준비 중)</p>
+        </div>
+
+        <Separator className="my-8" />
+
+        {/* ==================== 레슨 ==================== */}
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold">레슨</h2>
+          <p className="text-muted-foreground">레슨 관리 (준비 중)</p>
         </div>
 
         <AsyncButton type="submit" className="w-full" isLoading={isLoading}>

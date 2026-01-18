@@ -405,6 +405,16 @@
     "uploading": "Uploading...",
     "upload": "Upload"
   },
+  "multiImageForm": {
+    "uploadSuccess": "Images uploaded successfully.",
+    "dragDropHint": "Drag and drop images or click to select (max {maxFiles})",
+    "clickToSelect": "Click to select images",
+    "maxFileSize": "Max {size}MB",
+    "uploading": "Uploading...",
+    "upload": "Upload selected images",
+    "remove": "Remove",
+    "addMore": "Add more images"
+  },
   "program": {
     "title": "Program",
     "create": "Create Program",
