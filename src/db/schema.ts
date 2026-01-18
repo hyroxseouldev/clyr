@@ -103,8 +103,6 @@ export const programs = pgTable("programs", {
   title: text("title").notNull(), // 프로그램 제목
   slug: text("slug").unique().notNull(), // URL 경로로 사용될 슬러그
   type: text("type").notNull().$type<"SINGLE" | "SUBSCRIPTION">(), // 단건판매 vs 구독형
-  thumbnailUrl: text("thumbnail_url"),
-  shortDescription: text("short_description"), // 리스트에 보여줄 요약
   description: text("description"), // 상세 페이지용 설명 (HTML/MD)
   // 가시성 및 판매 설정
   isPublic: boolean("is_public").default(false).notNull(), // 공개/비공개 설정
@@ -120,6 +118,10 @@ export const programs = pgTable("programs", {
   daysPerWeek: integer("days_per_week").notNull(), // 주당 운동 일수
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // ==================== NEW FIELDS ====================
+  mainImageList: jsonb("main_image_list").default([]).$type<string[]>(),
+  programImage: text("program_image"),
+  curriculum: jsonb("curriculum").default([]).$type<{ title: string; description: string }[]>(),
 });
 
 export const programBlueprints = pgTable("program_blueprints", {

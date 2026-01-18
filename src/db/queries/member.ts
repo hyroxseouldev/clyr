@@ -187,7 +187,6 @@ export const getMemberOrdersQuery = async (memberId: string, coachId?: string) =
         columns: {
           id: true,
           title: true,
-          thumbnailUrl: true,
           type: true,
         },
       },

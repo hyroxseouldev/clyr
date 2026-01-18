@@ -82,19 +82,8 @@ const PublicCommercePage = async ({
             )}
           </div>
           <h1 className="text-4xl font-bold mb-4">{program.title}</h1>
-          <p className="text-xl text-gray-600">{program.shortDescription}</p>
+          <p className="text-xl text-gray-600">{program.description?.substring(0, 200) || ""}</p>
         </div>
-
-        {/* 썸네일 */}
-        {program.thumbnailUrl && (
-          <div className="mb-8 rounded-lg overflow-hidden border">
-            <img
-              src={program.thumbnailUrl}
-              alt={program.title}
-              className="w-full h-64 object-cover"
-            />
-          </div>
-        )}
 
         {/* 메타 정보 */}
         <div className="grid grid-cols-4 gap-4 mb-8">

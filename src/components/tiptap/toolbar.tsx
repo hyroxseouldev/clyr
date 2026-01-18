@@ -118,6 +118,51 @@ export function Toolbar({ editor }: ToolbarProps) {
         </ToolbarButton>
       </div>
 
+      {/* 텍스트 사이즈 */}
+      <div className="flex gap-1 pr-2 border-r border-input">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" variant="ghost" size="sm" className="h-8 px-2">
+              크기
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem
+              onClick={() => (editor.chain() as any).focus().setTextSize("small").run()}
+              className={cn(
+                editor.isActive("textStyle", { fontSize: "small" }) && "bg-accent"
+              )}
+            >
+              <span className="text-sm">작게</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => (editor.chain() as any).focus().setTextSize("normal").run()}
+              className={cn(
+                editor.isActive("textStyle", { fontSize: "normal" }) && "bg-accent"
+              )}
+            >
+              <span className="text-base">보통</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => (editor.chain() as any).focus().setTextSize("large").run()}
+              className={cn(
+                editor.isActive("textStyle", { fontSize: "large" }) && "bg-accent"
+              )}
+            >
+              <span className="text-lg">크게</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => (editor.chain() as any).focus().setTextSize("huge").run()}
+              className={cn(
+                editor.isActive("textStyle", { fontSize: "huge" }) && "bg-accent"
+              )}
+            >
+              <span className="text-xl">매우 크게</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       {/* 헤딩 */}
       <div className="flex gap-1 pr-2 border-r border-input">
         <DropdownMenu>

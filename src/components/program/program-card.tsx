@@ -44,7 +44,7 @@ export function ProgramCard({ program }: { program: Program }) {
           <div className="flex-1 space-y-2">
             <CardTitle>{program.title}</CardTitle>
             <CardDescription className="line-clamp-2">
-              {program.shortDescription || "설명이 없습니다."}
+              {program.description || "설명이 없습니다."}
             </CardDescription>
           </div>
           <CardAction>

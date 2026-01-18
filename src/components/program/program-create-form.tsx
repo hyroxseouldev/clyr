@@ -37,7 +37,6 @@ const programCreateSchema = z.object({
   durationWeeks: z.number().min(1),
   daysPerWeek: z.number().min(1).max(7),
   accessPeriodDays: z.number().nullable().optional(),
-  shortDescription: z.string().nullable(),
 });
 
 type FormValues = z.infer<typeof programCreateSchema>;
@@ -58,7 +57,6 @@ export function ProgramCreateForm() {
       durationWeeks: 1,
       daysPerWeek: 3,
       accessPeriodDays: null,
-      shortDescription: null,
     },
   });
 
@@ -111,26 +109,6 @@ export function ProgramCreateForm() {
                 <FormLabel>{t("slug")}</FormLabel>
                 <FormControl>
                   <Input placeholder={t("slugPlaceholder")} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="shortDescription"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("shortDescription")}</FormLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    value={field.value ?? ""}
-                    rows={3}
-                    placeholder={t("shortDescriptionPlaceholder")}
-                    onChange={(e) => field.onChange(e.target.value || null)}
-                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

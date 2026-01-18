@@ -26,28 +26,38 @@ import { AsyncButton } from "@/components/common/async-button";
 import { useTransition } from "react";
 import { updateProgramAction } from "@/actions";
 import { toast } from "sonner";
-import { ImageForm, TiptapForm } from "@/components/form";
+import { ImageForm, MultiImageForm, TiptapForm } from "@/components/form";
+import { Plus, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /** 수정용 Schema - 전체 정보 */
 const programEditSchema = z.object({
-  title: z.string().min(1, "제목을 입력하세요"),
-  slug: z.string().min(1, "슬러그를 입력하세요"),
+  title: z.string().min(1),
+  slug: z.string().min(1),
   type: z.enum(["SINGLE", "SUBSCRIPTION"]),
-  price: z.string().min(1, "가격을 입력하세요"),
+  price: z.string().min(1),
   difficulty: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]),
   durationWeeks: z.number().min(1),
   daysPerWeek: z.number().min(1).max(7),
   accessPeriodDays: z.number().nullable().optional(),
-  shortDescription: z.string().nullable(),
   description: z.string().nullable(),
-  thumbnailUrl: z.string().nullable(),
   isPublic: z.boolean(),
   isForSale: z.boolean(),
+  // ==================== NEW FIELDS ====================
+  mainImageList: z.array(z.string()),
+  programImage: z.string().nullable(),
+  curriculum: z.array(
+    z.object({
+      title: z.string().min(1),
+      description: z.string().min(1),
+    })
+  ),
 });
 
 type FormValues = z.infer<typeof programEditSchema>;
 
 export function ProgramEditForm({ initialData }: { initialData: any }) {
+  const t = useTranslations("programEdit");
   const [isLoading, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -61,12 +71,17 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
       durationWeeks: initialData?.durationWeeks ?? 1,
       daysPerWeek: initialData?.daysPerWeek ?? 3,
       accessPeriodDays: initialData?.accessPeriodDays ?? null,
-      shortDescription: initialData?.shortDescription ?? null,
       description: initialData?.description ?? null,
-      thumbnailUrl: initialData?.thumbnailUrl ?? null,
       isPublic: !!initialData?.isPublic,
       isForSale: !!initialData?.isForSale,
-    },
+      // ==================== NEW FIELDS ====================
+      mainImageList: (initialData?.mainImageList as string[] | undefined) ?? [],
+      programImage: initialData?.programImage ?? null,
+      curriculum:
+        (initialData?.curriculum as
+          | Array<{ title: string; description: string }>
+          | undefined) ?? [],
+    } as FormValues,
   });
 
   const onSubmit = async (values: FormValues) => {
@@ -77,12 +92,12 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
         return;
       }
       if (result && "success" in result && result.success) {
-        toast.success("프로그램 수정 성공");
+        toast.success(t("saveSuccess"));
       }
     });
   };
 
-  const typeLabel = form.watch("type") === "SINGLE" ? "단건 판매" : "구독형";
+  const typeLabel = form.watch("type") === "SINGLE" ? t("singleSale") : t("subscription");
 
   return (
     <Form {...form}>
@@ -92,26 +107,27 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
       >
         {/* ==================== 메인 ==================== */}
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold">메인</h2>
+          <h2 className="text-xl font-semibold">{t("sectionMain")}</h2>
 
-          {/* 썸네일 이미지 업로드 */}
-          <ImageForm
-            name="thumbnailUrl"
-            label="썸네일 이미지"
+          {/* 메인 이미지 리스트 (다중) */}
+          <MultiImageForm
+            name="mainImageList"
+            label={t("mainImageList")}
             form={form}
             bucketName="public-assets"
-            path="program/thumbnails"
+            path="program/main-images"
             maxFileSize={5 * 1024 * 1024}
+            maxFiles={10}
           />
 
-          <div className="space-y-6 border rounded-lg p-4">
+          <div className="space-y-6 rounded-lg">
             {/* 기본 정보 세션 */}
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>프로그램 제목</FormLabel>
+                  <FormLabel>{t("programTitle")}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -124,7 +140,7 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
               name="slug"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>슬러그 (URL)</FormLabel>
+                  <FormLabel>{t("slug")}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -139,7 +155,7 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
               name="type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>판매 방식</FormLabel>
+                  <FormLabel>{t("saleType")}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -151,12 +167,12 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="SINGLE">단건 판매</SelectItem>
-                      <SelectItem value="SUBSCRIPTION">구독형</SelectItem>
+                      <SelectItem value="SINGLE">{t("singleSale")}</SelectItem>
+                      <SelectItem value="SUBSCRIPTION">{t("subscription")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    판매 방식은 생성 시에만 설정할 수 있습니다 ({typeLabel})
+                    {t("saleTypeReadOnly", { type: typeLabel })}
                   </p>
                   <FormMessage />
                 </FormItem>
@@ -168,7 +184,7 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
               name="price"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>가격 (₩)</FormLabel>
+                  <FormLabel>{t("price")}</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} />
                   </FormControl>
@@ -182,7 +198,7 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
               name="difficulty"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>난이도</FormLabel>
+                  <FormLabel>{t("difficulty")}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -193,9 +209,9 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="BEGINNER">입문</SelectItem>
-                      <SelectItem value="INTERMEDIATE">중급</SelectItem>
-                      <SelectItem value="ADVANCED">고급</SelectItem>
+                      <SelectItem value="BEGINNER">{t("beginner")}</SelectItem>
+                      <SelectItem value="INTERMEDIATE">{t("intermediate")}</SelectItem>
+                      <SelectItem value="ADVANCED">{t("advanced")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -207,7 +223,7 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
               name="durationWeeks"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>총 주차 (Weeks)</FormLabel>
+                  <FormLabel>{t("totalWeeks")}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -225,7 +241,7 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
               name="daysPerWeek"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>주당 운동 일수</FormLabel>
+                  <FormLabel>{t("daysPerWeek")}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -242,7 +258,7 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
               name="accessPeriodDays"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>수강 기간 (일 / 비워두면 평생소장)</FormLabel>
+                  <FormLabel>{t("accessPeriodDays")}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -258,32 +274,6 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="shortDescription"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>요약 설명</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      value={field.value ?? ""}
-                      rows={3}
-                      onChange={(e) => field.onChange(e.target.value || null)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <TiptapForm
-                name="description"
-                label="상세 설명"
-                form={form}
-                placeholder="프로그램에 대한 상세 설명을 입력하세요..."
-                minHeight="200px"
-              />
 
             <div className="flex gap-6 border p-4 rounded-lg bg-slate-50">
               <FormField
@@ -291,7 +281,7 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
                 name="isPublic"
                 render={({ field }) => (
                   <FormItem className="flex items-center gap-2 space-y-0">
-                    <FormLabel>공개 여부</FormLabel>
+                    <FormLabel>{t("isPublic")}</FormLabel>
                     <FormControl>
                       <Switch
                         checked={field.value}
@@ -306,7 +296,7 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
                 name="isForSale"
                 render={({ field }) => (
                   <FormItem className="flex items-center gap-2 space-y-0">
-                    <FormLabel>판매 중</FormLabel>
+                    <FormLabel>{t("isForSale")}</FormLabel>
                     <FormControl>
                       <Switch
                         checked={field.value}
@@ -324,20 +314,104 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
 
         {/* ==================== 프로그램 ==================== */}
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold">프로그램</h2>
-          <p className="text-muted-foreground">프로그램 설정 (준비 중)</p>
+          <h2 className="text-xl font-semibold">{t("sectionProgram")}</h2>
+
+          {/* 프로그램 이미지 (단일) */}
+          <ImageForm
+            name="programImage"
+            label={t("programImage")}
+            form={form}
+            bucketName="public-assets"
+            path="program/program-images"
+            maxFileSize={5 * 1024 * 1024}
+          />
+
+          {/* 상세 설명 */}
+          <TiptapForm
+            name="description"
+            label={t("description")}
+            form={form}
+            placeholder={t("descriptionPlaceholder")}
+            minHeight="200px"
+          />
         </div>
 
         <Separator className="my-8" />
 
         {/* ==================== 레슨 ==================== */}
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold">레슨</h2>
-          <p className="text-muted-foreground">레슨 관리 (준비 중)</p>
+          <h2 className="text-xl font-semibold">{t("sectionLessons")}</h2>
+
+          <FormField
+            control={form.control}
+            name="curriculum"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("curriculum")}</FormLabel>
+                <FormControl>
+                  <div className="space-y-3">
+                    {field.value?.map((item, index) => (
+                      <div key={index} className="flex gap-3 items-start">
+                        <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
+                          {index + 1}
+                        </span>
+                        <div className="flex-1 space-y-2">
+                          <Input
+                            placeholder={t("curriculumTitle")}
+                            value={item.title}
+                            onChange={(e) => {
+                              const newCurriculum = [...(field.value ?? [])];
+                              newCurriculum[index].title = e.target.value;
+                              field.onChange(newCurriculum);
+                            }}
+                          />
+                          <Input
+                            placeholder={t("curriculumDescription")}
+                            value={item.description}
+                            onChange={(e) => {
+                              const newCurriculum = [...(field.value ?? [])];
+                              newCurriculum[index].description = e.target.value;
+                              field.onChange(newCurriculum);
+                            }}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newCurriculum = [...(field.value ?? [])];
+                            newCurriculum.splice(index, 1);
+                            field.onChange(newCurriculum);
+                          }}
+                          className="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center"
+                          title={t("delete")}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        field.onChange([
+                          ...(field.value ?? []),
+                          { title: "", description: "" },
+                        ]);
+                      }}
+                      className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      {t("addCurriculum")}
+                    </button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <AsyncButton type="submit" className="w-full" isLoading={isLoading}>
-          {isLoading ? "프로그램 정보 저장중..." : "프로그램 정보 저장하기"}
+          {isLoading ? t("saving") : t("save")}
         </AsyncButton>
       </form>
     </Form>

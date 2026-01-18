@@ -6,6 +6,73 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 
 /**
+ * 텍스트 사이즈 확장
+ * small, normal, large, huge 옵션을 제공합니다
+ */
+export const TextSizeExtension = Extension.create({
+  name: "textSize",
+
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["textStyle"],
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (element) => {
+              const fontSize = element.style.fontSize?.replace(/['"]+/g, "");
+              const sizeMap: Record<string, "small" | "normal" | "large" | "huge"> = {
+                "0.875rem": "small",
+                "14px": "small",
+                "1rem": "normal",
+                "16px": "normal",
+                "1.25rem": "large",
+                "20px": "large",
+                "1.5rem": "huge",
+                "24px": "huge",
+              };
+              return sizeMap[fontSize || ""] || null;
+            },
+            renderHTML: (attributes: any) => {
+              const fontSize = attributes.fontSize;
+              if (!fontSize) {
+                return {};
+              }
+
+              const sizeMap: Record<string, string> = {
+                small: "0.875rem",
+                normal: "1rem",
+                large: "1.25rem",
+                huge: "1.5rem",
+              };
+
+              return {
+                style: `font-size: ${sizeMap[fontSize] || fontSize}`,
+              };
+            },
+          },
+        },
+      },
+    ];
+  },
+
+  addCommands() {
+    return {
+      setTextSize:
+        (fontSize: "small" | "normal" | "large" | "huge") =>
+        ({ commands }: any) => {
+          return commands.setMark("textStyle", { fontSize });
+        },
+      unsetTextSize:
+        () =>
+        ({ commands }: any) => {
+          return commands.setMark("textStyle", { fontSize: null });
+        },
+    } as any;
+  },
+});
+
+/**
  * Tiptap 확장 설정
  * 프로젝트에서 사용하는 모든 Tiptap 확장을 중앙 관리합니다.
  */
@@ -58,4 +125,5 @@ export const getTiptapExtensions = () => [
   }),
   TextStyle,
   Color,
+  TextSizeExtension,
 ];
