@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
 import { ProgramEditForm } from "@/components/program/program-edit-form";
+import { Link } from "@/i18n/routing";
 
 const CoachInfoPage = async ({
   params,
@@ -24,14 +25,14 @@ const CoachInfoPage = async ({
           <p className="text-muted-foreground">{program.title}</p>
         </div>
         <Button asChild variant="outline" size="sm">
-          <a
+          <Link
             href={`/programs/${program.slug}`}
             target="_blank"
             rel="noopener noreferrer"
           >
             <ExternalLink className="h-4 w-4 mr-2" />
             공개 페이지 보기
-          </a>
+          </Link>
         </Button>
       </div>
 

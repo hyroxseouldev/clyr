@@ -76,7 +76,8 @@ export function ProgramCreateForm() {
     });
   };
 
-  const typeLabel = form.watch("type") === "SINGLE" ? t("singleSale") : t("subscription");
+  const typeLabel =
+    form.watch("type") === "SINGLE" ? t("singleSale") : t("subscription");
 
   return (
     <Form {...form}>
@@ -158,7 +159,9 @@ export function ProgramCreateForm() {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="SINGLE">{t("singleSale")}</SelectItem>
-                    <SelectItem value="SUBSCRIPTION">{t("subscription")}</SelectItem>
+                    <SelectItem value="SUBSCRIPTION">
+                      {t("subscription")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -176,7 +179,11 @@ export function ProgramCreateForm() {
               <FormItem>
                 <FormLabel>{t("price")}</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder={t("pricePlaceholder")} {...field} />
+                  <Input
+                    type="number"
+                    placeholder={t("pricePlaceholder")}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -231,7 +238,9 @@ export function ProgramCreateForm() {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="BEGINNER">{t("beginner")}</SelectItem>
-                    <SelectItem value="INTERMEDIATE">{t("intermediate")}</SelectItem>
+                    <SelectItem value="INTERMEDIATE">
+                      {t("intermediate")}
+                    </SelectItem>
                     <SelectItem value="ADVANCED">{t("advanced")}</SelectItem>
                   </SelectContent>
                 </Select>
