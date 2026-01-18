@@ -101,9 +101,9 @@ export async function getProgramBlueprintsQuery(
     if (row.sectionId) {
       blueprint.sections.push({
         id: row.sectionId,
-        title: row.sectionTitle,
-        content: row.sectionContent,
-        orderIndex: row.orderIndex,
+        title: row.sectionTitle ?? "",
+        content: row.sectionContent ?? "",
+        orderIndex: row.orderIndex ?? 0,
       });
     }
   }
