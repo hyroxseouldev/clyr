@@ -34,14 +34,14 @@ export function CoachSnsLinks({
       url: snsLinks.instagram,
       icon: Instagram,
       label: labels.instagram,
-      color: "hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200",
+      color: "hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200",
     },
     {
       platform: "youtube",
       url: snsLinks.youtube,
       icon: Youtube,
       label: labels.youtube,
-      color: "hover:bg-red-50 hover:text-red-600 hover:border-red-200",
+      color: "hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200",
     },
     {
       platform: "blog",
@@ -63,11 +63,11 @@ export function CoachSnsLinks({
         return (
           <Button
             key={link.platform}
-            variant="outline"
+            variant="link"
             size="sm"
             asChild
             className={cn(
-              "gap-2 border-gray-200 text-gray-700 transition-colors",
+              "gap-2 border-gray-200 text-blue-700 transition-colors underline",
               link.color
             )}
           >

@@ -93,15 +93,15 @@ export function ProgramDetailClient({
   return (
     <div>
       {/* Sticky Navigation Tabs */}
-      <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <div className="sticky top-0 z-50 bg-white ">
         <div className="container max-w-[800px] mx-auto px-4">
           <Tabs value={activeTab} onValueChange={handleTabClick}>
-            <TabsList className="grid grid-cols-3 w-full bg-transparent h-14 rounded-none p-0">
+            <TabsList className="grid grid-cols-4 w-full bg-transparent h-14 rounded-none p-0">
               <TabsTrigger
                 value="program"
                 className={cn(
-                  "rounded-none border-b-2 data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 transition-colors",
-                  activeTab === "program" ? "border-gray-900" : "border-transparent"
+                  "rounded-none data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 transition-colors",
+                  activeTab === "program" ? "" : "border-transparent"
                 )}
               >
                 {tabs.program}
@@ -109,8 +109,8 @@ export function ProgramDetailClient({
               <TabsTrigger
                 value="curriculum"
                 className={cn(
-                  "rounded-none border-b-2 data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 transition-colors",
-                  activeTab === "curriculum" ? "border-gray-900" : "border-transparent"
+                  "rounded-none data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 transition-colors",
+                  activeTab === "curriculum" ? "" : "border-transparent"
                 )}
               >
                 {tabs.curriculum}
@@ -118,8 +118,8 @@ export function ProgramDetailClient({
               <TabsTrigger
                 value="coach"
                 className={cn(
-                  "rounded-none border-b-2 data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 transition-colors",
-                  activeTab === "coach" ? "border-gray-900" : "border-transparent"
+                  "rounded-none data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 transition-colors",
+                  activeTab === "coach" ? "" : "border-transparent"
                 )}
               >
                 {tabs.coach}

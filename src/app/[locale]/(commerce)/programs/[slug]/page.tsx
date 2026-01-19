@@ -56,20 +56,15 @@ const PublicCommercePage = async ({
   return (
     <div className="min-h-screen bg-white">
       {/* Warning Banner (if not for sale) */}
-      {!program.isForSale && (
-        <WarningBanner message={t("notForSaleWarning")} />
-      )}
+      {!program.isForSale && <WarningBanner message={t("notForSaleWarning")} />}
 
       {/* Image Carousel */}
-      <div className="container max-w-[800px] mx-auto px-4 py-8">
-        <ProgramImageCarousel
-          images={mainImages}
-          alt={program.title}
-        />
+      <div className="container max-w-[800px] mx-auto">
+        <ProgramImageCarousel images={mainImages} alt={program.title} />
       </div>
 
       {/* Program Title, Coach, Price */}
-      <div className="container max-w-[800px] mx-auto px-4 pb-6">
+      <div className="container max-w-[800px] mx-auto px-4 py-6">
         <div className="flex items-start justify-between gap-6 mb-6">
           {/* Left: Title and Coach */}
           <div className="flex-1">
@@ -111,33 +106,26 @@ const PublicCommercePage = async ({
           </div>
 
           {/* Right: Price and Access Info */}
-          <div className="text-right flex-shrink-0">
-            <div className="text-3xl font-bold text-gray-900">
-              {Number(program.price).toLocaleString()}
-              <span className="text-lg font-normal text-gray-600 ml-1">
-                {t("won")}
-              </span>
-            </div>
-            <div className="text-sm text-gray-600 mt-1">
-              {t("totalWeeksProgram", { weeks: program.durationWeeks })}
-            </div>
-            <div className="text-sm text-gray-600">
-              {accessPeriodText}
-            </div>
+        </div>
+        <div className="text-left shrink-0">
+          <div className="text-3xl font-bold text-gray-900">
+            {`${Number(program.price).toLocaleString()} ${t("won")}`}
+          </div>
+          <div className="text-sm text-gray-600 mt-1">
+            {`${t("totalWeeksProgram", {
+              weeks: program.durationWeeks,
+            })} | ${accessPeriodText}`}
           </div>
         </div>
-
         {/* Purchase Button */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 py-4 -mx-4 px-4 mt-4 z-40">
+        <div className="sticky bottom-0 bg-white py-4 -mx-4 px-4 mt-4 z-40">
           <Button
             asChild
             className="w-full"
             size="lg"
             disabled={!program.isForSale}
           >
-            <Link href={`/programs/payment/${slug}`}>
-              {t("purchase")}
-            </Link>
+            <Link href={`/programs/payment/${slug}`}>{t("purchase")}</Link>
           </Button>
         </div>
       </div>
@@ -151,10 +139,13 @@ const PublicCommercePage = async ({
         }}
       >
         {/* Program Introduction Section */}
-        <section id={SECTIONS.program} className="container max-w-[800px] mx-auto px-4 py-12">
+        <section
+          id={SECTIONS.program}
+          className="container max-w-[800px] mx-auto"
+        >
           {/* Program Image (if available) */}
           {program.programImage && (
-            <div className="mb-8 rounded-lg overflow-hidden">
+            <div className="overflow-hidden">
               <img
                 src={program.programImage}
                 alt={program.title}
@@ -162,31 +153,30 @@ const PublicCommercePage = async ({
               />
             </div>
           )}
+          <div className="px-4 py-6">
+            <h2 className="text-2xl font-bold text-primary mb-6">
+              {t("tabProgramIntro")}
+            </h2>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            {t("tabProgramIntro")}
-          </h2>
+            {/* Description */}
+            {program.description && (
+              <div
+                className="prose max-w-none mb-12 text-gray-700"
+                dangerouslySetInnerHTML={{ __html: program.description }}
+              />
+            )}
 
-          {/* Description */}
-          {program.description && (
-            <div
-              className="prose max-w-none mb-12 text-gray-700"
-              dangerouslySetInnerHTML={{ __html: program.description }}
+            {/* Info Cards */}
+            <InfoCards
+              difficulty={program.difficulty}
+              difficultyLabel={difficultyLabels[program.difficulty]}
+              durationWeeks={program.durationWeeks}
+              daysPerWeek={program.daysPerWeek}
+              durationLabel={t("durationPeriod")}
+              weeklyTrainingLabel={t("weeklyTraining")}
             />
-          )}
-
-          {/* Info Cards */}
-          <InfoCards
-            difficulty={program.difficulty}
-            difficultyLabel={difficultyLabels[program.difficulty]}
-            durationWeeks={program.durationWeeks}
-            daysPerWeek={program.daysPerWeek}
-            durationLabel={t("durationPeriod")}
-            weeklyTrainingLabel={t("weeklyTraining")}
-          />
+          </div>
         </section>
-
-        <Separator className="bg-gray-200 max-w-[800px] mx-auto" />
 
         {/* Curriculum Section */}
         <section
@@ -209,45 +199,45 @@ const PublicCommercePage = async ({
           )}
         </section>
 
-        <Separator className="bg-gray-200 max-w-[800px] mx-auto" />
-
         {/* Coach Section */}
         <section
           id={SECTIONS.coach}
-          className="container max-w-[800px] mx-auto px-4 py-12"
+          className="container max-w-[800px] mx-auto"
         >
           {program.coach && (
             <div className="space-y-8">
               {/* Representative Image */}
               {program.coach.coachProfile?.representativeImage && (
-                <div className="rounded-lg overflow-hidden shadow-md">
+                <div className="overflow-hidden">
                   <img
                     src={program.coach.coachProfile.representativeImage}
-                    alt={`${program.coach.coachProfile?.nickname || program.coach.fullName} representative image`}
-                    className="w-full object-cover max-h-[500px]"
+                    alt={`${
+                      program.coach.coachProfile?.nickname ||
+                      program.coach.fullName
+                    } representative image`}
+                    className="w-full object-cover aspect-4/3"
                   />
                 </div>
               )}
 
               {/* Coach Info Card */}
-              <div className="bg-gray-50 rounded-lg p-8 space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900">
+              <div className="px-4 py-6 space-y-6">
+                <h2 className="text-2xl font-bold text-primary">
                   {t("tabCoachIntro")}
                 </h2>
 
                 {/* Coach Name */}
                 <div>
                   <div className="text-xl font-semibold text-gray-900">
-                    {program.coach.coachProfile?.nickname || program.coach.fullName}
-                  </div>
-                  <Badge variant="outline" className="text-xs mt-1">
+                    {program.coach.coachProfile?.nickname ||
+                      program.coach.fullName}{" "}
                     {t("coach")}
-                  </Badge>
+                  </div>
                 </div>
 
                 {/* Introduction */}
                 {program.coach.coachProfile?.introduction && (
-                  <div className="bg-white rounded-lg p-6 shadow-sm">
+                  <div className="bg-white  p-6 shadow-sm">
                     <h3 className="font-semibold text-gray-900 mb-3">소개</h3>
                     <p className="text-gray-700 leading-relaxed">
                       {program.coach.coachProfile.introduction}
@@ -256,42 +246,24 @@ const PublicCommercePage = async ({
                 )}
 
                 {/* Experience */}
+                {/* Description like this 
+            {program.description && (
+              <div
+                className="prose max-w-none mb-12 text-gray-700"
+                dangerouslySetInnerHTML={{ __html: program.description }}
+              />
+            )} */}
                 {program.coach.coachProfile?.experience && (
-                  <div className="bg-white rounded-lg p-6 shadow-sm">
-                    <h3 className="font-semibold text-gray-900 mb-3">경력</h3>
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                      {program.coach.coachProfile.experience}
-                    </p>
-                  </div>
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: program.coach.coachProfile.experience,
+                    }}
+                  />
                 )}
-
-                {/* Certifications */}
-                {program.coach.coachProfile?.certifications &&
-                  program.coach.coachProfile.certifications.length > 0 && (
-                    <div className="bg-white rounded-lg p-6 shadow-sm">
-                      <h3 className="font-semibold text-gray-900 mb-3">
-                        자격증
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {program.coach.coachProfile.certifications.map(
-                          (cert, idx) => (
-                            <Badge
-                              key={idx}
-                              variant="secondary"
-                              className="bg-blue-50 text-blue-800 border-blue-200 px-3 py-1.5 text-sm"
-                            >
-                              {cert}
-                            </Badge>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
 
                 {/* SNS Links */}
                 {program.coach.coachProfile?.snsLinks && (
-                  <div className="bg-white rounded-lg p-6 shadow-sm">
-                    <h3 className="font-semibold text-gray-900 mb-3">SNS</h3>
+                  <div className="">
                     <CoachSnsLinks
                       snsLinks={program.coach.coachProfile.snsLinks}
                       labels={{

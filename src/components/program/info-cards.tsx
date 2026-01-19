@@ -40,22 +40,14 @@ export function InfoCards({
   };
 
   return (
-    <div
-      className={cn(
-        "grid grid-cols-1 gap-4 max-w-4xl mx-auto",
-        className
-      )}
-    >
+    <div className={cn("grid grid-cols-1 gap-4 max-w-4xl mx-auto", className)}>
       {/* 난이도 Card */}
       <Card className="border-gray-200">
-        <CardContent className="p-6 text-center">
-          <div className="flex justify-center mb-3">
-            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-2xl">
-              {difficultyIcons[difficulty]}
-            </div>
-          </div>
-          <div className="text-sm text-gray-600 mb-2">난이도</div>
-          <Badge className={cn("text-sm px-3 py-1", difficultyColors[difficulty])}>
+        <CardContent className="px-4 py-2 flex justify-between items-center">
+          <div className="text-sm text-gray-600">난이도</div>
+          <Badge
+            className={cn("text-sm px-3 py-1", difficultyColors[difficulty])}
+          >
             {difficultyLabel}
           </Badge>
         </CardContent>
@@ -63,12 +55,7 @@ export function InfoCards({
 
       {/* 진행기간 Card */}
       <Card className="border-gray-200">
-        <CardContent className="p-6 text-center">
-          <div className="flex justify-center mb-3">
-            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
-              <Calendar className="h-6 w-6 text-gray-600" />
-            </div>
-          </div>
+        <CardContent className="px-4 py-2 flex justify-between items-center">
           <div className="text-sm text-gray-600 mb-2">{durationLabel}</div>
           <div className="text-2xl font-bold text-gray-900">
             {durationWeeks}
@@ -79,16 +66,15 @@ export function InfoCards({
 
       {/* 주당훈련횟수 Card */}
       <Card className="border-gray-200">
-        <CardContent className="p-6 text-center">
-          <div className="flex justify-center mb-3">
-            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
-              <Dumbbell className="h-6 w-6 text-gray-600" />
-            </div>
+        <CardContent className="px-4 py-2 flex justify-between items-center">
+          <div className="text-sm text-gray-600 mb-2">
+            {weeklyTrainingLabel}
           </div>
-          <div className="text-sm text-gray-600 mb-2">{weeklyTrainingLabel}</div>
           <div className="text-2xl font-bold text-gray-900">
             {daysPerWeek}
-            <span className="text-base font-normal text-gray-600 ml-1">일/주</span>
+            <span className="text-base font-normal text-gray-600 ml-1">
+              일/주
+            </span>
           </div>
         </CardContent>
       </Card>

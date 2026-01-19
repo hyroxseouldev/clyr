@@ -31,20 +31,18 @@ export function CurriculumList({
     <div className={cn("space-y-0", className)}>
       {curriculum.map((item, index) => (
         <div key={index}>
-          <div className="flex gap-4 py-4">
+          <div className="flex flex-col gap-4 py-4">
             {/* Week Badge */}
             <Badge
               variant="outline"
-              className="flex-shrink-0 px-3 py-1 h-fit bg-blue-50 text-blue-700 border-blue-200 font-medium"
+              className="shrink-0 px-3 py-1 h-fit font-medium rounded-sm"
             >
               {weekLabel(index + 1)}
             </Badge>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-900 mb-1">
-                {item.title}
-              </h4>
+              <h4 className="font-semibold text-gray-900 mb-1">{item.title}</h4>
               <p className="text-sm text-gray-600 leading-relaxed">
                 {item.description}
               </p>

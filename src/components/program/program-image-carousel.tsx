@@ -46,7 +46,7 @@ export function ProgramImageCarousel({
         <img
           src={images[0]}
           alt={alt}
-          className="w-full aspect-video object-cover rounded-lg"
+          className="w-full aspect-4/3 object-cover"
         />
       </div>
     );
@@ -64,11 +64,11 @@ export function ProgramImageCarousel({
       <CarouselContent>
         {images.map((image, index) => (
           <CarouselItem key={index}>
-            <div className="relative aspect-video">
+            <div className="relative aspect-4/3">
               <img
                 src={image}
                 alt={`${alt} ${index + 1}`}
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover"
               />
             </div>
           </CarouselItem>
