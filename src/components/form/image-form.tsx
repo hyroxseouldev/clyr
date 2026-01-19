@@ -100,6 +100,23 @@ export function ImageForm<
   const t = useTranslations("imageForm");
   const currentValue = form.watch(name);
 
+  // Helper to get preview aspect ratio class based on crop config
+  const getPreviewClassName = useCallback((crop?: CropConfig): string => {
+    if (!crop?.enabled) return "h-48"; // Default fixed height when no crop
+
+    switch (crop.aspectRatio) {
+      case "square":
+        return "aspect-square w-full max-h-80"; // 1:1, max 320px
+      case "landscape":
+        return "aspect-video w-full max-h-56"; // 16:9, max 224px
+      case "portrait":
+        return "aspect-[4/3] w-full max-h-72"; // 4:3, max 288px
+      case "free":
+      default:
+        return "h-48"; // Fixed height for free aspect ratio
+    }
+  }, []);
+
   // Crop state
   const [showCropModal, setShowCropModal] = useState(false);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
@@ -251,7 +268,10 @@ export function ImageForm<
 
                 {/* 이미지 프리뷰 (기존 이미지 또는 업로드된 이미지) */}
                 {currentValue && (
-                  <div className="relative w-full h-48 border rounded-lg overflow-hidden bg-muted">
+                  <div className={cn(
+                    "relative border rounded-lg overflow-hidden bg-muted",
+                    getPreviewClassName(crop)
+                  )}>
                     <Image
                       src={currentValue as string}
                       alt="Preview"
@@ -262,7 +282,7 @@ export function ImageForm<
                       type="button"
                       variant="destructive"
                       size="icon"
-                      className="absolute top-2 right-2"
+                      className="absolute top-2 right-2 z-10"
                       onClick={handleRemoveImage}
                     >
                       <X className="h-4 w-4" />
