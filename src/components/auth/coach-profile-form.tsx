@@ -141,6 +141,13 @@ export function CoachProfileForm({
           bucketName="public-assets"
           path="coach/profile"
           maxFileSize={2 * 1024 * 1024}
+          crop={{
+            enabled: true,
+            aspectRatio: "square",
+            shape: "round",
+            minWidth: 300,
+            minHeight: 300,
+          }}
         />
 
         {/* 대표 이미지 */}
@@ -151,6 +158,13 @@ export function CoachProfileForm({
           bucketName="public-assets"
           path="coach/representative"
           maxFileSize={5 * 1024 * 1024}
+          crop={{
+            enabled: true,
+            aspectRatio: "portrait",
+            shape: "rect",
+            minWidth: 800,
+            minHeight: 450,
+          }}
         />
 
         <FormField

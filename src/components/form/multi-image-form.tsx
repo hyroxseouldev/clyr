@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState, useRef } from "react";
 import {
   FormField,
   FormItem,
@@ -13,16 +13,26 @@ import {
   type FieldPath,
   type FieldValues,
 } from "react-hook-form";
-import {
-  useSupabaseUpload,
-  sanitizeFileName,
-} from "@/hooks/use-supabase-upload";
-import { Button } from "@/components/ui/button";
-import { Upload, X, FileImage, Plus } from "lucide-react";
-import Image from "next/image";
-import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
+import {
+  CropModal,
+  type AspectRatio,
+  type CropShape,
+} from "./crop-modal";
+import { SortableImage } from "./sortable-image";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+export type { AspectRatio, CropShape };
+
+interface CropConfig {
+  enabled: boolean;
+  aspectRatio?: AspectRatio;
+  shape?: CropShape;
+  minWidth?: number;
+  minHeight?: number;
+}
 
 interface MultiImageFormProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -37,6 +47,7 @@ interface MultiImageFormProps<
   maxFiles?: number;
   className?: string;
   required?: boolean;
+  crop?: CropConfig;
 }
 
 /**
@@ -46,13 +57,14 @@ interface MultiImageFormProps<
  * @example
  * ```tsx
  * <MultiImageForm
- *   name="galleryUrls"
+ *   name="mainImageList"
  *   label="갤러리 이미지"
  *   form={form}
  *   bucketName="public-assets"
  *   path="program/gallery"
  *   maxFileSize={5 * 1024 * 1024} // 5MB
  *   maxFiles={5}
+ *   crop={{ enabled: true, aspectRatio: 'landscape', shape: 'rect' }}
  * />
  * ```
  */
@@ -69,73 +81,167 @@ export function MultiImageForm<
   maxFiles = 5,
   className,
   required = false,
+  crop,
 }: MultiImageFormProps<TFieldValues, TName>) {
   const t = useTranslations("multiImageForm");
   const currentValue = form.watch(name) as string[] | undefined;
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Supabase 업로드 훅
-  const {
-    files,
-    setFiles,
-    onUpload,
-    loading,
-    isSuccess,
-    errors,
-    getRootProps,
-    getInputProps,
-    inputRef,
-  } = useSupabaseUpload({
-    bucketName,
-    path,
-    allowedMimeTypes: ["image/*"],
-    maxFileSize,
-    maxFiles,
-  });
+  // Drag and drop state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // 업로드 후 public URL들을 가져와서 폼에 저장
-  const handleUploadSuccess = useCallback(async () => {
-    const uploadedPaths = await onUpload();
+  // Crop state
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
 
-    if (uploadedPaths && uploadedPaths.length > 0) {
+  const currentImageCount = currentValue?.length || 0;
+  const canAddMore = currentImageCount < maxFiles;
+
+  // Handle file input change - show crop modal if enabled
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const selectedFiles = e.target.files;
+      if (!selectedFiles || selectedFiles.length === 0) return;
+
+      const file = selectedFiles[0];
+
+      if (crop?.enabled) {
+        // Show crop modal
+        const preview = URL.createObjectURL(file);
+        setPendingImage(preview);
+        setShowCropModal(true);
+      } else {
+        // Directly upload
+        uploadFile(file);
+      }
+
+      // Reset input
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+    },
+    [crop?.enabled]
+  );
+
+  // Upload file to Supabase
+  const uploadFile = useCallback(
+    async (file: File) => {
       const supabase = createClient();
 
-      // 모든 업로드된 경로에 대해 public URL 생성
-      const publicUrls = await Promise.all(
-        uploadedPaths.map(async (filePath) => {
-          const { data } = supabase.storage
-            .from(bucketName)
-            .getPublicUrl(filePath);
-          return data.publicUrl;
-        })
-      );
+      // Generate sanitized filename
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 10);
+      const extension = file.name.split(".").pop();
+      const sanitizedName = `${timestamp}-${randomString}.${extension}`;
+      const uploadPath = path ? `${path}/${sanitizedName}` : sanitizedName;
 
-      // 기존 값에 새 URL들을 추가
-      const existingUrls = (currentValue || []) as string[];
-      const newUrls = [...existingUrls, ...publicUrls];
-      form.setValue(name, newUrls as any);
+      try {
+        // Upload to Supabase
+        const { error } = await supabase.storage
+          .from(bucketName)
+          .upload(uploadPath, file);
 
-      // 파일 상태 초기화
-      setFiles([]);
+        if (error) {
+          console.error("Upload failed:", error);
+          return;
+        }
+
+        // Get public URL
+        const { data } = supabase.storage
+          .from(bucketName)
+          .getPublicUrl(uploadPath);
+
+        // Update form value
+        const existingUrls = (currentValue || []) as string[];
+        const newUrls = [...existingUrls, data.publicUrl];
+        form.setValue(name, newUrls as any);
+      } catch (error) {
+        console.error("Upload error:", error);
+      }
+    },
+    [bucketName, currentValue, form, name, path]
+  );
+
+  // Crop apply handler
+  const handleCropApply = useCallback(
+    (blob: Blob) => {
+      setCroppedBlob(blob);
+      setShowCropModal(false);
+
+      // Create a new File from the cropped blob
+      const croppedFile = new File([blob], "cropped-image.jpg", {
+        type: "image/jpeg",
+      });
+
+      // Upload the cropped file
+      uploadFile(croppedFile);
+
+      // Clean up pending image
+      if (pendingImage) {
+        URL.revokeObjectURL(pendingImage);
+        setPendingImage(null);
+      }
+    },
+    [pendingImage, uploadFile]
+  );
+
+  // Crop cancel handler
+  const handleCropCancel = useCallback(() => {
+    setShowCropModal(false);
+    if (pendingImage) {
+      URL.revokeObjectURL(pendingImage);
+      setPendingImage(null);
     }
-  }, [onUpload, bucketName, form, name, currentValue, setFiles]);
+  }, [pendingImage]);
 
-  // 단일 이미지 삭제 핸들러
+  // Remove image handler
   const handleRemoveImage = useCallback(
     (index: number) => {
       const currentUrls = (currentValue || []) as string[];
       const newUrls = currentUrls.filter((_, i) => i !== index);
       form.setValue(name, newUrls as any);
     },
-    [form, name, currentValue]
+    [currentValue, form, name]
   );
 
-  // 선택된 파일 취소 핸들러
-  const handleClearFiles = useCallback(() => {
-    setFiles([]);
-  }, [setFiles]);
+  // Drag and drop handlers
+  const handleDragStart = useCallback((index: number) => {
+    setDraggedIndex(index);
+  }, []);
 
-  const currentImageCount = currentValue?.length || 0;
-  const canAddMore = currentImageCount < maxFiles;
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent, dropIndex: number) => {
+      e.preventDefault();
+      if (draggedIndex === null || draggedIndex === dropIndex) {
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+        return;
+      }
+
+      // Reorder array
+      const currentUrls = (currentValue || []) as string[];
+      const newUrls = [...currentUrls];
+      const [removed] = newUrls.splice(draggedIndex, 1);
+      newUrls.splice(dropIndex, 0, removed);
+
+      form.setValue(name, newUrls as any);
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+    },
+    [currentValue, draggedIndex, form, name]
+  );
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  }, []);
 
   return (
     <FormField
@@ -154,182 +260,78 @@ export function MultiImageForm<
           )}
           <FormControl>
             <div className="space-y-4">
-              {/* 성공 메시지 */}
-              {isSuccess && (
-                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                  <p className="text-sm text-green-700 dark:text-green-400">
-                    {t("uploadSuccess")}
-                  </p>
-                  <X
-                    className="h-4 w-4 text-green-700 dark:text-green-400 cursor-pointer"
-                    onClick={() => setFiles([])}
-                  />
-                </div>
-              )}
-
-              {/* 업로드된 이미지 그리드 */}
+              {/* Images Grid with drag and drop */}
               {currentValue && currentValue.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {currentValue.map((url, index) => (
-                    <div
-                      key={index}
-                      className="relative aspect-square border rounded-lg overflow-hidden bg-muted group"
-                    >
-                      <Image
-                        src={url}
-                        alt={`Preview ${index + 1}`}
-                        fill
-                        className="object-cover"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => handleRemoveImage(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <SortableImage
+                      key={url}
+                      url={url}
+                      index={index}
+                      isDragging={draggedIndex === index}
+                      onRemove={() => handleRemoveImage(index)}
+                      onDragStart={handleDragStart}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                      onDragEnd={handleDragEnd}
+                    />
                   ))}
                 </div>
               )}
 
-              {/* 업로드 영역 (더 추가 가능할 때만 표시) */}
+              {/* Add Image Button (single file input) */}
               {canAddMore && (
-                <div {...getRootProps()}>
-                  <input {...getInputProps()} />
-                  <div
-                    className={cn(
-                      "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
-                      "hover:border-primary/50",
-                      "cursor-pointer"
-                    )}
-                  >
-                    {files.length === 0 ? (
-                      // 빈 상태
-                      <div className="flex flex-col items-center gap-y-2">
-                        <Upload className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">
-                          {t("dragDropHint", { maxFiles })}
-                        </p>
-                        {maxFileSize && (
-                          <p className="text-xs text-muted-foreground">
-                            {t("maxFileSize", {
-                              size: (maxFileSize / 1024 / 1024).toFixed(0),
-                            })}
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      // 파일들이 선택된 상태
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap gap-2 justify-center">
-                          {files.map((file, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-2 p-2 border rounded-lg bg-muted/50"
-                            >
-                              {file.type.startsWith("image/") && file.preview ? (
-                                <div className="h-12 w-12 rounded border overflow-hidden shrink-0 bg-muted">
-                                  <img
-                                    src={file.preview}
-                                    alt={file.name}
-                                    className="h-full w-full object-cover"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="h-12 w-12 rounded border bg-muted flex items-center justify-center shrink-0">
-                                  <FileImage className="h-5 w-5 text-muted-foreground" />
-                                </div>
-                              )}
-                              <div className="flex flex-col items-start truncate">
-                                <p className="text-xs font-medium truncate max-w-[100px]">
-                                  {file.name}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {(file.size / 1024).toFixed(1)}KB
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleClearFiles();
-                          }}
-                        >
-                          {t("remove")}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                <>
+                  <input
+                    ref={inputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
 
-              {/* 업로드 버튼 및 상태 메시지 */}
-              {files.length > 0 && !isSuccess && (
-                <div className="space-y-3">
-                  {/* 파일 에러 표시 */}
-                  {files.some((f) => f.errors.length > 0) && (
-                    <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                      <p className="text-sm font-medium text-destructive mb-2">
-                        {t("uploadErrors") || "파일 업로드 에러"}
-                      </p>
-                      <ul className="text-xs text-destructive space-y-1">
-                        {files
-                          .filter((f) => f.errors.length > 0)
-                          .map((file, idx) => (
-                            <li key={idx}>
-                              • {file.name}:{" "}
-                              {file.errors.map((e) => e.message).join(", ")}
-                            </li>
-                          ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2">
+                  {currentValue && currentValue.length > 0 ? (
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={handleUploadSuccess}
-                      disabled={loading || files.some((f) => f.errors.length > 0)}
+                      onClick={() => inputRef.current?.click()}
+                      className="w-full"
                     >
-                      {loading ? (
-                        <>{t("uploading")}</>
-                      ) : (
-                        <>
-                          <Upload className="h-4 w-4 mr-2" />
-                          {t("upload")}
-                        </>
-                      )}
+                      <Plus className="h-4 w-4 mr-2" />
+                      {t("addImage") || "이미지 추가"}
                     </Button>
-                    {loading && (
+                  ) : (
+                    <div
+                      onClick={() => inputRef.current?.click()}
+                      className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                    >
+                      <Plus className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                       <p className="text-sm text-muted-foreground">
-                        {t("uploadingWait") || "업로드 중..."}
+                        {t("addImage") || "이미지 추가"}
                       </p>
-                    )}
-                  </div>
-                </div>
+                      {maxFileSize && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {(maxFileSize / 1024 / 1024).toFixed(0)}MB 이하
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
 
-              {/* 더 추가 버튼 (이미지가 있고 더 추가 가능할 때) */}
-              {currentImageCount > 0 && canAddMore && files.length === 0 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => inputRef.current?.click()}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  {t("addMore")}
-                </Button>
+              {/* Crop Modal */}
+              {crop?.enabled && pendingImage && (
+                <CropModal
+                  isOpen={showCropModal}
+                  imageUrl={pendingImage}
+                  aspectRatio={crop.aspectRatio || "landscape"}
+                  shape={crop.shape || "rect"}
+                  minWidth={crop.minWidth || 200}
+                  minHeight={crop.minHeight || 200}
+                  onApply={handleCropApply}
+                  onCancel={handleCropCancel}
+                />
               )}
             </div>
           </FormControl>

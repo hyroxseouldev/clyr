@@ -240,7 +240,22 @@
       "anytime": "Access Anytime"
     },
     "purchase": "Purchase",
-    "notAvailable": "Currently Not for Sale"
+    "notAvailable": "Currently Not for Sale",
+    "notForSaleWarning": "This content is currently not available",
+    "totalWeeksProgram": "{weeks} weeks program",
+    "daysAccess": "{days} days access",
+    "lifetimeAccess": "Lifetime access",
+    "tabProgramIntro": "Program",
+    "tabCurriculum": "Curriculum",
+    "tabCoachIntro": "Coach",
+    "week": "Week {n}",
+    "durationPeriod": "Duration",
+    "weeklyTraining": "Weekly Training",
+    "timesPerWeek": "{days} days/week",
+    "lessons": "Lessons",
+    "instagram": "Instagram",
+    "youtube": "YouTube",
+    "blog": "Blog"
   },
   "programEdit": {
     "sectionMain": "Main",
@@ -461,7 +476,8 @@
     "uploading": "Uploading...",
     "upload": "Upload selected images",
     "remove": "Remove",
-    "addMore": "Add more images"
+    "addMore": "Add more images",
+    "addImage": "Add Image"
   },
   "program": {
     "title": "Program",

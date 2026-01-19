@@ -240,7 +240,22 @@
       "anytime": "언제든지 접근"
     },
     "purchase": "구매하기",
-    "notAvailable": "현재 구매할 수 없습니다"
+    "notAvailable": "현재 구매할 수 없습니다",
+    "notForSaleWarning": "현재 비공개된 컨텐츠입니다",
+    "totalWeeksProgram": "총 {weeks}주 프로그램",
+    "daysAccess": "{days}일 소장가능",
+    "lifetimeAccess": "평생 소장",
+    "tabProgramIntro": "프로그램 소개",
+    "tabCurriculum": "강의 내용",
+    "tabCoachIntro": "트레이너 소개",
+    "week": "{n}주차",
+    "durationPeriod": "진행기간",
+    "weeklyTraining": "주당훈련",
+    "timesPerWeek": "{days}일/주",
+    "lessons": "강의 내용",
+    "instagram": "인스타그램",
+    "youtube": "유튜브",
+    "blog": "블로그"
   },
   "programEdit": {
     "sectionMain": "메인",
@@ -461,7 +476,8 @@
     "uploading": "업로드 중...",
     "upload": "선택한 이미지 업로드",
     "remove": "제거",
-    "addMore": "이미지 추가"
+    "addMore": "이미지 추가",
+    "addImage": "이미지 추가"
   },
   "program": {
     "title": "프로그램",

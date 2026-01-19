@@ -213,6 +213,7 @@ export async function getUserId() {
  */
 export async function createCoachProfileAction(data: {
   profileImageUrl?: string | null;
+  representativeImage?: string | null;
   nickname?: string | null;
   introduction?: string | null;
   experience?: string | null;
@@ -243,6 +244,7 @@ export async function createCoachProfileAction(data: {
     const profile = await createCoachProfileQuery({
       accountId: userId,
       profileImageUrl: data.profileImageUrl ?? null,
+      representativeImage: data.representativeImage ?? null,
       nickname: data.nickname ?? null,
       introduction: data.introduction ?? null,
       experience: data.experience ?? null,
@@ -303,6 +305,7 @@ export async function getMyCoachProfileAction() {
  */
 export async function updateCoachProfileAction(data: {
   profileImageUrl?: string | null;
+  representativeImage?: string | null;
   nickname?: string | null;
   introduction?: string | null;
   experience?: string | null;
@@ -332,6 +335,7 @@ export async function updateCoachProfileAction(data: {
 
     const updatedProfile = await updateCoachProfileQuery(userId, {
       profileImageUrl: data.profileImageUrl,
+      representativeImage: data.representativeImage,
       nickname: data.nickname,
       introduction: data.introduction,
       experience: data.experience,

@@ -1,20 +1,19 @@
 import { getProgramBySlugAction } from "@/actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import {
-  Clock,
-  Calendar,
-  TrendingUp,
-  CheckCircle2,
-  User,
-  Eye,
-  EyeOff,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
+import { WarningBanner } from "@/components/program/warning-banner";
+import { ProgramImageCarousel } from "@/components/program/program-image-carousel";
+import { InfoCards } from "@/components/program/info-cards";
+import { CurriculumList } from "@/components/program/curriculum-list";
+import { CoachSnsLinks } from "@/components/program/coach-sns-links";
+import {
+  ProgramDetailClient,
+  SECTIONS,
+} from "./components/program-detail-client";
 
 /**
  * 프로그램 상세 및 구매 페이지
@@ -28,7 +27,6 @@ const PublicCommercePage = async ({
   const { data: program } = await getProgramBySlugAction(slug);
   const t = await getTranslations("programDetail");
   const tProgram = await getTranslations("program");
-  const tCommon = await getTranslations("common");
 
   if (!program) {
     return (
@@ -41,224 +39,276 @@ const PublicCommercePage = async ({
     );
   }
 
-  const difficultyColors = {
-    BEGINNER: "bg-green-100 text-green-800",
-    INTERMEDIATE: "bg-yellow-100 text-yellow-800",
-    ADVANCED: "bg-red-100 text-red-800",
-  };
-
   const difficultyLabels = {
     BEGINNER: tProgram("difficulty.BEGINNER"),
     INTERMEDIATE: tProgram("difficulty.INTERMEDIATE"),
     ADVANCED: tProgram("difficulty.ADVANCED"),
   };
 
+  // Access period text
+  const accessPeriodText = program.accessPeriodDays
+    ? t("daysAccess", { days: program.accessPeriodDays })
+    : t("lifetimeAccess");
+
+  // Main images for carousel
+  const mainImages = program.mainImageList || [];
+
   return (
-    <div className="min-h-screen bg-white">
-      <div className="container max-w-4xl mx-auto px-4 py-12">
-        {/* 헤더 */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Badge>
-              {program.type === "SINGLE" ? t("singleSale") : t("subscription")}
-            </Badge>
-            <Badge
-              variant={program.isPublic ? "default" : "secondary"}
-              className={cn(
-                "gap-1",
-                program.isPublic
-                  ? "bg-green-100 text-green-800 hover:bg-green-200"
-                  : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-              )}
-            >
-              {program.isPublic ? (
-                <>
-                  <Eye className="h-3 w-3" />
-                  {t("public")}
-                </>
-              ) : (
-                <>
-                  <EyeOff className="h-3 w-3" />
-                  {t("private")}
-                </>
-              )}
-            </Badge>
-            {!program.isForSale && (
-              <Badge variant="outline" className="text-gray-500">
-                {t("notForSale")}
-              </Badge>
-            )}
-          </div>
-          <h1 className="text-4xl font-bold mb-4">{program.title}</h1>
-          <p className="text-xl text-gray-600">
-            {program.description?.substring(0, 200) || ""}
-          </p>
-        </div>
+    <ProgramDetailClient
+      tabs={{
+        program: t("tabProgramIntro"),
+        curriculum: t("tabCurriculum"),
+        coach: t("tabCoachIntro"),
+      }}
+    >
+      {/* Warning Banner (if not for sale) */}
+      {!program.isForSale && (
+        <WarningBanner message={t("notForSaleWarning")} />
+      )}
 
-        {/* 메타 정보 */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <div className="text-center p-4 border rounded">
-            <TrendingUp className="h-5 w-5 mx-auto mb-2 text-gray-600" />
-            <div className="text-sm text-gray-600">{t("difficulty")}</div>
-            <Badge
-              className={cn(
-                difficultyColors[program.difficulty],
-                "mt-1 text-sm"
-              )}
-            >
-              {difficultyLabels[program.difficulty]}
-            </Badge>
-          </div>
-          <div className="text-center p-4 border rounded">
-            <Calendar className="h-5 w-5 mx-auto mb-2 text-gray-600" />
-            <div className="text-sm text-gray-600">{t("totalDuration")}</div>
-            <div className="font-bold mt-1">
-              {program.durationWeeks}
-              {t("weeks")}
-            </div>
-          </div>
-          <div className="text-center p-4 border rounded">
-            <Clock className="h-5 w-5 mx-auto mb-2 text-gray-600" />
-            <div className="text-sm text-gray-600">{t("perWeek")}</div>
-            <div className="font-bold mt-1">{program.daysPerWeek}</div>
-          </div>
-          <div className="text-center p-4 border rounded">
-            <User className="h-5 w-5 mx-auto mb-2 text-gray-600" />
-            <div className="text-sm text-gray-600">{t("accessPeriod")}</div>
-            <div className="font-bold mt-1">
-              {program.accessPeriodDays
-                ? `${program.accessPeriodDays}${t("days")}`
-                : t("lifetime")}
-            </div>
-          </div>
-        </div>
+      {/* Image Carousel */}
+      <div className="container max-w-4xl mx-auto px-4 py-8">
+        <ProgramImageCarousel
+          images={mainImages}
+          alt={program.title}
+        />
+      </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* 메인 컨텐츠 */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* 상세 설명 */}
-            {program.description && (
-              <section>
-                <h2 className="text-2xl font-bold mb-4">
-                  {t("programDetails")}
-                </h2>
-                <div
-                  className="prose max-w-none p-6 border rounded"
-                  dangerouslySetInnerHTML={{ __html: program.description }}
-                />
-              </section>
-            )}
-          </div>
+      {/* Program Title, Coach, Price */}
+      <div className="container max-w-4xl mx-auto px-4 pb-6">
+        <div className="flex items-start justify-between gap-6 mb-6">
+          {/* Left: Title and Coach */}
+          <div className="flex-1">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              {program.title}
+            </h1>
 
-          {/* 사이드바 */}
-          <div className="space-y-6">
-            {/* 코치 정보 */}
+            {/* Coach Info */}
             {program.coach && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">{t("coachIntro")}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    {program.coach.avatarUrl ? (
-                      <img
-                        src={program.coach.avatarUrl}
-                        alt={program.coach.fullName || "Coach"}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                    ) : program.coach.coachProfile?.profileImageUrl ? (
-                      <img
-                        src={program.coach.coachProfile.profileImageUrl}
-                        alt={program.coach.fullName || "Coach"}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center font-bold">
-                        {program.coach.fullName?.charAt(0) || "C"}
-                      </div>
-                    )}
-                    <div>
-                      <div className="font-bold">
-                        {program.coach.coachProfile?.nickname ||
-                          program.coach.fullName}
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        {t("coach")}
-                      </Badge>
-                    </div>
-                  </div>
-                  {program.coach.coachProfile?.introduction && (
-                    <p className="text-sm text-gray-600">
-                      {program.coach.coachProfile.introduction}
-                    </p>
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10">
+                  {(program.coach.avatarUrl ||
+                    program.coach.coachProfile?.profileImageUrl) && (
+                    <AvatarImage
+                      src={
+                        program.coach.avatarUrl ||
+                        program.coach.coachProfile?.profileImageUrl ||
+                        undefined
+                      }
+                    />
                   )}
-                  {program.coach.coachProfile?.certifications &&
-                    program.coach.coachProfile.certifications.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {program.coach.coachProfile.certifications.map(
-                          (cert, idx) => (
-                            <Badge
-                              key={idx}
-                              variant="secondary"
-                              className="text-xs"
-                            >
-                              {cert}
-                            </Badge>
-                          )
-                        )}
-                      </div>
-                    )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* 구매 카드 */}
-            <Card>
-              <CardContent className="p-6 space-y-4">
+                  <AvatarFallback>
+                    {program.coach.coachProfile?.nickname?.charAt(0) ||
+                      program.coach.fullName?.charAt(0) ||
+                      "?"}
+                  </AvatarFallback>
+                </Avatar>
                 <div>
-                  <div className="text-sm text-gray-600">
-                    {t("paymentAmount")}
+                  <div className="font-semibold text-gray-900">
+                    {program.coach.coachProfile?.nickname ||
+                      program.coach.fullName}
                   </div>
-                  <div className="text-3xl font-bold mt-1">
-                    {Number(program.price).toLocaleString()}
-                    {t("won")}
-                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {t("coach")}
+                  </Badge>
                 </div>
-
-                <Separator />
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-gray-600" />
-                    <span>{t("features.feedback")}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-gray-600" />
-                    <span>{t("features.curriculum")}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-gray-600" />
-                    <span>{t("features.anytime")}</span>
-                  </div>
-                </div>
-
-                {program.isForSale ? (
-                  <Button asChild className="w-full" size="lg">
-                    <Link href={`/programs/payment/${slug}`}>
-                      {t("purchase")}
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button disabled className="w-full" size="lg">
-                    {t("notAvailable")}
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+              </div>
+            )}
           </div>
+
+          {/* Right: Price and Access Info */}
+          <div className="text-right flex-shrink-0">
+            <div className="text-3xl font-bold text-gray-900">
+              {Number(program.price).toLocaleString()}
+              <span className="text-lg font-normal text-gray-600 ml-1">
+                {t("won")}
+              </span>
+            </div>
+            <div className="text-sm text-gray-600 mt-1">
+              {t("totalWeeksProgram", { weeks: program.durationWeeks })}
+            </div>
+            <div className="text-sm text-gray-600">
+              {accessPeriodText}
+            </div>
+          </div>
+        </div>
+
+        {/* Sticky Purchase Button (mobile) */}
+        <div className="md:hidden sticky bottom-0 bg-white border-t border-gray-200 py-4 -mx-4 px-4 mt-4 z-40">
+          <Button
+            asChild
+            className="w-full"
+            size="lg"
+            disabled={!program.isForSale}
+          >
+            <Link href={`/programs/payment/${slug}`}>
+              {t("purchase")}
+            </Link>
+          </Button>
+        </div>
+
+        {/* Desktop Purchase Button */}
+        <div className="hidden md:block">
+          <Button
+            asChild
+            className="w-full max-w-xs"
+            size="lg"
+            disabled={!program.isForSale}
+          >
+            <Link href={`/programs/payment/${slug}`}>
+              {t("purchase")}
+            </Link>
+          </Button>
         </div>
       </div>
-    </div>
+
+      <Separator className="bg-gray-200" />
+
+      {/* Program Introduction Section */}
+      <section id={SECTIONS.program} className="container max-w-4xl mx-auto px-4 py-12">
+        {/* Program Image (if available) */}
+        {program.programImage && (
+          <div className="mb-8 rounded-lg overflow-hidden">
+            <img
+              src={program.programImage}
+              alt={program.title}
+              className="w-full object-cover"
+            />
+          </div>
+        )}
+
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          {t("tabProgramIntro")}
+        </h2>
+
+        {/* Description */}
+        {program.description && (
+          <div
+            className="prose max-w-none mb-12 text-gray-700"
+            dangerouslySetInnerHTML={{ __html: program.description }}
+          />
+        )}
+
+        {/* Info Cards */}
+        <InfoCards
+          difficulty={program.difficulty}
+          difficultyLabel={difficultyLabels[program.difficulty]}
+          durationWeeks={program.durationWeeks}
+          daysPerWeek={program.daysPerWeek}
+          durationLabel={t("durationPeriod")}
+          weeklyTrainingLabel={t("weeklyTraining")}
+        />
+      </section>
+
+      <Separator className="bg-gray-200" />
+
+      {/* Curriculum Section */}
+      <section
+        id={SECTIONS.curriculum}
+        className="container max-w-4xl mx-auto px-4 py-12"
+      >
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          {t("lessons")}
+        </h2>
+
+        {program.curriculum && program.curriculum.length > 0 ? (
+          <CurriculumList
+            curriculum={program.curriculum}
+            weekLabel={(n) => t("week", { n })}
+          />
+        ) : (
+          <div className="text-center py-12 text-gray-500">
+            No curriculum information available.
+          </div>
+        )}
+      </section>
+
+      <Separator className="bg-gray-200" />
+
+      {/* Coach Section */}
+      <section
+        id={SECTIONS.coach}
+        className="container max-w-4xl mx-auto px-4 py-12"
+      >
+        {program.coach && (
+          <div>
+            {/* Representative Image */}
+            {program.coach.coachProfile?.representativeImage && (
+              <div className="mb-8 rounded-lg overflow-hidden">
+                <img
+                  src={program.coach.coachProfile.representativeImage}
+                  alt={`${program.coach.coachProfile?.nickname || program.coach.fullName} representative image`}
+                  className="w-full object-cover max-h-96"
+                />
+              </div>
+            )}
+
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              {t("tabCoachIntro")}
+            </h2>
+
+            {/* Coach Name */}
+            <div className="text-xl font-semibold text-gray-900 mb-4">
+              {program.coach.coachProfile?.nickname || program.coach.fullName}
+            </div>
+
+            {/* Introduction */}
+            {program.coach.coachProfile?.introduction && (
+              <div className="mb-6">
+                <p className="text-gray-700 leading-relaxed">
+                  {program.coach.coachProfile.introduction}
+                </p>
+              </div>
+            )}
+
+            {/* Experience */}
+            {program.coach.coachProfile?.experience && (
+              <div className="mb-6">
+                <h3 className="font-semibold text-gray-900 mb-2">경력</h3>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  {program.coach.coachProfile.experience}
+                </p>
+              </div>
+            )}
+
+            {/* Certifications */}
+            {program.coach.coachProfile?.certifications &&
+              program.coach.coachProfile.certifications.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    자격증
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {program.coach.coachProfile.certifications.map(
+                      (cert, idx) => (
+                        <Badge
+                          key={idx}
+                          variant="secondary"
+                          className="bg-gray-100 text-gray-800"
+                        >
+                          {cert}
+                        </Badge>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
+            {/* SNS Links */}
+            {program.coach.coachProfile?.snsLinks && (
+              <CoachSnsLinks
+                snsLinks={program.coach.coachProfile.snsLinks}
+                labels={{
+                  instagram: t("instagram"),
+                  youtube: t("youtube"),
+                  blog: t("blog"),
+                }}
+              />
+            )}
+          </div>
+        )}
+      </section>
+    </ProgramDetailClient>
   );
 };
 

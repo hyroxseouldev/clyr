@@ -97,7 +97,8 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
     });
   };
 
-  const typeLabel = form.watch("type") === "SINGLE" ? t("singleSale") : t("subscription");
+  const typeLabel =
+    form.watch("type") === "SINGLE" ? t("singleSale") : t("subscription");
 
   return (
     <Form {...form}>
@@ -117,7 +118,14 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
             bucketName="public-assets"
             path="program/main-images"
             maxFileSize={5 * 1024 * 1024}
-            maxFiles={10}
+            maxFiles={5}
+            crop={{
+              enabled: true,
+              aspectRatio: "portrait",
+              shape: "rect",
+              minWidth: 200,
+              minHeight: 200,
+            }}
           />
 
           <div className="space-y-6 rounded-lg">
@@ -168,7 +176,9 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="SINGLE">{t("singleSale")}</SelectItem>
-                      <SelectItem value="SUBSCRIPTION">{t("subscription")}</SelectItem>
+                      <SelectItem value="SUBSCRIPTION">
+                        {t("subscription")}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -210,7 +220,9 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="BEGINNER">{t("beginner")}</SelectItem>
-                      <SelectItem value="INTERMEDIATE">{t("intermediate")}</SelectItem>
+                      <SelectItem value="INTERMEDIATE">
+                        {t("intermediate")}
+                      </SelectItem>
                       <SelectItem value="ADVANCED">{t("advanced")}</SelectItem>
                     </SelectContent>
                   </Select>
@@ -324,6 +336,13 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
             bucketName="public-assets"
             path="program/program-images"
             maxFileSize={5 * 1024 * 1024}
+            crop={{
+              enabled: true,
+              aspectRatio: "portrait",
+              shape: "rect",
+              minWidth: 800,
+              minHeight: 450,
+            }}
           />
 
           {/* 상세 설명 */}
