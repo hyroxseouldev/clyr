@@ -42,7 +42,7 @@ export function InfoCards({
   return (
     <div
       className={cn(
-        "grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto",
+        "grid grid-cols-1 gap-4 max-w-4xl mx-auto",
         className
       )}
     >

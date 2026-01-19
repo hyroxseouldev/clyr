@@ -91,10 +91,10 @@ export function ProgramDetailClient({
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div>
       {/* Sticky Navigation Tabs */}
       <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="container max-w-4xl mx-auto px-4">
+        <div className="container max-w-[800px] mx-auto px-4">
           <Tabs value={activeTab} onValueChange={handleTabClick}>
             <TabsList className="grid grid-cols-3 w-full bg-transparent h-14 rounded-none p-0">
               <TabsTrigger

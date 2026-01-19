@@ -102,18 +102,18 @@ export function ImageForm<
 
   // Helper to get preview aspect ratio class based on crop config
   const getPreviewClassName = useCallback((crop?: CropConfig): string => {
-    if (!crop?.enabled) return "h-48"; // Default fixed height when no crop
+    if (!crop?.enabled) return "h-48 w-full"; // Default fixed height when no crop
 
     switch (crop.aspectRatio) {
       case "square":
-        return "aspect-square w-full max-h-80"; // 1:1, max 320px
+        return "aspect-square w-full max-w-xs max-h-80"; // 1:1, max 320px
       case "landscape":
-        return "aspect-video w-full max-h-56"; // 16:9, max 224px
+        return "aspect-video w-full max-w-lg max-h-56"; // 16:9, max 512px wide, max 224px tall
       case "portrait":
-        return "aspect-[4/3] w-full max-h-72"; // 4:3, max 288px
+        return "aspect-[4/3] w-full max-w-sm max-h-72"; // 4:3, max 384px wide, max 288px tall
       case "free":
       default:
-        return "h-48"; // Fixed height for free aspect ratio
+        return "h-48 w-full max-w-md"; // Fixed height, max 448px wide
     }
   }, []);
 
