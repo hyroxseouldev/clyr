@@ -77,17 +77,13 @@ export function ProgramDetailClient({
   }, []);
 
   const handleTabClick = (tab: string) => {
+    // add setState to activeTab
+    setActiveTab(tab);
+    // scroll to the section
     const sectionId = SECTIONS[tab as keyof typeof SECTIONS];
     const element = document.getElementById(sectionId);
     if (element) {
-      const offset = 80; // Account for sticky header
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
+      element.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -104,18 +100,18 @@ export function ProgramDetailClient({
               >
                 {tabs.program}
               </NonBorderTapTrigger>
-              <TabsTrigger
+              <NonBorderTapTrigger
                 value="curriculum"
                 className="data-[state=active]:border-none border-none rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 {tabs.curriculum}
-              </TabsTrigger>
-              <TabsTrigger
+              </NonBorderTapTrigger>
+              <NonBorderTapTrigger
                 value="coach"
                 className="data-[state=active]:border-none border-none rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 {tabs.coach}
-              </TabsTrigger>
+              </NonBorderTapTrigger>
             </TabsList>
           </Tabs>
         </div>
