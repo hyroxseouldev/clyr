@@ -255,7 +255,9 @@
     "lessons": "Lessons",
     "instagram": "Instagram",
     "youtube": "YouTube",
-    "blog": "Blog"
+    "blog": "Blog",
+    "noCurriculum": "No curriculum information available",
+    "introduction": "Introduction"
   },
   "programEdit": {
     "sectionMain": "Main",

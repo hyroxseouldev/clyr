@@ -255,7 +255,9 @@
     "lessons": "강의 내용",
     "instagram": "인스타그램",
     "youtube": "유튜브",
-    "blog": "블로그"
+    "blog": "블로그",
+    "noCurriculum": "커리큘럼 정보가 없습니다",
+    "introduction": "소개"
   },
   "programEdit": {
     "sectionMain": "메인",

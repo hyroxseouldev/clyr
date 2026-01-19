@@ -8,6 +8,7 @@
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { NonBorderTapTrigger } from "@/components/common/non-border-tap-trigger";
 
 // Section IDs for scroll navigation
 export const SECTIONS = {
@@ -97,30 +98,21 @@ export function ProgramDetailClient({
         <div className="container max-w-[800px] mx-auto px-4">
           <Tabs value={activeTab} onValueChange={handleTabClick}>
             <TabsList className="grid grid-cols-4 w-full bg-transparent h-14 rounded-none p-0">
-              <TabsTrigger
+              <NonBorderTapTrigger
                 value="program"
-                className={cn(
-                  "rounded-none data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 transition-colors",
-                  activeTab === "program" ? "" : "border-transparent"
-                )}
+                className="data-[state=active]:border-none border-none rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 {tabs.program}
-              </TabsTrigger>
+              </NonBorderTapTrigger>
               <TabsTrigger
                 value="curriculum"
-                className={cn(
-                  "rounded-none data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 transition-colors",
-                  activeTab === "curriculum" ? "" : "border-transparent"
-                )}
+                className="data-[state=active]:border-none border-none rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 {tabs.curriculum}
               </TabsTrigger>
               <TabsTrigger
                 value="coach"
-                className={cn(
-                  "rounded-none data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 data-[state=active]:bg-transparent text-gray-600 hover:text-gray-900 transition-colors",
-                  activeTab === "coach" ? "" : "border-transparent"
-                )}
+                className="data-[state=active]:border-none border-none rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 {tabs.coach}
               </TabsTrigger>

@@ -43,7 +43,7 @@ export function InfoCards({
     <div className={cn("grid grid-cols-1 gap-4 max-w-4xl mx-auto", className)}>
       {/* 난이도 Card */}
       <Card className="border-gray-200">
-        <CardContent className="px-4 py-2 flex justify-between items-center">
+        <CardContent className="px-4 py-3 flex justify-between items-center h-14">
           <div className="text-sm text-gray-600">난이도</div>
           <Badge
             className={cn("text-sm px-3 py-1", difficultyColors[difficulty])}
@@ -55,24 +55,24 @@ export function InfoCards({
 
       {/* 진행기간 Card */}
       <Card className="border-gray-200">
-        <CardContent className="px-4 py-2 flex justify-between items-center">
-          <div className="text-sm text-gray-600 mb-2">{durationLabel}</div>
-          <div className="text-2xl font-bold text-gray-900">
+        <CardContent className="px-4 py-3 flex justify-between items-center h-14">
+          <div className="text-sm text-gray-600">{durationLabel}</div>
+          <div className="text-xl font-bold text-gray-900">
             {durationWeeks}
-            <span className="text-base font-normal text-gray-600 ml-1">주</span>
+            <span className="text-sm font-normal text-gray-600 ml-1">주</span>
           </div>
         </CardContent>
       </Card>
 
       {/* 주당훈련횟수 Card */}
       <Card className="border-gray-200">
-        <CardContent className="px-4 py-2 flex justify-between items-center">
-          <div className="text-sm text-gray-600 mb-2">
+        <CardContent className="px-4 py-3 flex justify-between items-center h-14">
+          <div className="text-sm text-gray-600">
             {weeklyTrainingLabel}
           </div>
-          <div className="text-2xl font-bold text-gray-900">
+          <div className="text-xl font-bold text-gray-900">
             {daysPerWeek}
-            <span className="text-base font-normal text-gray-600 ml-1">
+            <span className="text-sm font-normal text-gray-600 ml-1">
               일/주
             </span>
           </div>

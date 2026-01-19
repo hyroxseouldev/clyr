@@ -1,7 +1,6 @@
 import { getProgramBySlugAction } from "@/actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
@@ -194,7 +193,7 @@ const PublicCommercePage = async ({
             />
           ) : (
             <div className="text-center py-12 text-gray-500">
-              No curriculum information available.
+              {t("noCurriculum")}
             </div>
           )}
         </section>
@@ -238,7 +237,9 @@ const PublicCommercePage = async ({
                 {/* Introduction */}
                 {program.coach.coachProfile?.introduction && (
                   <div className="bg-white  p-6 shadow-sm">
-                    <h3 className="font-semibold text-gray-900 mb-3">소개</h3>
+                    <h3 className="font-semibold text-gray-900 mb-3">
+                      {t("introduction")}
+                    </h3>
                     <p className="text-gray-700 leading-relaxed">
                       {program.coach.coachProfile.introduction}
                     </p>
