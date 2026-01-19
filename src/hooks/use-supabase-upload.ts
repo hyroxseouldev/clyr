@@ -18,6 +18,82 @@ export const sanitizeFileName = (fileName: string): string => {
   return `${timestamp}-${randomString}.${extension}`;
 };
 
+/**
+ * 이미지 압축 함수
+ * Canvas API를 사용하여 이미지를 압축하고 리사이징합니다.
+ */
+const compressImage = (
+  file: File,
+  maxWidth = 1920,
+  maxHeight = 1920,
+  quality = 0.8
+): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.src = e.target?.result as string;
+    };
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let width = img.width;
+      let height = img.height;
+
+      // 비율 유지하며 리사이징
+      if (width > height) {
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Failed to get canvas context"));
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // 압축된 Blob 생성
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error("Failed to compress image"));
+            return;
+          }
+          // 새 File 객체 생성 (원본 확장자 유지)
+          const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+          const mimeType = extension === "png" ? "image/png" : "image/jpeg";
+          const compressedFile = new File([blob], file.name, {
+            type: mimeType,
+            lastModified: Date.now(),
+          });
+          resolve(compressedFile);
+        },
+        "image/jpeg",
+        quality
+      );
+    };
+
+    img.onerror = () => {
+      reject(new Error("Failed to load image"));
+    };
+
+    reader.readAsDataURL(file);
+  });
+};
+
 interface FileWithPreview extends File {
   preview?: string;
   errors: readonly FileError[];
@@ -143,20 +219,41 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
 
     const responses = await Promise.all(
       filesToUpload.map(async (file) => {
-        // 한글 등 비ASCII 문자가 포함된 파일명 처리
-        const sanitizedFileName = sanitizeFileName(file.name);
-        const uploadPath = !!path ? `${path}/${sanitizedFileName}` : sanitizedFileName;
+        try {
+          let fileToUpload = file;
 
-        const { error } = await supabase.storage
-          .from(bucketName)
-          .upload(uploadPath, file, {
-            cacheControl: cacheControl.toString(),
-            upsert,
-          });
-        if (error) {
-          return { name: file.name, message: error.message };
-        } else {
-          return { name: file.name, message: undefined, uploadPath };
+          // 이미지 파일이고 크기가 1MB 이상인 경우 압축
+          if (file.type.startsWith("image/") && file.size > 1024 * 1024) {
+            try {
+              const compressedFile = await compressImage(file, 1920, 1920, 0.8);
+              // Preserve errors property from original file
+              fileToUpload = Object.assign(compressedFile, {
+                errors: file.errors,
+                preview: file.preview,
+              }) as FileWithPreview;
+            } catch (compressError) {
+              console.warn("Image compression failed, uploading original:", compressError);
+              // 압축 실패시 원본 파일 사용
+            }
+          }
+
+          // 한글 등 비ASCII 문자가 포함된 파일명 처리
+          const sanitizedFileName = sanitizeFileName(fileToUpload.name);
+          const uploadPath = !!path ? `${path}/${sanitizedFileName}` : sanitizedFileName;
+
+          const { error } = await supabase.storage
+            .from(bucketName)
+            .upload(uploadPath, fileToUpload, {
+              cacheControl: cacheControl.toString(),
+              upsert,
+            });
+          if (error) {
+            return { name: file.name, message: error.message };
+          } else {
+            return { name: file.name, message: undefined, uploadPath };
+          }
+        } catch (err) {
+          return { name: file.name, message: err instanceof Error ? err.message : "Upload failed" };
         }
       })
     );
@@ -179,7 +276,7 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
     setLoading(false);
 
     return uploadedPaths;
-  }, [files, path, bucketName, errors, successes]);
+  }, [files, path, bucketName, errors, successes, cacheControl, upsert]);
 
   useEffect(() => {
     if (files.length === 0) {

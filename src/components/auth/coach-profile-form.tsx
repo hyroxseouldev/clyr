@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { TiptapForm } from "@/components/form";
 import { AvatarForm } from "@/components/form/avatar-form";
+import { ImageForm } from "@/components/form";
 import type { CoachProfile } from "@/db/schema";
 import { useTranslations } from "next-intl";
 
@@ -41,6 +42,7 @@ export function CoachProfileForm({
 
   const coachProfileFormSchema = z.object({
     profileImageUrl: z.string().nullable().optional(),
+    representativeImage: z.string().nullable().optional(),
     nickname: z.string().optional(),
     introduction: z.string().optional(),
     experience: z.string().optional(),
@@ -57,6 +59,7 @@ export function CoachProfileForm({
     resolver: zodResolver(coachProfileFormSchema),
     defaultValues: {
       profileImageUrl: initialData?.profileImageUrl ?? null,
+      representativeImage: (initialData as any)?.representativeImage ?? null,
       nickname: initialData?.nickname ?? "",
       introduction: initialData?.introduction ?? "",
       experience: initialData?.experience ?? "",
@@ -78,6 +81,7 @@ export function CoachProfileForm({
         setIsEditMode(true);
         form.reset({
           profileImageUrl: result.data.profileImageUrl ?? null,
+          representativeImage: (result.data as any).representativeImage ?? null,
           nickname: result.data.nickname ?? "",
           introduction: result.data.introduction ?? "",
           experience: result.data.experience ?? "",
@@ -95,6 +99,7 @@ export function CoachProfileForm({
     startTransition(async () => {
       const data = {
         profileImageUrl: values.profileImageUrl || null,
+        representativeImage: values.representativeImage || null,
         nickname: values.nickname || null,
         introduction: values.introduction || null,
         experience: values.experience || null,
@@ -136,6 +141,16 @@ export function CoachProfileForm({
           bucketName="public-assets"
           path="coach/profile"
           maxFileSize={2 * 1024 * 1024}
+        />
+
+        {/* 대표 이미지 */}
+        <ImageForm
+          name="representativeImage"
+          label={t("representativeImage")}
+          form={form}
+          bucketName="public-assets"
+          path="coach/representative"
+          maxFileSize={5 * 1024 * 1024}
         />
 
         <FormField

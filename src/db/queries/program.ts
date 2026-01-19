@@ -51,12 +51,16 @@ export const deleteProgramQuery = async (programId: string) => {
 };
 
 // 프로그램 slug 로 프로그램 정보 가져오기
-// 코치 정보도 함께 들어갑니다
+// 코치 정보와 코치 프로필도 함께 들어갑니다
 export const getProgramBySlugQuery = async (slug: string) => {
   return await db.query.programs.findFirst({
     where: eq(programs.slug, slug),
     with: {
-      coach: true,
+      coach: {
+        with: {
+          coachProfile: true,
+        },
+      },
     },
   });
 };

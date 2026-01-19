@@ -37,6 +37,7 @@ export const coachProfile = pgTable("coach_profile", {
     .unique()
     .notNull(),
   profileImageUrl: text("profile_image_url"),
+  representativeImage: text("representative_image"), // 대표 이미지
   nickname: text("nickname"), // 코치 별명
   introduction: text("introduction"), // 한줄 소개
   experience: text("experience"), // 코칭 경력 (상세 텍스트)
@@ -121,7 +122,9 @@ export const programs = pgTable("programs", {
   // ==================== NEW FIELDS ====================
   mainImageList: jsonb("main_image_list").default([]).$type<string[]>(),
   programImage: text("program_image"),
-  curriculum: jsonb("curriculum").default([]).$type<{ title: string; description: string }[]>(),
+  curriculum: jsonb("curriculum")
+    .default([])
+    .$type<{ title: string; description: string }[]>(),
 });
 
 export const programBlueprints = pgTable("program_blueprints", {
@@ -160,27 +163,31 @@ export const blueprintSectionItems = pgTable("blueprint_section_items", {
 });
 
 // [sectionRecords] 섹션 완료 기록 (숙제, 설문, 퀴즈 등)
-export const sectionRecords = pgTable("section_records", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .references(() => account.id, { onDelete: "cascade" })
-    .notNull(),
-  sectionId: uuid("section_id")
-    .references(() => blueprintSections.id, { onDelete: "cascade" })
-    .notNull(),
-  sectionItemId: uuid("section_item_id")
-    .references(() => blueprintSectionItems.id, { onDelete: "cascade" })
-    .notNull(), // 컨텍스트 저장 (프로그램/페이즈/일차 필터링용)
-  content: jsonb("content").default({}).$type<Record<string, unknown>>(),
-  completedAt: timestamp("completed_at").defaultNow().notNull(),
-  coachComment: text("coach_comment"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (table) => ({
-  // sectionItemId별로 유니크 (같은 주차 재도전 시 업데이트)
-  // sectionId는 유니크 없음 (1주차 vs 4주차 같은 섹션 비교 가능)
-  uniqueConstraint: unique().on(table.userId, table.sectionItemId),
-}));
+export const sectionRecords = pgTable(
+  "section_records",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .references(() => account.id, { onDelete: "cascade" })
+      .notNull(),
+    sectionId: uuid("section_id")
+      .references(() => blueprintSections.id, { onDelete: "cascade" })
+      .notNull(),
+    sectionItemId: uuid("section_item_id")
+      .references(() => blueprintSectionItems.id, { onDelete: "cascade" })
+      .notNull(), // 컨텍스트 저장 (프로그램/페이즈/일차 필터링용)
+    content: jsonb("content").default({}).$type<Record<string, unknown>>(),
+    completedAt: timestamp("completed_at").defaultNow().notNull(),
+    coachComment: text("coach_comment"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    // sectionItemId별로 유니크 (같은 주차 재도전 시 업데이트)
+    // sectionId는 유니크 없음 (1주차 vs 4주차 같은 섹션 비교 가능)
+    uniqueConstraint: unique().on(table.userId, table.sectionItemId),
+  })
+);
 
 // ==========================================
 // 4. 상거래 및 수강 권한 (Commerce & Access)
@@ -425,7 +432,9 @@ export type CoachProfile = InferSelectModel<typeof coachProfile>;
 export type UserProfile = InferSelectModel<typeof userProfile>;
 export type WorkoutLibrary = InferSelectModel<typeof workoutLibrary>;
 export type BlueprintSection = InferSelectModel<typeof blueprintSections>;
-export type BlueprintSectionItem = InferSelectModel<typeof blueprintSectionItems>;
+export type BlueprintSectionItem = InferSelectModel<
+  typeof blueprintSectionItems
+>;
 export type SectionRecord = InferSelectModel<typeof sectionRecords>;
 export type Program = InferSelectModel<typeof programs>;
 export type ProgramBlueprint = InferSelectModel<typeof programBlueprints>;
@@ -439,7 +448,9 @@ export type NewCoachProfile = InferInsertModel<typeof coachProfile>;
 export type NewUserProfile = InferInsertModel<typeof userProfile>;
 export type NewWorkoutLibrary = InferInsertModel<typeof workoutLibrary>;
 export type NewBlueprintSection = InferInsertModel<typeof blueprintSections>;
-export type NewBlueprintSectionItem = InferInsertModel<typeof blueprintSectionItems>;
+export type NewBlueprintSectionItem = InferInsertModel<
+  typeof blueprintSectionItems
+>;
 export type NewSectionRecord = InferInsertModel<typeof sectionRecords>;
 export type NewProgram = InferInsertModel<typeof programs>;
 export type NewProgramBlueprint = InferInsertModel<typeof programBlueprints>;

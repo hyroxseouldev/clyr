@@ -43,9 +43,6 @@ export function ProgramCard({ program }: { program: Program }) {
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 space-y-2">
             <CardTitle>{program.title}</CardTitle>
-            <CardDescription className="line-clamp-2">
-              {program.description || "설명이 없습니다."}
-            </CardDescription>
           </div>
           <CardAction>
             <Button variant="ghost" size="icon-sm">

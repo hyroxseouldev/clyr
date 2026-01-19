@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState, useRef } from "react";
 import {
   FormField,
   FormItem,
@@ -23,6 +23,21 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
+import {
+  CropModal,
+  type AspectRatio,
+  type CropShape,
+} from "./crop-modal";
+
+export type { AspectRatio, CropShape };
+
+interface CropConfig {
+  enabled: boolean; // Enable/disable cropping
+  aspectRatio?: AspectRatio; // Aspect ratio preset
+  shape?: CropShape; // Crop shape (rect or round)
+  minWidth?: number; // Minimum crop width in pixels (default: 100)
+  minHeight?: number; // Minimum crop height in pixels (default: 100)
+}
 
 interface ImageFormProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -36,6 +51,7 @@ interface ImageFormProps<
   maxFileSize?: number;
   className?: string;
   required?: boolean;
+  crop?: CropConfig; // New: crop configuration
 }
 
 /**
@@ -53,6 +69,19 @@ interface ImageFormProps<
  *   maxFileSize={5 * 1024 * 1024} // 5MB
  * />
  * ```
+ *
+ * @example
+ * ```tsx
+ * // With crop enabled (square, round for avatar)
+ * <ImageForm
+ *   name="profileImageUrl"
+ *   label={t("profileImage")}
+ *   form={form}
+ *   bucketName="public-assets"
+ *   path="coach/profile"
+ *   crop={{ enabled: true, aspectRatio: 'square', shape: 'round' }}
+ * />
+ * ```
  */
 export function ImageForm<
   TFieldValues extends FieldValues = FieldValues,
@@ -66,9 +95,15 @@ export function ImageForm<
   maxFileSize = 5 * 1024 * 1024, // 5MB default
   className,
   required = false,
+  crop,
 }: ImageFormProps<TFieldValues, TName>) {
   const t = useTranslations("imageForm");
   const currentValue = form.watch(name);
+
+  // Crop state
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
 
   // Supabase 업로드 훅
   const {
@@ -88,6 +123,19 @@ export function ImageForm<
     maxFileSize,
     maxFiles: 1,
   });
+
+  // Handle file drop - show crop modal if enabled
+  const handleDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      if (crop?.enabled && acceptedFiles.length > 0) {
+        const file = acceptedFiles[0];
+        const preview = URL.createObjectURL(file);
+        setPendingImage(preview);
+        setShowCropModal(true);
+      }
+    },
+    [crop?.enabled]
+  );
 
   // 업로드 후 public URL을 가져와서 폼에 저장
   const handleUploadSuccess = useCallback(async () => {
@@ -112,145 +160,225 @@ export function ImageForm<
     }
   }, [onUpload, bucketName, form, name]);
 
+  // Crop apply handler
+  const handleCropApply = useCallback(
+    (blob: Blob) => {
+      setCroppedBlob(blob);
+      setShowCropModal(false);
+
+      // Create a new File from the cropped blob
+      const croppedFile = new File([blob], "cropped-image.jpg", {
+        type: "image/jpeg",
+      });
+
+      // Create preview for the cropped image
+      const preview = URL.createObjectURL(blob);
+
+      // Create FileWithPreview by casting - FileWithPreview extends File
+      const fileWithPreview = Object.assign(croppedFile, {
+        preview,
+        errors: [],
+      }) as File & { preview: string; errors: [] };
+
+      // Update files with cropped image
+      setFiles([fileWithPreview]);
+
+      // Clean up pending image
+      if (pendingImage) {
+        URL.revokeObjectURL(pendingImage);
+        setPendingImage(null);
+      }
+    },
+    [setFiles, pendingImage]
+  );
+
+  // Crop cancel handler
+  const handleCropCancel = useCallback(() => {
+    setShowCropModal(false);
+
+    // Clean up pending image and cropped blob
+    if (pendingImage) {
+      URL.revokeObjectURL(pendingImage);
+      setPendingImage(null);
+    }
+    setCroppedBlob(null);
+    setFiles([]);
+  }, [pendingImage, setFiles]);
+
   // 이미지 삭제 핸들러
   const handleRemoveImage = useCallback(() => {
     form.setValue(name, "" as any);
     setFiles([]);
-  }, [form, name, setFiles]);
+
+    // Clean up pending image and cropped blob
+    if (pendingImage) {
+      URL.revokeObjectURL(pendingImage);
+      setPendingImage(null);
+    }
+    setCroppedBlob(null);
+  }, [form, name, setFiles, pendingImage]);
+
+  // Override drop handlers if crop is enabled
+  const rootProps = crop?.enabled
+    ? {
+        ...getRootProps(),
+        onDrop: (e: React.DragEvent<HTMLDivElement>) => {
+          e.preventDefault();
+          e.stopPropagation();
+          inputRef.current?.click();
+        },
+      }
+    : getRootProps();
 
   return (
-    <FormField
-      control={form.control}
-      name={name}
-      render={({ field }) => (
-        <FormItem className={className}>
-          {label && (
-            <FormLabel>
-              {label}
-              {required && <span className="text-destructive ml-1">*</span>}
-            </FormLabel>
-          )}
-          <FormControl>
-            <div className="space-y-4">
-              {/* 성공 메시지 */}
-              {isSuccess && (
-                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                  <p className="text-sm text-green-700 dark:text-green-400">
-                    {t("uploadSuccess")}
-                  </p>
-                  <X className="h-4 w-4 text-green-700 dark:text-green-400" />
-                </div>
-              )}
+    <>
+      <FormField
+        control={form.control}
+        name={name}
+        render={({ field }) => (
+          <FormItem className={className}>
+            {label && (
+              <FormLabel>
+                {label}
+                {required && <span className="text-destructive ml-1">*</span>}
+              </FormLabel>
+            )}
+            <FormControl>
+              <div className="space-y-4">
+                {/* 성공 메시지 */}
+                {isSuccess && (
+                  <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <p className="text-sm text-green-700 dark:text-green-400">
+                      {t("uploadSuccess")}
+                    </p>
+                    <X className="h-4 w-4 text-green-700 dark:text-green-400" />
+                  </div>
+                )}
 
-              {/* 이미지 프리뷰 (기존 이미지 또는 업로드된 이미지) */}
-              {currentValue && (
-                <div className="relative w-full h-48 border rounded-lg overflow-hidden bg-muted">
-                  <Image
-                    src={currentValue as string}
-                    alt="Preview"
-                    fill
-                    className="object-cover"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2"
-                    onClick={handleRemoveImage}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+                {/* 이미지 프리뷰 (기존 이미지 또는 업로드된 이미지) */}
+                {currentValue && (
+                  <div className="relative w-full h-48 border rounded-lg overflow-hidden bg-muted">
+                    <Image
+                      src={currentValue as string}
+                      alt="Preview"
+                      fill
+                      className="object-cover"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={handleRemoveImage}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
 
-              {/* 업로드 영역 */}
-              {!currentValue && (
-                <div {...getRootProps()}>
-                  <input {...getInputProps()} />
-                  <div
-                    className={cn(
-                      "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
-                      "hover:border-primary/50",
-                      "cursor-pointer"
-                    )}
-                  >
-                    {files.length === 0 ? (
-                      // 빈 상태
-                      <div className="flex flex-col items-center gap-y-2">
-                        <Upload className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">
-                          {t("dragDropHint")}
-                        </p>
-                        {maxFileSize && (
-                          <p className="text-xs text-muted-foreground">
-                            {t("maxFileSize", {
-                              size: (maxFileSize / 1024 / 1024).toFixed(0),
-                            })}
+                {/* 업로드 영역 */}
+                {!currentValue && (
+                  <div {...rootProps}>
+                    <input {...getInputProps()} />
+                    <div
+                      className={cn(
+                        "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
+                        "hover:border-primary/50",
+                        "cursor-pointer"
+                      )}
+                    >
+                      {files.length === 0 ? (
+                        // 빈 상태
+                        <div className="flex flex-col items-center gap-y-2">
+                          <Upload className="h-8 w-8 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">
+                            {t("dragDropHint")}
                           </p>
-                        )}
-                      </div>
-                    ) : (
-                      // 파일이 선택된 상태
-                      <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/50">
-                        {files[0].type.startsWith("image/") &&
-                        files[0].preview ? (
-                          <div className="h-16 w-16 rounded border overflow-hidden shrink-0 bg-muted">
-                            <img
-                              src={files[0].preview}
-                              alt={files[0].name}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <div className="h-16 w-16 rounded border bg-muted flex items-center justify-center shrink-0">
-                            <FileImage className="h-6 w-6 text-muted-foreground" />
-                          </div>
-                        )}
-                        <div className="flex flex-col items-start truncate">
-                          <p className="text-sm font-medium truncate max-w-xs">
-                            {files[0].name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {(files[0].size / 1024).toFixed(1)}KB
-                          </p>
+                          {maxFileSize && (
+                            <p className="text-xs text-muted-foreground">
+                              {t("maxFileSize", {
+                                size: (maxFileSize / 1024 / 1024).toFixed(0),
+                              })}
+                            </p>
+                          )}
                         </div>
-                      </div>
+                      ) : (
+                        // 파일이 선택된 상태
+                        <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/50">
+                          {files[0].type.startsWith("image/") &&
+                          files[0].preview ? (
+                            <div className="h-16 w-16 rounded border overflow-hidden shrink-0 bg-muted">
+                              <img
+                                src={files[0].preview}
+                                alt={files[0].name}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="h-16 w-16 rounded border bg-muted flex items-center justify-center shrink-0">
+                              <FileImage className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex flex-col items-start truncate">
+                            <p className="text-sm font-medium truncate max-w-xs">
+                              {files[0].name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {(files[0].size / 1024).toFixed(1)}KB
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 업로드 버튼 및 상태 메시지 */}
+                {files.length > 0 && !isSuccess && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleUploadSuccess}
+                      disabled={loading || files.some((f) => f.errors.length > 0)}
+                    >
+                      {loading ? (
+                        <>{t("uploading")}</>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4 mr-2" />
+                          {t("upload")}
+                        </>
+                      )}
+                    </Button>
+                    {errors.length > 0 && (
+                      <p className="text-sm text-destructive">
+                        {errors[0]?.message}
+                      </p>
                     )}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-              {/* 업로드 버튼 및 상태 메시지 */}
-              {files.length > 0 && !isSuccess && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleUploadSuccess}
-                    disabled={loading || files.some((f) => f.errors.length > 0)}
-                  >
-                    {loading ? (
-                      <>{t("uploading")}</>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        {t("upload")}
-                      </>
-                    )}
-                  </Button>
-                  {errors.length > 0 && (
-                    <p className="text-sm text-destructive">
-                      {errors[0]?.message}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
+      {/* Crop Modal */}
+      {crop?.enabled && pendingImage && (
+        <CropModal
+          isOpen={showCropModal}
+          imageUrl={pendingImage}
+          aspectRatio={crop.aspectRatio || "square"}
+          shape={crop.shape || "rect"}
+          minWidth={crop.minWidth || 100}
+          minHeight={crop.minHeight || 100}
+          onApply={handleCropApply}
+          onCancel={handleCropCancel}
+        />
       )}
-    />
+    </>
   );
 }

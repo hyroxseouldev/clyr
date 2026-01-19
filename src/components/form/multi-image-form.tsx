@@ -273,28 +273,49 @@ export function MultiImageForm<
 
               {/* 업로드 버튼 및 상태 메시지 */}
               {files.length > 0 && !isSuccess && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleUploadSuccess}
-                    disabled={loading || files.some((f) => f.errors.length > 0)}
-                  >
-                    {loading ? (
-                      <>{t("uploading")}</>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        {t("upload")}
-                      </>
-                    )}
-                  </Button>
-                  {errors.length > 0 && (
-                    <p className="text-sm text-destructive">
-                      {errors[0]?.message}
-                    </p>
+                <div className="space-y-3">
+                  {/* 파일 에러 표시 */}
+                  {files.some((f) => f.errors.length > 0) && (
+                    <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                      <p className="text-sm font-medium text-destructive mb-2">
+                        {t("uploadErrors") || "파일 업로드 에러"}
+                      </p>
+                      <ul className="text-xs text-destructive space-y-1">
+                        {files
+                          .filter((f) => f.errors.length > 0)
+                          .map((file, idx) => (
+                            <li key={idx}>
+                              • {file.name}:{" "}
+                              {file.errors.map((e) => e.message).join(", ")}
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
                   )}
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleUploadSuccess}
+                      disabled={loading || files.some((f) => f.errors.length > 0)}
+                    >
+                      {loading ? (
+                        <>{t("uploading")}</>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4 mr-2" />
+                          {t("upload")}
+                        </>
+                      )}
+                    </Button>
+                    {loading && (
+                      <p className="text-sm text-muted-foreground">
+                        {t("uploadingWait") || "업로드 중..."}
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
 

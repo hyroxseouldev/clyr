@@ -340,6 +340,7 @@
   },
   "profile": {
     "profileImage": "Profile Image",
+    "representativeImage": "Representative Image",
     "nickname": "Nickname",
     "introduction": "Introduction",
     "experience": "Coaching Experience",
@@ -357,6 +358,12 @@
     "introductionPlaceholder": "Helping you build a healthy body",
     "experiencePlaceholder": "Enter your experience in detail...",
     "nicknamePlaceholder": "Coach John"
+  },
+  "crop": {
+    "title": "Crop Image",
+    "zoom": "Zoom",
+    "cancel": "Cancel",
+    "apply": "Apply"
   },
   "validation": {
     "required": "This field is required",
