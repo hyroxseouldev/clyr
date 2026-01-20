@@ -17,6 +17,8 @@ interface PaymentClientProps {
     type: string;
     slug: string;
     accessPeriodDays: number | null;
+    mainImageList?: string[] | null;
+    durationWeeks?: number | null;
   };
   user: {
     email: string;
@@ -126,112 +128,64 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
     }
   };
 
+  const headingTextClassName = "font-bold text-primary";
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container max-w-4xl mx-auto px-4">
-        {/* 헤더 */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">{t("title")}</h1>
-          <p className="text-gray-600">{t("description")}</p>
+    <div className="min-h-screen">
+      <div className="container max-w-2xl mx-auto">
+        <div className="space-y-4 px-4 py-6">
+          <h2 className={headingTextClassName}>{t("programInfo")}</h2>
+
+          <div className="space-y-3">
+            <div className="flex items-start gap-4">
+              <img
+                src={program.mainImageList?.[0]}
+                alt={program.title}
+                className="w-20 h-20 rounded-md object-cover"
+              />
+              <div>
+                <div className="font-bold">{program.title}</div>
+                <p className="text-sm text-gray-600">
+                  {`총 ${program.durationWeeks}주 프로그램 ∙ ${program.accessPeriodDays}일 소장 가능`}
+                </p>
+                <div className="text-2xl font-bold mt-2">
+                  {amount.toLocaleString()}원
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+        {/* 구매자 정보 */}
+        <div className="space-y-4 px-4 py-6">
+          <h2 className={headingTextClassName}>구매자 정보</h2>
+          <div>
+            <div className="text-sm text-gray-600">{t("email")}</div>
+            <div className="font-medium">{user.email}</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-600">{t("name")}</div>
+            <div className="font-medium">{user.fullName}</div>
+          </div>
+        </div>
+        <div className="space-y-4 px-4 py-6">
+          <h2 className={headingTextClassName}>{t("paymentMethod")}</h2>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* 왼쪽: 결제 정보 */}
-          <div className="space-y-6">
-            {/* 프로그램 정보 */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="font-semibold mb-4">{t("programInfo")}</h2>
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-sm text-gray-600">{t("programName")}</div>
-                    <div className="font-medium">{program.title}</div>
-                  </div>
-                  <Separator />
-                  <div>
-                    <div className="text-sm text-gray-600">{t("amount")}</div>
-                    <div className="text-2xl font-bold">
-                      {amount.toLocaleString()}원
-                    </div>
-                  </div>
-                  {program.accessPeriodDays && (
-                    <>
-                      <Separator />
-                      <div>
-                        <div className="text-sm text-gray-600">{t("accessPeriod")}</div>
-                        <div className="font-medium">
-                          {program.accessPeriodDays}{t("days")}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* 구매자 정보 */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="font-semibold mb-4">{t("buyerInfo")}</h2>
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-sm text-gray-600">{t("email")}</div>
-                    <div className="font-medium">{user.email}</div>
-                  </div>
-                  <Separator />
-                  <div>
-                    <div className="text-sm text-gray-600">{t("name")}</div>
-                    <div className="font-medium">{user.fullName}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          {/* 결제 수단 선택 영역 */}
+          <div className="min-h-[200px] relative">
+            {!widgetReady && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            )}
+            <div id="payment-methods" className="min-h-[200px]" />
           </div>
 
-          {/* 오른쪽: 결제 위젯 */}
-          <div className="space-y-6">
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="font-semibold mb-4">{t("paymentMethod")}</h2>
-
-                {/* 결제 수단 선택 영역 */}
-                <div className="min-h-[200px] relative">
-                  {!widgetReady && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                    </div>
-                  )}
-                  <div id="payment-methods" className="min-h-[200px]" />
-                </div>
-
-                {/* 결제 버튼 */}
-                {widgetReady && (
-                  <Button
-                    onClick={handlePayment}
-                    className="w-full mt-4"
-                    size="lg"
-                  >
-                    {t("payButton", { amount: amount.toLocaleString() })}
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* 안내 문구 */}
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="p-4">
-                <div className="flex gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-                  <div className="text-sm text-blue-800">
-                    <p className="font-medium mb-1">{t("safePayment")}</p>
-                    <p className="text-blue-700">
-                      {t("safePaymentDesc")}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* 결제 버튼 */}
+          {widgetReady && (
+            <Button onClick={handlePayment} className="w-full mt-4 " size="xl">
+              {t("payButton", { amount: amount.toLocaleString() })}
+            </Button>
+          )}
         </div>
       </div>
     </div>

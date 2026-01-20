@@ -63,6 +63,10 @@ export async function initPurchaseAction(programSlug: string) {
       type: program.type,
       slug: program.slug,
       accessPeriodDays: program.accessPeriodDays,
+      mainImageList: program.mainImageList,
+      durationWeeks: program.durationWeeks,
+      daysPerWeek: program.daysPerWeek,
+      programImage: program.programImage,
     },
     user: {
       email: user.email,
