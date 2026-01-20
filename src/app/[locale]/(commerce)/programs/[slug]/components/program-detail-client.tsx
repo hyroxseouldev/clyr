@@ -7,10 +7,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { useLocale } from "next-intl";
-import { cn } from "@/lib/utils";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { NonBorderTapTrigger } from "@/components/common/non-border-tap-trigger";
+import { Tabs, TabsList } from "@/components/ui/tabs";
+import { BottomBorderTabTrigger } from "@/components/common/bottom-border-tab-trigger";
 import { WarningBanner } from "@/components/program/warning-banner";
 import { ProgramImageCarousel } from "@/components/program/program-image-carousel";
 import { InfoCards } from "@/components/program/info-cards";
@@ -21,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
 import type { getProgramBySlugQuery } from "@/db/queries/program";
+import { cn } from "@/lib/utils";
 
 // Section IDs for scroll navigation
 export const SECTIONS = {
@@ -38,11 +37,10 @@ interface ProgramDetailClientProps {
 export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
   const t = useTranslations("programDetail");
   const tProgram = useTranslations("program");
-  const locale = useLocale();
   const [activeTab, setActiveTab] = useState<string>("program");
   const [showPurchaseButton, setShowPurchaseButton] = useState<boolean>(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const tabSentinelRef = useRef<HTMLDivElement>(null);
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
 
   // Main images for carousel
   const mainImages = program.mainImageList || [];
@@ -52,6 +50,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
     ? t("daysAccess", { days: program.accessPeriodDays })
     : t("lifetimeAccess");
 
+  const headingTextClassName = "text-xl font-bold text-primary";
   // Set up intersection observer for active tab tracking
   useEffect(() => {
     const sections = Object.values(SECTIONS)
@@ -97,35 +96,50 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
 
   // Track when tabs become sticky to show/hide purchase button
   useEffect(() => {
-    const sentinel = tabSentinelRef.current;
-    if (!sentinel) return;
+    const handleScroll = () => {
+      const tabsContainer = tabsContainerRef.current;
+      if (!tabsContainer) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // When sentinel is NOT intersecting (out of view), tabs are sticky
-        setShowPurchaseButton(!entry.isIntersecting);
-      },
-      {
-        threshold: 0,
-        rootMargin: "0px 0px -100% 0px", // Trigger when sentinel leaves viewport top
-      }
-    );
+      const tabsRect = tabsContainer.getBoundingClientRect();
+      const tabsTop = tabsRect.top + window.pageYOffset;
 
-    observer.observe(sentinel);
+      // Show purchase button when scroll reaches tabs position (tabs become sticky)
+      setShowPurchaseButton(window.pageYOffset >= tabsTop);
+    };
 
+    // Initial check after a small delay to ensure DOM is ready
+    const timeoutId = setTimeout(handleScroll, 100);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
-      observer.disconnect();
+      clearTimeout(timeoutId);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
   const handleTabClick = (tab: string) => {
-    // add setState to activeTab
     setActiveTab(tab);
-    // scroll to the section
     const sectionId = SECTIONS[tab as keyof typeof SECTIONS];
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+      const tabHeight = 56; // h-14 = 56px
+      const viewportHeight = window.innerHeight;
+      const elementRect = element.getBoundingClientRect();
+      const scrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
+
+      // Calculate position to center element in viewport (below sticky tabs)
+      const targetScroll =
+        scrollTop +
+        elementRect.top -
+        viewportHeight / 2 +
+        elementRect.height / 2 -
+        tabHeight;
+
+      window.scrollTo({
+        top: targetScroll,
+        behavior: "smooth",
+      });
     }
   };
 
@@ -190,7 +204,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
 
           {/* Right: Price and Access Info */}
         </div>
-        <div className="text-left shrink-0">
+        <div className="text-left shrink-0 mb-4">
           <div className="text-3xl font-bold text-gray-900">
             {`${Number(program.price).toLocaleString()} ${t("won")}`}
           </div>
@@ -204,7 +218,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
           <Button
             asChild
             className="w-full"
-            size="lg"
+            size="xl"
             disabled={!program.isForSale}
           >
             <Link href={`/programs/payment/${program.slug}`}>
@@ -216,12 +230,12 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
 
       {/* Purchase Button - Fixed at bottom */}
       {showPurchaseButton && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white py-4 px-4 z-40 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <div className="fixed bottom-0 left-0 right-0 bg-white py-4 px-4 z-40">
           <div className="container max-w-[800px] mx-auto">
             <Button
               asChild
               className="w-full"
-              size="lg"
+              size="xl"
               disabled={!program.isForSale}
             >
               <Link href={`/programs/payment/${program.slug}`}>
@@ -232,32 +246,29 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
         </div>
       )}
 
-      {/* Sentinel for detecting when tabs become sticky */}
-      <div ref={tabSentinelRef} className="h-0" aria-hidden="true" />
-
       {/* Sticky Navigation Tabs */}
-      <div className="sticky top-0 z-50 bg-white ">
+      <div ref={tabsContainerRef} className="sticky top-0 z-50 bg-white ">
         <div className="container max-w-[800px] mx-auto px-4">
           <Tabs value={activeTab} onValueChange={handleTabClick}>
-            <TabsList className="grid grid-cols-4 w-full bg-transparent h-14 rounded-none p-0">
-              <NonBorderTapTrigger
+            <TabsList className="flex w-full bg-transparent rounded-none p-0 items-stretch justify-start">
+              <BottomBorderTabTrigger
                 value="program"
-                className="data-[state=active]:border-none border-none rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
+                className="data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 {t("tabProgramIntro")}
-              </NonBorderTapTrigger>
-              <NonBorderTapTrigger
+              </BottomBorderTabTrigger>
+              <BottomBorderTabTrigger
                 value="curriculum"
-                className="data-[state=active]:border-none border-none rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
+                className="data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 {t("tabCurriculum")}
-              </NonBorderTapTrigger>
-              <NonBorderTapTrigger
+              </BottomBorderTabTrigger>
+              <BottomBorderTabTrigger
                 value="coach"
-                className="data-[state=active]:border-none border-none rounded-none border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
+                className="data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 {t("tabCoachIntro")}
-              </NonBorderTapTrigger>
+              </BottomBorderTabTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -280,7 +291,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
           </div>
         )}
         <div className="px-4 py-6">
-          <h2 className="text-2xl font-bold text-primary mb-6">
+          <h2 className={cn(headingTextClassName, "mb-6")}>
             {t("tabProgramIntro")}
           </h2>
 
@@ -307,11 +318,9 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
       {/* Curriculum Section */}
       <section
         id={SECTIONS.curriculum}
-        className="container max-w-[800px] mx-auto px-4 py-12"
+        className="container max-w-[800px] mx-auto px-4 py-6"
       >
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          {t("lessons")}
-        </h2>
+        <h2 className={cn(headingTextClassName, "mb-6")}>{t("lessons")}</h2>
 
         {program.curriculum && program.curriculum.length > 0 ? (
           <CurriculumList
@@ -328,7 +337,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
       {/* Coach Section */}
       <section id={SECTIONS.coach} className="container max-w-[800px] mx-auto">
         {program.coach && (
-          <div className="space-y-8">
+          <div className="">
             {/* Representative Image */}
             {program.coach.coachProfile?.representativeImage && (
               <div className="overflow-hidden">
@@ -345,9 +354,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
 
             {/* Coach Info Card */}
             <div className="px-4 py-6 space-y-6">
-              <h2 className="text-2xl font-bold text-primary">
-                {t("tabCoachIntro")}
-              </h2>
+              <h2 className={cn(headingTextClassName)}>{t("tabCoachIntro")}</h2>
 
               {/* Coach Name */}
               <div>
@@ -360,7 +367,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
 
               {/* Introduction */}
               {program.coach.coachProfile?.introduction && (
-                <div className="bg-white  p-6 shadow-sm">
+                <div className="bg-white p-6 shadow-sm">
                   <h3 className="font-semibold text-gray-900 mb-3">
                     {t("introduction")}
                   </h3>

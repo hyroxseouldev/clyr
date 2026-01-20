@@ -11,7 +11,7 @@ function BottomBorderTabTrigger({
       data-slot="tabs-trigger"
       className={cn(
         // 1. 기본 스타일
-        "inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all",
+        "inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all",
         "shadow-none outline-none",
         "disabled:pointer-events-none disabled:opacity-50",
 
