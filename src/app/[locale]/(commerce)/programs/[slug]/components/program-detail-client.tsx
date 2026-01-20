@@ -128,13 +128,9 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
       const scrollTop =
         window.pageYOffset || document.documentElement.scrollTop;
 
-      // Calculate position to center element in viewport (below sticky tabs)
+      // Scroll to center section in viewport
       const targetScroll =
-        scrollTop +
-        elementRect.top -
-        viewportHeight / 2 +
-        elementRect.height / 2 -
-        tabHeight;
+        scrollTop + elementRect.top - viewportHeight / 2 + elementRect.height / 2 - tabHeight;
 
       window.scrollTo({
         top: targetScroll,
