@@ -168,7 +168,7 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
               <div>
                 <div className="font-bold">{program.title}</div>
                 {program.durationWeeks && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     {t("programInfoText", {
                       weeks: program.durationWeeks,
                       days: accessPeriodText,
@@ -187,11 +187,11 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
         <div className="space-y-2 px-4 py-6">
           <h2 className={headingTextClassName}>{t("buyerInfo")}</h2>
           <div>
-            <div className="text-sm text-gray-600">{t("email")}</div>
+            <div className="text-sm text-muted-foreground">{t("email")}</div>
             <div className="font-medium">{user.email}</div>
           </div>
           <div>
-            <div className="text-sm text-gray-600">{t("name")}</div>
+            <div className="text-sm text-muted-foreground">{t("name")}</div>
             <div className="font-medium">{user.fullName}</div>
           </div>
         </div>
@@ -204,7 +204,7 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
           <div className="min-h-[200px] relative">
             {!widgetReady && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             )}
             <div id="payment-methods" className="min-h-[200px]" />

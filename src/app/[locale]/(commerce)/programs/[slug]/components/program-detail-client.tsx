@@ -171,7 +171,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-background pb-24">
       {/* Warning Banner (if not for sale) */}
       {!program.isForSale && <WarningBanner message={t("notForSaleWarning")} />}
 
@@ -185,7 +185,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
         <div className="flex items-start justify-between gap-6 mb-6">
           {/* Left: Title and Coach */}
           <div className="flex-1">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               {program.title}
             </h1>
 
@@ -210,7 +210,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-semibold text-gray-900">
+                  <div className="font-semibold text-foreground">
                     {program.coach.coachProfile?.nickname ||
                       program.coach.fullName}
                   </div>
@@ -225,10 +225,10 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
           {/* Right: Price and Access Info */}
         </div>
         <div className="text-left shrink-0 mb-4">
-          <div className="text-3xl font-bold text-gray-900">
+          <div className="text-3xl font-bold text-foreground">
             {`${Number(program.price).toLocaleString()} ${t("won")}`}
           </div>
-          <div className="text-sm text-gray-600 mt-1">
+          <div className="text-sm text-muted-foreground mt-1">
             {`${t("totalWeeksProgram", {
               weeks: program.durationWeeks,
             })} | ${accessPeriodText}`}
@@ -250,7 +250,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
 
       {/* Purchase Button - Fixed at bottom */}
       {showPurchaseButton && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white py-4 px-4 z-40">
+        <div className="fixed bottom-0 left-0 right-0 bg-background py-4 px-4 z-40 border-t">
           <div className="container max-w-[800px] mx-auto">
             {!program.isForSale ? (
               <Button className="w-full" size="xl" disabled>
@@ -268,25 +268,25 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
       )}
 
       {/* Sticky Navigation Tabs */}
-      <div ref={tabsContainerRef} className="sticky top-0 z-50 bg-white ">
+      <div ref={tabsContainerRef} className="sticky top-0 z-50 bg-background">
         <div className="container max-w-[800px] mx-auto">
           <Tabs value={activeTab} onValueChange={handleTabClick}>
-            <TabsList className="flex w-full bg-transparent rounded-none p-0 items-stretch justify-start">
+            <TabsList className="flex w-full bg-background rounded-none p-0 items-stretch justify-start">
               <BottomBorderTabTrigger
                 value="program"
-                className="data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
+                className="data-[state=active]:text-foreground text-muted-foreground hover:text-foreground transition-colors"
               >
                 {t("tabProgramIntro")}
               </BottomBorderTabTrigger>
               <BottomBorderTabTrigger
                 value="curriculum"
-                className="data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
+                className="data-[state=active]:text-foreground text-muted-foreground hover:text-foreground transition-colors"
               >
                 {t("tabCurriculum")}
               </BottomBorderTabTrigger>
               <BottomBorderTabTrigger
                 value="coach"
-                className="data-[state=active]:text-gray-900 text-gray-600 hover:text-gray-900 transition-colors"
+                className="data-[state=active]:text-foreground text-muted-foreground hover:text-foreground transition-colors"
               >
                 {t("tabCoachIntro")}
               </BottomBorderTabTrigger>
@@ -319,7 +319,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
           {/* Description */}
           {program.description && (
             <div
-              className="prose max-w-none mb-12 text-gray-700"
+              className="prose max-w-none mb-12 text-foreground dark:prose-invert"
               dangerouslySetInnerHTML={{ __html: program.description }}
             />
           )}
@@ -349,7 +349,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
             weekLabel={(n) => t("week", { n })}
           />
         ) : (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-muted-foreground">
             {t("noCurriculum")}
           </div>
         )}
@@ -379,7 +379,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
 
               {/* Coach Name */}
               <div>
-                <div className="text-xl font-semibold text-gray-900">
+                <div className="text-xl font-semibold text-foreground">
                   {program.coach.coachProfile?.nickname ||
                     program.coach.fullName}{" "}
                   {t("coach")}
@@ -388,11 +388,11 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
 
               {/* Introduction */}
               {program.coach.coachProfile?.introduction && (
-                <div className="bg-white p-6 shadow-sm">
-                  <h3 className="font-semibold text-gray-900 mb-3">
+                <div className="bg-card p-6 shadow-sm border">
+                  <h3 className="font-semibold text-foreground mb-3">
                     {t("introduction")}
                   </h3>
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-foreground leading-relaxed">
                     {program.coach.coachProfile.introduction}
                   </p>
                 </div>
@@ -401,6 +401,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
               {/* Experience */}
               {program.coach.coachProfile?.experience && (
                 <div
+                  className="prose max-w-none dark:prose-invert"
                   dangerouslySetInnerHTML={{
                     __html: program.coach.coachProfile.experience,
                   }}

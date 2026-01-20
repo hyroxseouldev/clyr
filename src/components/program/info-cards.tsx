@@ -27,9 +27,9 @@ export function InfoCards({
   className,
 }: InfoCardsProps) {
   const difficultyColors = {
-    BEGINNER: "bg-green-100 text-green-800 border-green-200",
-    INTERMEDIATE: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    ADVANCED: "bg-red-100 text-red-800 border-red-200",
+    BEGINNER: "bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/30",
+    INTERMEDIATE: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/30",
+    ADVANCED: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30",
   };
 
   const cardContextClassName =
@@ -38,9 +38,9 @@ export function InfoCards({
   return (
     <div className={cn("grid grid-cols-1 gap-4 max-w-4xl mx-auto", className)}>
       {/* 난이도 Card */}
-      <Card className="border-gray-200">
+      <Card>
         <CardContent className={cardContextClassName}>
-          <div className="text-sm text-gray-600">난이도</div>
+          <div className="text-sm text-muted-foreground">난이도</div>
           <Badge
             className={cn("text-sm px-3 py-1", difficultyColors[difficulty])}
           >
@@ -50,23 +50,23 @@ export function InfoCards({
       </Card>
 
       {/* 진행기간 Card */}
-      <Card className="border-gray-200">
+      <Card>
         <CardContent className={cardContextClassName}>
-          <div className="text-sm text-gray-600">{durationLabel}</div>
-          <div className="text-xl font-bold text-gray-900">
+          <div className="text-sm text-muted-foreground">{durationLabel}</div>
+          <div className="text-xl font-bold text-foreground">
             {durationWeeks}
-            <span className="text-sm font-normal text-gray-600 ml-1">주</span>
+            <span className="text-sm font-normal text-muted-foreground ml-1">주</span>
           </div>
         </CardContent>
       </Card>
 
       {/* 주당훈련횟수 Card */}
-      <Card className="border-gray-200">
+      <Card>
         <CardContent className={cardContextClassName}>
-          <div className="text-sm text-gray-600">{weeklyTrainingLabel}</div>
-          <div className="text-xl font-bold text-gray-900">
+          <div className="text-sm text-muted-foreground">{weeklyTrainingLabel}</div>
+          <div className="text-xl font-bold text-foreground">
             {daysPerWeek}
-            <span className="text-sm font-normal text-gray-600 ml-1">회</span>
+            <span className="text-sm font-normal text-muted-foreground ml-1">회</span>
           </div>
         </CardContent>
       </Card>

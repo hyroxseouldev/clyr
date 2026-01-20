@@ -42,8 +42,8 @@ export function CurriculumList({
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-900 mb-1">{item.title}</h4>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <h4 className="font-semibold text-foreground mb-1">{item.title}</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 {item.description}
               </p>
             </div>
@@ -51,7 +51,7 @@ export function CurriculumList({
 
           {/* Divider - don't show after last item */}
           {index < curriculum.length - 1 && (
-            <Separator className="bg-gray-200" />
+            <Separator />
           )}
         </div>
       ))}
