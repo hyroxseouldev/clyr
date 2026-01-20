@@ -19,6 +19,8 @@ interface PaymentClientProps {
     accessPeriodDays: number | null;
     mainImageList?: string[] | null;
     durationWeeks?: number | null;
+    daysPerWeek?: number | null;
+    programImage?: string | null;
   };
   user: {
     email: string;
@@ -130,24 +132,40 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
 
   const headingTextClassName = "font-bold text-primary";
 
+  // Get thumbnail image
+  const thumbnailImage = program.mainImageList?.[0] || program.programImage;
+
+  // Calculate access period text
+  const accessPeriodText = program.accessPeriodDays
+    ? `${program.accessPeriodDays}`
+    : "평생";
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-32">
       <div className="container max-w-2xl mx-auto">
+        {/* 프로그램 정보 */}
         <div className="space-y-4 px-4 py-6">
           <h2 className={headingTextClassName}>{t("programInfo")}</h2>
 
           <div className="space-y-3">
             <div className="flex items-start gap-4">
-              <img
-                src={program.mainImageList?.[0]}
-                alt={program.title}
-                className="w-20 h-20 rounded-md object-cover"
-              />
+              {thumbnailImage && (
+                <img
+                  src={thumbnailImage}
+                  alt={program.title}
+                  className="w-20 h-20 rounded-md object-cover"
+                />
+              )}
               <div>
                 <div className="font-bold">{program.title}</div>
-                <p className="text-sm text-gray-600">
-                  {`총 ${program.durationWeeks}주 프로그램 ∙ ${program.accessPeriodDays}일 소장 가능`}
-                </p>
+                {program.durationWeeks && (
+                  <p className="text-sm text-gray-600">
+                    {t("programInfoText", {
+                      weeks: program.durationWeeks,
+                      days: accessPeriodText,
+                    })}
+                  </p>
+                )}
                 <div className="text-2xl font-bold mt-2">
                   {amount.toLocaleString()}원
                 </div>
@@ -155,9 +173,10 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
             </div>
           </div>
         </div>
+
         {/* 구매자 정보 */}
-        <div className="space-y-4 px-4 py-6">
-          <h2 className={headingTextClassName}>구매자 정보</h2>
+        <div className="space-y-2 px-4 py-6">
+          <h2 className={headingTextClassName}>{t("buyerInfo")}</h2>
           <div>
             <div className="text-sm text-gray-600">{t("email")}</div>
             <div className="font-medium">{user.email}</div>
@@ -167,6 +186,8 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
             <div className="font-medium">{user.fullName}</div>
           </div>
         </div>
+
+        {/* 결제 수단 */}
         <div className="space-y-4 px-4 py-6">
           <h2 className={headingTextClassName}>{t("paymentMethod")}</h2>
 
@@ -179,15 +200,19 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
             )}
             <div id="payment-methods" className="min-h-[200px]" />
           </div>
-
-          {/* 결제 버튼 */}
-          {widgetReady && (
-            <Button onClick={handlePayment} className="w-full mt-4 " size="xl">
-              {t("payButton", { amount: amount.toLocaleString() })}
-            </Button>
-          )}
         </div>
       </div>
+
+      {/* 결제 버튼 - 하단 고정 */}
+      {widgetReady && (
+        <div className="fixed bottom-0 left-0 right-0 border-t bg-background shadow-lg z-50">
+          <div className="container max-w-2xl mx-auto p-4">
+            <Button onClick={handlePayment} className="w-full" size="xl">
+              {t("payButton", { amount: amount.toLocaleString() })}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

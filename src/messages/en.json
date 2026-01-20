@@ -182,20 +182,14 @@
       "contactSupport": "If payment continues to fail, please contact customer service."
     },
     "client": {
-      "title": "Payment",
-      "description": "Pay safely and start learning",
       "programInfo": "Program Information",
-      "programName": "Program Name",
-      "amount": "Payment Amount",
-      "accessPeriod": "Access Period",
-      "days": "days",
+      "programInfoText": "Total {weeks} weeks program ∙ {days} days access",
       "buyerInfo": "Buyer Information",
       "email": "Email",
       "name": "Name",
       "paymentMethod": "Payment Method",
       "payButton": "Pay {amount}",
-      "safePayment": "Secure Payment",
-      "safePaymentDesc": "Securely processed through Tosspayments. Payment information is encrypted and transmitted.",
+      "buyer": "Buyer",
       "errors": {
         "setupError": "Payment Setup Error",
         "setupErrorDesc": "Payment service is not configured correctly.",
@@ -205,8 +199,7 @@
         "widgetNotReady": "Payment widget is not ready.",
         "paymentError": "Payment Error",
         "paymentErrorDesc": "An error occurred during payment processing."
-      },
-      "buyer": "Buyer"
+      }
     }
   },
   "programDetail": {

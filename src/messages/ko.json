@@ -182,20 +182,14 @@
       "contactSupport": "결제가 계속 실패하는 경우 고객센터에 문의해 주세요."
     },
     "client": {
-      "title": "결제하기",
-      "description": "안전하게 결제하고 수강을 시작하세요",
       "programInfo": "프로그램 정보",
-      "programName": "프로그램명",
-      "amount": "결제 금액",
-      "accessPeriod": "수강 기간",
-      "days": "일",
+      "programInfoText": "총 {weeks}주 프로그램 ∙ {days}일 소장 가능",
       "buyerInfo": "구매자 정보",
       "email": "이메일",
       "name": "이름",
       "paymentMethod": "결제 수단",
       "payButton": "{amount}원 결제하기",
-      "safePayment": "안전한 결제",
-      "safePaymentDesc": "토스페이먼츠를 통해 안전하게 결제됩니다. 결제 정보는 암호화되어 전송됩니다.",
+      "buyer": "구매자",
       "errors": {
         "setupError": "결제 설정 오류",
         "setupErrorDesc": "결제 서비스 설정이 올바르지 않습니다.",
@@ -205,8 +199,7 @@
         "widgetNotReady": "결제 위젯이 준비되지 않았습니다.",
         "paymentError": "결제 오류",
         "paymentErrorDesc": "결제 처리 중 오류가 발생했습니다."
-      },
-      "buyer": "구매자"
+      }
     }
   },
   "programDetail": {
