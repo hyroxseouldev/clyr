@@ -269,7 +269,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
 
       {/* Sticky Navigation Tabs */}
       <div ref={tabsContainerRef} className="sticky top-0 z-50 bg-white ">
-        <div className="container max-w-[800px] mx-auto px-4">
+        <div className="container max-w-[800px] mx-auto">
           <Tabs value={activeTab} onValueChange={handleTabClick}>
             <TabsList className="flex w-full bg-transparent rounded-none p-0 items-stretch justify-start">
               <BottomBorderTabTrigger
