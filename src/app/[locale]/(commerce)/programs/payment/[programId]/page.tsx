@@ -1,7 +1,6 @@
 import { initPurchaseAction } from "@/actions/payment";
 import { redirect } from "@/i18n/routing";
 import PaymentClient from "./client-page";
-import { useLocale } from "next-intl";
 import { getLocale } from "next-intl/server";
 
 /**
