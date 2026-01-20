@@ -41,6 +41,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
   const [showPurchaseButton, setShowPurchaseButton] = useState<boolean>(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const isProgrammaticScrollRef = useRef(false);
 
   // Main images for carousel
   const mainImages = program.mainImageList || [];
@@ -61,6 +62,9 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
+        // Skip observer updates during programmatic scroll
+        if (isProgrammaticScrollRef.current) return;
+
         // Special case: when scrolled near bottom, activate last tab (coach)
         const scrollPosition = window.innerHeight + window.pageYOffset;
         const threshold = document.documentElement.scrollHeight - 100;
@@ -130,6 +134,9 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
     const sectionId = SECTIONS[tab as keyof typeof SECTIONS];
     const element = document.getElementById(sectionId);
     if (element) {
+      // Block observer updates during programmatic scroll
+      isProgrammaticScrollRef.current = true;
+
       const tabHeight = 56; // h-14 = 56px
       const viewportHeight = window.innerHeight;
       const elementRect = element.getBoundingClientRect();
@@ -144,6 +151,11 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
         top: targetScroll,
         behavior: "smooth",
       });
+
+      // Re-enable observer after smooth scroll completes
+      setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 600);
     }
   };
 
