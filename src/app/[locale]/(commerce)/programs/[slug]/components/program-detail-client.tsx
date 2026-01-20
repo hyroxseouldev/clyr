@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
-import type { ProgramsDto } from "@/db/schema/dto";
+import type { getProgramBySlugQuery } from "@/db/queries/program";
 
 // Section IDs for scroll navigation
 export const SECTIONS = {
@@ -29,8 +29,10 @@ export const SECTIONS = {
   coach: "coach-section",
 } as const;
 
+type ProgramsDto = Awaited<ReturnType<typeof getProgramBySlugQuery>>;
+
 interface ProgramDetailClientProps {
-  program: ProgramsDto;
+  program: NonNullable<ProgramsDto>;
 }
 
 export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
@@ -38,7 +40,9 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
   const tProgram = useTranslations("program");
   const locale = useLocale();
   const [activeTab, setActiveTab] = useState<string>("program");
+  const [showPurchaseButton, setShowPurchaseButton] = useState<boolean>(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const tabSentinelRef = useRef<HTMLDivElement>(null);
 
   // Main images for carousel
   const mainImages = program.mainImageList || [];
@@ -91,6 +95,29 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
     };
   }, []);
 
+  // Track when tabs become sticky to show/hide purchase button
+  useEffect(() => {
+    const sentinel = tabSentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // When sentinel is NOT intersecting (out of view), tabs are sticky
+        setShowPurchaseButton(!entry.isIntersecting);
+      },
+      {
+        threshold: 0,
+        rootMargin: "0px 0px -100% 0px", // Trigger when sentinel leaves viewport top
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   const handleTabClick = (tab: string) => {
     // add setState to activeTab
     setActiveTab(tab);
@@ -110,7 +137,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pb-24">
       {/* Warning Banner (if not for sale) */}
       {!program.isForSale && <WarningBanner message={t("notForSaleWarning")} />}
 
@@ -173,8 +200,7 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
             })} | ${accessPeriodText}`}
           </div>
         </div>
-        {/* Purchase Button */}
-        <div className="sticky bottom-0 bg-white py-4 -mx-4 px-4 mt-4 z-40">
+        {!showPurchaseButton && (
           <Button
             asChild
             className="w-full"
@@ -185,8 +211,29 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
               {t("purchase")}
             </Link>
           </Button>
-        </div>
+        )}
       </div>
+
+      {/* Purchase Button - Fixed at bottom */}
+      {showPurchaseButton && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white py-4 px-4 z-40 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+          <div className="container max-w-[800px] mx-auto">
+            <Button
+              asChild
+              className="w-full"
+              size="lg"
+              disabled={!program.isForSale}
+            >
+              <Link href={`/programs/payment/${program.slug}`}>
+                {t("purchase")}
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Sentinel for detecting when tabs become sticky */}
+      <div ref={tabSentinelRef} className="h-0" aria-hidden="true" />
 
       {/* Sticky Navigation Tabs */}
       <div className="sticky top-0 z-50 bg-white ">
