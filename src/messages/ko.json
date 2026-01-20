@@ -188,8 +188,11 @@
       "email": "이메일",
       "name": "이름",
       "paymentMethod": "결제 수단",
-      "payButton": "{amount}원 결제하기",
+      "payButton": "{amount} 결제하기",
       "buyer": "구매자",
+      "won": "원",
+      "lifetime": "평생",
+      "daysUnit": "일",
       "errors": {
         "setupError": "결제 설정 오류",
         "setupErrorDesc": "결제 서비스 설정이 올바르지 않습니다.",

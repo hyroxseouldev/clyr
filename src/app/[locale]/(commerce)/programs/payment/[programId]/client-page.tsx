@@ -2,12 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { loadTossPayments, ANONYMOUS } from "@tosspayments/tosspayments-sdk";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { Loader2 } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
 
 interface PaymentClientProps {
   program: {
@@ -32,11 +30,22 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
   const { toast } = useToast();
   const t = useTranslations("payment.client");
   const tError = useTranslations("payment.client.errors");
+  const locale = useLocale();
   const [paymentWidget, setPaymentWidget] = useState<unknown>(null);
   const [widgetReady, setWidgetReady] = useState(false);
   const isInitialized = useRef(false);
-
   const amount = Number(program.price);
+
+  // Format currency based on locale
+  const formatCurrency = (amount: number) => {
+    if (locale === "ko") {
+      return `${amount.toLocaleString()}원`;
+    }
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "KRW",
+    }).format(amount);
+  };
 
   // 결제 위젯 로드
   useEffect(() => {
@@ -138,7 +147,7 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
   // Calculate access period text
   const accessPeriodText = program.accessPeriodDays
     ? `${program.accessPeriodDays}`
-    : "평생";
+    : t("lifetime");
 
   return (
     <div className="min-h-screen pb-32">
@@ -166,9 +175,9 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
                     })}
                   </p>
                 )}
-                <div className="text-2xl font-bold mt-2">
-                  {amount.toLocaleString()}원
-                </div>
+                <p className="text-2xl font-bold mt-2">
+                  {formatCurrency(amount)}
+                </p>
               </div>
             </div>
           </div>
@@ -208,7 +217,7 @@ export default function PaymentClient({ program, user }: PaymentClientProps) {
         <div className="fixed bottom-0 left-0 right-0 border-t bg-background shadow-lg z-50">
           <div className="container max-w-2xl mx-auto p-4">
             <Button onClick={handlePayment} className="w-full" size="xl">
-              {t("payButton", { amount: amount.toLocaleString() })}
+              {t("payButton", { amount: formatCurrency(amount) })}
             </Button>
           </div>
         </div>

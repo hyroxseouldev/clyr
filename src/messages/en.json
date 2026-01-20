@@ -190,6 +190,9 @@
       "paymentMethod": "Payment Method",
       "payButton": "Pay {amount}",
       "buyer": "Buyer",
+      "won": "KRW",
+      "lifetime": "Lifetime",
+      "daysUnit": "days",
       "errors": {
         "setupError": "Payment Setup Error",
         "setupErrorDesc": "Payment service is not configured correctly.",
