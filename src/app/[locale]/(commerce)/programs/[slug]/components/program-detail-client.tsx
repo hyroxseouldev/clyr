@@ -61,6 +61,14 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
+        // Special case: when scrolled near bottom, activate last tab (coach)
+        const scrollPosition = window.innerHeight + window.pageYOffset;
+        const threshold = document.documentElement.scrollHeight - 100;
+        if (scrollPosition >= threshold) {
+          setActiveTab("coach");
+          return;
+        }
+
         // Find the section that's most visible
         const visibleEntries = entries.filter((entry) => entry.isIntersecting);
         if (visibleEntries.length > 0) {
