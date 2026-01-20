@@ -76,7 +76,19 @@ export async function middleware(request: NextRequest) {
       userRole === "COACH"
         ? `/${locale}/coach/dashboard`
         : `/${locale}/user/program`;
-    const dest = redirectTo || defaultDest;
+
+    // Ensure redirectTo has locale prefix
+    let dest;
+    if (redirectTo) {
+      if (redirectTo.match(/^\/(ko|en)\//)) {
+        dest = redirectTo; // Already has locale prefix
+      } else {
+        dest = `/${locale}${redirectTo}`; // Prepend current locale
+      }
+    } else {
+      dest = defaultDest;
+    }
+
     return NextResponse.redirect(new URL(dest, request.url));
   }
 

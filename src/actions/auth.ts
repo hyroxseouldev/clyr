@@ -16,7 +16,8 @@ import {
 
 export async function signInWithEmailAndPassword(
   email: string,
-  password: string
+  password: string,
+  redirectTo?: string
 ) {
   const supabase = await createClient();
 
@@ -44,9 +45,10 @@ export async function signInWithEmailAndPassword(
   }
 
   // 3. 리다이렉트 경로 결정
-  let redirectPath = "/user/program";
+  let redirectPath = redirectTo || "/";
+
   if (account.role === "COACH") {
-    redirectPath = "/coach/dashboard"; // 처음에 설계하신 코치 전용 경로
+    redirectPath = "/coach/dashboard";
   }
 
   // 4. redirect는 함수의 가장 마지막에 호출 (try-catch를 쓸 경우 반드시 밖에서 호출)

@@ -1,6 +1,8 @@
 import { initPurchaseAction } from "@/actions/payment";
-import { redirect } from "next/navigation";
+import { redirect } from "@/i18n/routing";
 import PaymentClient from "./client-page";
+import { useLocale } from "next-intl";
+import { getLocale } from "next-intl/server";
 
 /**
  * 프로그램 결제 페이지 (Server Component)
@@ -15,9 +17,10 @@ const PaymentPage = async ({
 
   // 로그인 & 프로그램 확인
   const result = await initPurchaseAction(programId);
+  const locale = await getLocale();
 
   if (!result.success && result.requiresAuth) {
-    redirect(result.redirectUrl);
+    redirect({ href: result.redirectUrl, locale: locale });
   }
 
   if (!result.success) {
