@@ -145,7 +145,11 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
 
       // Scroll to center section in viewport
       const targetScroll =
-        scrollTop + elementRect.top - viewportHeight / 2 + elementRect.height / 2 - tabHeight;
+        scrollTop +
+        elementRect.top -
+        viewportHeight / 2 +
+        elementRect.height / 2 -
+        tabHeight;
 
       window.scrollTo({
         top: targetScroll,
@@ -230,34 +234,35 @@ export function ProgramDetailClient({ program }: ProgramDetailClientProps) {
             })} | ${accessPeriodText}`}
           </div>
         </div>
-        {!showPurchaseButton && (
-          <Button
-            asChild
-            className="w-full"
-            size="xl"
-            disabled={!program.isForSale}
-          >
-            <Link href={`/programs/payment/${program.slug}`}>
+        {!showPurchaseButton &&
+          (!program.isForSale ? (
+            <Button className="w-full" size="xl" disabled>
               {t("purchase")}
-            </Link>
-          </Button>
-        )}
+            </Button>
+          ) : (
+            <Button asChild className="w-full" size="xl">
+              <Link href={`/programs/payment/${program.slug}`}>
+                {t("purchase")}
+              </Link>
+            </Button>
+          ))}
       </div>
 
       {/* Purchase Button - Fixed at bottom */}
       {showPurchaseButton && (
         <div className="fixed bottom-0 left-0 right-0 bg-white py-4 px-4 z-40">
           <div className="container max-w-[800px] mx-auto">
-            <Button
-              asChild
-              className="w-full"
-              size="xl"
-              disabled={!program.isForSale}
-            >
-              <Link href={`/programs/payment/${program.slug}`}>
+            {!program.isForSale ? (
+              <Button className="w-full" size="xl" disabled>
                 {t("purchase")}
-              </Link>
-            </Button>
+              </Button>
+            ) : (
+              <Button asChild className="w-full" size="xl">
+                <Link href={`/programs/payment/${program.slug}`}>
+                  {t("purchase")}
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       )}
