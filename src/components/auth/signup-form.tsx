@@ -4,13 +4,6 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
-import {
   Form,
   FormField,
   FormItem,
@@ -98,142 +91,141 @@ export function SignUpForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('title')}</CardTitle>
-          <CardDescription>{t('description')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4"
-            >
-              <FormField
-                control={form.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('fullName')}</FormLabel>
+    <div className={cn("flex flex-col gap-10", className)} {...props}>
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-bold text-primary">Clyr</h1>
+        <h2 className="text-3xl font-bold">{t('title')}</h2>
+        <p className="text-md text-muted-foreground">{t('description')}</p>
+      </div>
+
+      <div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-md font-bold">
+                    {t('fullName')}
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder={t('fullNamePlaceholder')} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-md font-bold">
+                    {t('email')}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t('emailPlaceholder')}
+                      type="email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-md font-bold">
+                    {t('password')}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t('passwordPlaceholder')}
+                      type="password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-md font-bold">
+                    {t('confirmPassword')}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t('confirmPasswordPlaceholder')}
+                      type="password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-md font-bold">
+                    {t('role')}
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
-                      <Input placeholder={t('fullNamePlaceholder')} {...field} />
+                      <SelectTrigger>
+                        <SelectValue placeholder="회원 유형을 선택하세요" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormDescription>
-                      서비스에서 사용하실 실명입니다.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    <SelectContent>
+                      <SelectItem value="USER">{t('roleUser')}</SelectItem>
+                      <SelectItem value="COACH">{t('roleCoach')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('email')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={t('emailPlaceholder')}
-                        type="email"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('password')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={t('passwordPlaceholder')}
-                        type="password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      최소 8자 이상 입력해주세요.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('confirmPassword')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={t('confirmPasswordPlaceholder')}
-                        type="password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('role')}</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="회원 유형을 선택하세요" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="USER">{t('roleUser')}</SelectItem>
-                        <SelectItem value="COACH">{t('roleCoach')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      코치는 프로그램을 생성하고 판매할 수 있습니다.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* 이미 계정이 있으면 로그인 페이지로 이동 */}
-              <FormDescription className="text-center text-muted-foreground">
-                {t('hasAccount')}{" "}
-                <Link
-                  href="/signin"
-                  className="text-primary text-underline underline-offset-4 hover:text-primary/80"
-                >
-                  {t('signIn')}
-                </Link>
-              </FormDescription>
-
-              <AsyncButton
-                type="submit"
-                className="w-full"
-                isLoading={isLoading}
+            {/* 이미 계정이 있으면 로그인 페이지로 이동 */}
+            <FormDescription className="text-center text-muted-foreground">
+              {t('hasAccount')}{" "}
+              <Link
+                href="/signin"
+                className="text-underline underline-offset-4 hover:text-primary/80 font-bold"
               >
-                {t('submit')}
-              </AsyncButton>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                {t('signIn')}
+              </Link>
+            </FormDescription>
+
+            <AsyncButton
+              type="submit"
+              className="w-full mt-4"
+              isLoading={isLoading}
+              size="xl"
+            >
+              {t('submit')}
+            </AsyncButton>
+          </form>
+        </Form>
+      </div>
     </div>
   );
 }
