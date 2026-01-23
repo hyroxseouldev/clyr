@@ -15,7 +15,7 @@ import { getProgramByIdQuery } from "@/db/queries/program";
 import { getSectionItemByIdQuery } from "@/db/queries/blueprint-sections";
 import { getUserId } from "@/actions/auth";
 import { db } from "@/db";
-import { sectionRecords } from "@/db/schema";
+import { sectionRecords, userProfile } from "@/db/schema";
 
 // ==========================================
 // USER ACTIONS
@@ -52,6 +52,15 @@ export async function createSectionRecordAction(data: {
       return { success: false, message: "권한이 없습니다." };
     }
 
+    // Get user profile ID
+    const profile = await db.query.userProfile.findFirst({
+      where: eq(userProfile.accountId, userId),
+    });
+
+    if (!profile) {
+      return { success: false, message: "프로필을 찾을 수 없습니다." };
+    }
+
     // 기존 기록 확인 (userId + sectionItemId 유니크)
     const existingRecord = await db.query.sectionRecords.findFirst({
       where: and(
@@ -71,6 +80,7 @@ export async function createSectionRecordAction(data: {
       // 새 기록 생성
       record = await createSectionRecordQuery({
         userId: userId,
+        userProfileId: profile.id,
         sectionId: data.sectionId,
         sectionItemId: data.sectionItemId,
         content: data.content,

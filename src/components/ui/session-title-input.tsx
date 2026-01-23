@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SESSION_TITLE_PRESETS, type SessionTitlePreset } from "@/lib/constants/workout";
+import { SESSION_TITLE_PRESETS } from "@/lib/constants/workout";
+
+// Type for preset values excluding "custom"
+type SessionTitlePresetValue = "warm_up" | "cool_down" | "aerobics" | "main_workout" | "accessory";
 
 interface SessionTitleInputProps {
   value: string;
@@ -28,26 +30,26 @@ export function SessionTitleInput({
 }: SessionTitleInputProps) {
   const t = useTranslations("sessionTitle");
 
-  // Get all preset display values for comparison
-  const presetDisplayValues = useMemo(() => {
-    return Object.values(SESSION_TITLE_PRESETS).reduce((acc, presetKey) => {
-      if (presetKey !== SESSION_TITLE_PRESETS.CUSTOM) {
-        acc[t(`presets.${presetKey}`)] = presetKey;
-      }
-      return acc;
-    }, {} as Record<string, string>);
-  }, [t]);
+  // All valid preset values (excluding CUSTOM which is for UI state)
+  const validPresetValues: SessionTitlePresetValue[] = [
+    SESSION_TITLE_PRESETS.WARM_UP,
+    SESSION_TITLE_PRESETS.COOL_DOWN,
+    SESSION_TITLE_PRESETS.AEROBICS,
+    SESSION_TITLE_PRESETS.MAIN_WORKOUT,
+    SESSION_TITLE_PRESETS.ACCESSORY,
+  ];
 
   // Determine if current value is a preset or custom
-  const isEmpty = !value;
-  const isCustom = !isEmpty && !presetDisplayValues[value];
-  const currentPresetKey = isEmpty ? "" : isCustom ? SESSION_TITLE_PRESETS.CUSTOM : presetDisplayValues[value];
+  // Check if value is a valid preset enum value (e.g., "warm_up")
+  const isPreset = validPresetValues.includes(value as SessionTitlePresetValue);
+  const isEmpty = !value || value === "\u00A0"; // Also check for non-breaking space
+  const currentPresetKey = isEmpty ? "" : isPreset ? value : SESSION_TITLE_PRESETS.CUSTOM;
 
   const handleSelectChange = (newValue: string) => {
     if (newValue === SESSION_TITLE_PRESETS.CUSTOM) {
       onChange("\u00A0"); // Use non-breaking space to distinguish from empty
     } else {
-      onChange(t(`presets.${newValue}`)); // Store translated display value
+      onChange(newValue); // Store enum value directly (e.g., "warm_up")
     }
   };
 

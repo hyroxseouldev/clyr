@@ -170,6 +170,9 @@ export const sectionRecords = pgTable(
     userId: uuid("user_id")
       .references(() => account.id, { onDelete: "cascade" })
       .notNull(),
+    userProfileId: uuid("user_profile_id")
+      .references(() => userProfile.id, { onDelete: "cascade" })
+      .notNull(),
     sectionId: uuid("section_id")
       .references(() => blueprintSections.id, { onDelete: "cascade" })
       .notNull(),
@@ -411,6 +414,10 @@ export const sectionRecordsRelations = relations(sectionRecords, ({ one }) => ({
   user: one(account, {
     fields: [sectionRecords.userId],
     references: [account.id],
+  }),
+  userProfile: one(userProfile, {
+    fields: [sectionRecords.userProfileId],
+    references: [userProfile.id],
   }),
   section: one(blueprintSections, {
     fields: [sectionRecords.sectionId],

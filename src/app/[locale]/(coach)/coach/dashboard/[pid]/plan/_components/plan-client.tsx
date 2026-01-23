@@ -35,6 +35,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SessionTitleInput } from "@/components/ui/session-title-input";
+import { SessionTitleDisplay } from "@/components/session-title-display";
 import {
   Plus,
   Calendar,
@@ -1040,7 +1041,7 @@ function BlueprintEditorModal({
                           <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
                           <div className="flex-1 min-w-0">
                             <h4 className="text-sm font-medium truncate">
-                              {section.title}
+                              <SessionTitleDisplay title={section.title} />
                             </h4>
                             {section.content && (
                               <div

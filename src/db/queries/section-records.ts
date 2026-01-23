@@ -26,6 +26,7 @@ export const getSectionRecordByIdQuery = async (recordId: string) => {
     where: eq(sectionRecords.id, recordId),
     with: {
       user: true,
+      userProfile: true,
       section: true,
       sectionItem: {
         with: {
@@ -45,6 +46,7 @@ export const getSectionRecordsByUserIdQuery = async (userId: string) => {
     orderBy: [desc(sectionRecords.completedAt)],
     with: {
       user: true,
+      userProfile: true,
       section: true,
       sectionItem: {
         with: {
@@ -66,6 +68,7 @@ export const getSectionRecordsBySectionIdQuery = async (
     orderBy: [desc(sectionRecords.completedAt)],
     with: {
       user: true,
+      userProfile: true,
       section: true,
       sectionItem: {
         with: {
@@ -120,6 +123,7 @@ export const getSectionRecordsByProgramAndDayQuery = async (
         where: eq(sectionRecords.id, row.id),
         with: {
           user: true,
+          userProfile: true,
           section: true,
           sectionItem: {
             with: {
