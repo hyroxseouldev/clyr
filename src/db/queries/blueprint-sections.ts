@@ -12,6 +12,16 @@ export interface BlueprintSectionWithOrder {
   id: string;
   title: string;
   content: string;
+  recordType:
+    | "TIME_BASED"
+    | "WEIGHT_BASED"
+    | "REP_BASED"
+    | "DISTANCE_BASED"
+    | "SURVEY"
+    | "CHECKLIST"
+    | "PHOTO"
+    | "OTHER";
+  isRecordable: boolean;
   orderIndex: number;
   createdAt: Date;
   updatedAt: Date;
@@ -41,6 +51,8 @@ export async function getBlueprintSectionsQuery(
       id: blueprintSections.id,
       title: blueprintSections.title,
       content: blueprintSections.content,
+      recordType: blueprintSections.recordType,
+      isRecordable: blueprintSections.isRecordable,
       orderIndex: blueprintSectionItems.orderIndex,
       createdAt: blueprintSections.createdAt,
       updatedAt: blueprintSections.updatedAt,
@@ -59,8 +71,26 @@ export async function getBlueprintSectionsQuery(
 export async function createBlueprintSectionQuery(data: {
   title: string;
   content: string;
+  recordType?:
+    | "TIME_BASED"
+    | "WEIGHT_BASED"
+    | "REP_BASED"
+    | "DISTANCE_BASED"
+    | "SURVEY"
+    | "CHECKLIST"
+    | "PHOTO"
+    | "OTHER";
+  isRecordable?: boolean;
 }) {
-  const [section] = await db.insert(blueprintSections).values(data).returning();
+  const [section] = await db
+    .insert(blueprintSections)
+    .values({
+      title: data.title,
+      content: data.content,
+      recordType: data.recordType ?? "OTHER",
+      isRecordable: data.isRecordable ?? false,
+    })
+    .returning();
   return section;
 }
 
@@ -110,6 +140,16 @@ export async function updateBlueprintSectionQuery(
   data: {
     title?: string;
     content?: string;
+    recordType?:
+      | "TIME_BASED"
+      | "WEIGHT_BASED"
+      | "REP_BASED"
+      | "DISTANCE_BASED"
+      | "SURVEY"
+      | "CHECKLIST"
+      | "PHOTO"
+      | "OTHER";
+    isRecordable?: boolean;
   }
 ) {
   const [updated] = await db

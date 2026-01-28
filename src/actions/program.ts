@@ -73,7 +73,7 @@ export async function updateProgramAction(programId: string, updateData: any) {
     revalidatePath("/coach/dashboard");
     return { success: true };
   } catch (error) {
-    return { success: false, message: "수정에 실패했습니다." };
+    return { error: "수정에 실패했습니다." };
   }
 }
 

@@ -92,6 +92,8 @@ export const getSectionRecordsByProgramAndDayQuery = async (
       id: sectionRecords.id,
       userId: sectionRecords.userId,
       sectionId: sectionRecords.sectionId,
+      recordType: blueprintSections.recordType,
+      isRecordable: blueprintSections.isRecordable,
       content: sectionRecords.content,
       completedAt: sectionRecords.completedAt,
       coachComment: sectionRecords.coachComment,
@@ -102,6 +104,10 @@ export const getSectionRecordsByProgramAndDayQuery = async (
     .innerJoin(
       blueprintSectionItems,
       eq(sectionRecords.sectionItemId, blueprintSectionItems.id)
+    )
+    .innerJoin(
+      blueprintSections,
+      eq(blueprintSectionItems.sectionId, blueprintSections.id)
     )
     .innerJoin(
       programBlueprints,

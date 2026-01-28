@@ -210,6 +210,17 @@ export function createBlueprintSectionSchema(t: (key: string) => string) {
     programId: z.string().min(1, t('programIdRequired')),
     title: z.string().min(1, t('sectionTitleRequired')),
     content: z.string().optional(),
+    recordType: z.enum([
+      "TIME_BASED",
+      "WEIGHT_BASED",
+      "REP_BASED",
+      "DISTANCE_BASED",
+      "SURVEY",
+      "CHECKLIST",
+      "PHOTO",
+      "OTHER",
+    ]).default("OTHER"),
+    isRecordable: z.boolean().default(false),
   });
 }
 
@@ -218,6 +229,17 @@ export const blueprintSectionSchema = z.object({
   programId: z.string().min(1, "프로그램 ID를 입력해주세요"),
   title: z.string().min(1, "섹션 제목을 입력해주세요"),
   content: z.string().optional(),
+  recordType: z.enum([
+    "TIME_BASED",
+    "WEIGHT_BASED",
+    "REP_BASED",
+    "DISTANCE_BASED",
+    "SURVEY",
+    "CHECKLIST",
+    "PHOTO",
+    "OTHER",
+  ]).default("OTHER"),
+  isRecordable: z.boolean().default(false),
 });
 
 export type BlueprintSectionInput = z.infer<typeof blueprintSectionSchema>;

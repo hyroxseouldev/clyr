@@ -71,6 +71,17 @@ export const userProfile = pgTable("user_profile", {
     "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
   >(), // 운동 수준
 
+  // 온보딩 정보
+  onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
+  onboardingData: jsonb("onboarding_data")
+    .default({})
+    .$type<{
+      gender?: "MALE" | "FEMALE" | "OTHER";
+      currentWorkoutType?: "HYROX" | "CROSSFIT" | "RUNNING" | "GYM" | "OTHER";
+      workoutExperience?: string;
+    }>(),
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
+
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
@@ -117,6 +128,8 @@ export const programs = pgTable("programs", {
     .$type<"BEGINNER" | "INTERMEDIATE" | "ADVANCED">(),
   durationWeeks: integer("duration_weeks").notNull(), // 총 주차수
   daysPerWeek: integer("days_per_week").notNull(), // 주당 운동 일수
+  startDate: timestamp("start_date"), // 프로그램 시작일
+  endDate: timestamp("end_date"), // 프로그램 종료일
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   // ==================== NEW FIELDS ====================
@@ -145,6 +158,22 @@ export const blueprintSections = pgTable("blueprint_sections", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
   content: text("content").notNull(), // HTML from TipTap editor
+  // 섹션 기록 타입 (record 저장/정렬 방식)
+  recordType: text("record_type")
+    .notNull()
+    .$type<
+      | "TIME_BASED" // 시간 기록 (FOR_TIME, AMRAP 등)
+      | "WEIGHT_BASED" // 무게 기록 (1RM, 3RM 등)
+      | "REP_BASED" // 횟수 기록 (MAX_REPS 등)
+      | "DISTANCE_BASED" // 거리 기록 (5K run, 2K row 등)
+      | "SURVEY" // 설문/숙제 (텍스트 응답)
+      | "CHECKLIST" // 체크리스트
+      | "PHOTO" // 사진 업로드
+      | "OTHER" // 기타
+    >()
+    .default("OTHER"),
+  // 기록 가능 유무 (사용자가 제출할 수 있는지)
+  isRecordable: boolean("is_recordable").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -305,7 +334,6 @@ export const userProfileRelations = relations(userProfile, ({ one }) => ({
 export const programsRelations = relations(programs, ({ one, many }) => ({
   coach: one(account, { fields: [programs.coachId], references: [account.id] }),
   enrollments: many(enrollments),
-  workoutLogs: many(workoutLogs),
   blueprints: many(programBlueprints),
   orders: many(orders),
 }));

@@ -275,6 +275,8 @@
     "totalWeeks": "총 주차 (Weeks)",
     "daysPerWeek": "주당 운동 일수",
     "accessPeriodDays": "수강 기간 (일 / 비워두면 평생소장)",
+    "startDate": "시작일",
+    "endDate": "종료일",
     "description": "상세 설명",
     "descriptionPlaceholder": "프로그램에 대한 상세 설명을 입력하세요...",
     "isPublic": "공개 여부",

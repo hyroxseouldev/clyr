@@ -40,6 +40,8 @@ const programEditSchema = z.object({
   durationWeeks: z.number().min(1),
   daysPerWeek: z.number().min(1).max(7),
   accessPeriodDays: z.number().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
   description: z.string().nullable(),
   isPublic: z.boolean(),
   isForSale: z.boolean(),
@@ -71,6 +73,13 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
       durationWeeks: initialData?.durationWeeks ?? 1,
       daysPerWeek: initialData?.daysPerWeek ?? 3,
       accessPeriodDays: initialData?.accessPeriodDays ?? null,
+      // Format dates to YYYY-MM-DD for input type="date"
+      startDate: initialData?.startDate
+        ? new Date(initialData.startDate).toISOString().split('T')[0]
+        : null,
+      endDate: initialData?.endDate
+        ? new Date(initialData.endDate).toISOString().split('T')[0]
+        : null,
       description: initialData?.description ?? null,
       isPublic: !!initialData?.isPublic,
       isForSale: !!initialData?.isForSale,
@@ -86,7 +95,14 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
 
   const onSubmit = async (values: FormValues) => {
     startTransition(async () => {
-      const result = await updateProgramAction(initialData.id, values);
+      // Convert date strings to Date objects for database
+      const submitData = {
+        ...values,
+        startDate: values.startDate ? new Date(values.startDate) : null,
+        endDate: values.endDate ? new Date(values.endDate) : null,
+      };
+
+      const result = await updateProgramAction(initialData.id, submitData);
       if (result && "error" in result) {
         toast.error(result.error as string);
         return;
@@ -286,6 +302,51 @@ export function ProgramEditForm({ initialData }: { initialData: any }) {
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("startDate")}</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === "" ? null : e.target.value
+                          )
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("endDate")}</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === "" ? null : e.target.value
+                          )
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="flex gap-6 border p-4 rounded-lg bg-slate-50">
               <FormField

@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
-import { updateEnrollmentStatusAction, extendEnrollmentAction } from "@/actions/member";
+import { updateEnrollmentStatusAction, extendEnrollmentAction, updateEnrollmentStartDateAction, updateEnrollmentEndDateAction } from "@/actions/member";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -24,6 +26,8 @@ import {
   UserIcon,
   ShoppingBagIcon,
   LoaderIcon,
+  CheckIcon,
+  XIcon,
 } from "lucide-react";
 import { format, addDays, addWeeks, addMonths } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -90,6 +94,10 @@ export function MemberDetailClient({
   const [activeTab, setActiveTab] = useState<"enrollment" | "performance">("enrollment");
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // 날짜 편집 상태
+  const [editingField, setEditingField] = useState<'startDate' | 'endDate' | null>(null);
+  const [tempDate, setTempDate] = useState<Date | null>(null);
+
   // 상태 변경 핸들러
   const handleStatusChange = async (newStatus: "ACTIVE" | "EXPIRED" | "PAUSED") => {
     setIsUpdating(true);
@@ -135,6 +143,59 @@ export function MemberDetailClient({
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  // 날짜 편집 시작 핸들러
+  const handleStartEdit = (field: 'startDate' | 'endDate') => {
+    const currentDate = field === 'startDate' ? member.startDate : member.endDate;
+    setEditingField(field);
+    setTempDate(currentDate ? new Date(currentDate) : null);
+  };
+
+  // 날짜 저장 핸들러
+  const handleSaveDate = async () => {
+    if (!editingField) return;
+
+    // 유효성 검사: startDate < endDate
+    if (editingField === 'startDate' && tempDate && member.endDate) {
+      if (tempDate > new Date(member.endDate)) {
+        toast.error('시작일은 종료일보다 앞서야 합니다.');
+        return;
+      }
+    }
+    if (editingField === 'endDate' && tempDate && member.startDate) {
+      if (tempDate < new Date(member.startDate)) {
+        toast.error('종료일은 시작일보다 뒤여야 합니다.');
+        return;
+      }
+    }
+
+    setIsUpdating(true);
+    try {
+      const result = editingField === 'startDate'
+        ? await updateEnrollmentStartDateAction(member.id, tempDate)
+        : await updateEnrollmentEndDateAction(member.id, tempDate);
+
+      if (!result.success) {
+        throw new Error(result.message || "Failed to update date");
+      }
+
+      toast.success(tToast('dateUpdated'));
+      setEditingField(null);
+      setTempDate(null);
+      router.refresh();
+    } catch (error) {
+      toast.error(tToast('dateUpdateFailed'));
+      console.error(error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // 날짜 편집 취소 핸들러
+  const handleCancelEdit = () => {
+    setEditingField(null);
+    setTempDate(null);
   };
 
   // 3대 운동 PR 계산 (content에서 운동 이름 찾기)
@@ -211,19 +272,81 @@ export function MemberDetailClient({
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{t('startDate')}</p>
-                <p className="font-medium">
-                  {member.startDate
-                    ? format(new Date(member.startDate), "yyyy.MM.dd", { locale: ko })
-                    : t('undecided')}
-                </p>
+                {editingField === 'startDate' ? (
+                  <div className="flex items-center gap-1">
+                    <Popover open={editingField === 'startDate'} onOpenChange={(open) => !open && handleCancelEdit()}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start font-normal" disabled={isUpdating}>
+                          {tempDate ? format(tempDate, "yyyy.MM.dd", { locale: ko }) : t('undecided')}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={tempDate ?? undefined}
+                          onSelect={(date) => setTempDate(date ?? null)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <Button size="icon" variant="ghost" className="h-9 w-9" onClick={handleSaveDate} disabled={isUpdating || !tempDate}>
+                      <CheckIcon className="h-4 w-4 text-green-600" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-9 w-9" onClick={handleCancelEdit} disabled={isUpdating}>
+                      <XIcon className="h-4 w-4 text-red-600" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start font-medium px-0 h-auto"
+                    onClick={() => handleStartEdit('startDate')}
+                    disabled={isUpdating}
+                  >
+                    {member.startDate
+                      ? format(new Date(member.startDate), "yyyy.MM.dd", { locale: ko })
+                      : t('undecided')}
+                  </Button>
+                )}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{t('endDate')}</p>
-                <p className="font-medium">
-                  {member.endDate
-                    ? format(new Date(member.endDate), "yyyy.MM.dd", { locale: ko })
-                    : t('unlimited')}
-                </p>
+                {editingField === 'endDate' ? (
+                  <div className="flex items-center gap-1">
+                    <Popover open={editingField === 'endDate'} onOpenChange={(open) => !open && handleCancelEdit()}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start font-normal" disabled={isUpdating}>
+                          {tempDate ? format(tempDate, "yyyy.MM.dd", { locale: ko }) : t('unlimited')}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={tempDate ?? undefined}
+                          onSelect={(date) => setTempDate(date ?? null)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <Button size="icon" variant="ghost" className="h-9 w-9" onClick={handleSaveDate} disabled={isUpdating || !tempDate}>
+                      <CheckIcon className="h-4 w-4 text-green-600" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-9 w-9" onClick={handleCancelEdit} disabled={isUpdating}>
+                      <XIcon className="h-4 w-4 text-red-600" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start font-medium px-0 h-auto"
+                    onClick={() => handleStartEdit('endDate')}
+                    disabled={isUpdating}
+                  >
+                    {member.endDate
+                      ? format(new Date(member.endDate), "yyyy.MM.dd", { locale: ko })
+                      : t('unlimited')}
+                  </Button>
+                )}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{t('purchaseDate')}</p>

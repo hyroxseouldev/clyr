@@ -34,6 +34,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { SessionTitleInput } from "@/components/ui/session-title-input";
 import { SessionTitleDisplay } from "@/components/session-title-display";
 import {
@@ -772,7 +780,22 @@ function BlueprintEditorModal({
 
   // Sections management
   const [sections, setSections] = useState<
-    Array<{ id: string; title: string; content: string; orderIndex: number }>
+    Array<{
+      id: string;
+      title: string;
+      content: string;
+      recordType:
+        | "TIME_BASED"
+        | "WEIGHT_BASED"
+        | "REP_BASED"
+        | "DISTANCE_BASED"
+        | "SURVEY"
+        | "CHECKLIST"
+        | "PHOTO"
+        | "OTHER";
+      isRecordable: boolean;
+      orderIndex: number;
+    }>
   >(blueprint.sections || []);
   const [isLoadingSections, setIsLoadingSections] = useState(false);
   const [isSectionFormOpen, setIsSectionFormOpen] = useState(false);
@@ -780,9 +803,30 @@ function BlueprintEditorModal({
     id: string;
     title: string;
     content: string;
+    recordType:
+      | "TIME_BASED"
+      | "WEIGHT_BASED"
+      | "REP_BASED"
+      | "DISTANCE_BASED"
+      | "SURVEY"
+      | "CHECKLIST"
+      | "PHOTO"
+      | "OTHER";
+    isRecordable: boolean;
   } | null>(null);
   const [newSectionTitle, setNewSectionTitle] = useState("");
   const [newSectionContent, setNewSectionContent] = useState("");
+  const [newSectionRecordType, setNewSectionRecordType] = useState<
+    | "TIME_BASED"
+    | "WEIGHT_BASED"
+    | "REP_BASED"
+    | "DISTANCE_BASED"
+    | "SURVEY"
+    | "CHECKLIST"
+    | "PHOTO"
+    | "OTHER"
+  >("OTHER");
+  const [newSectionIsRecordable, setNewSectionIsRecordable] = useState(false);
   const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
 
   // Load sections when modal opens
@@ -816,6 +860,8 @@ function BlueprintEditorModal({
       programId: programId,
       title: newSectionTitle.trim(),
       content: newSectionContent,
+      recordType: newSectionRecordType,
+      isRecordable: newSectionIsRecordable,
     });
 
     setIsSaving(false);
@@ -828,6 +874,8 @@ function BlueprintEditorModal({
     toast.success("섹션이 추가되었습니다.");
     setNewSectionTitle("");
     setNewSectionContent("");
+    setNewSectionRecordType("OTHER");
+    setNewSectionIsRecordable(false);
     setIsSectionFormOpen(false);
     loadSections();
   };
@@ -836,10 +884,22 @@ function BlueprintEditorModal({
     id: string;
     title: string;
     content: string;
+    recordType:
+      | "TIME_BASED"
+      | "WEIGHT_BASED"
+      | "REP_BASED"
+      | "DISTANCE_BASED"
+      | "SURVEY"
+      | "CHECKLIST"
+      | "PHOTO"
+      | "OTHER";
+    isRecordable: boolean;
   }) => {
     setEditingSection(section);
     setNewSectionTitle(section.title);
     setNewSectionContent(section.content);
+    setNewSectionRecordType(section.recordType);
+    setNewSectionIsRecordable(section.isRecordable);
     setIsSectionFormOpen(true);
   };
 
@@ -853,6 +913,8 @@ function BlueprintEditorModal({
     const result = await updateBlueprintSectionAction(editingSection.id, {
       title: newSectionTitle.trim(),
       content: newSectionContent,
+      recordType: newSectionRecordType,
+      isRecordable: newSectionIsRecordable,
     });
 
     setIsSaving(false);
@@ -866,6 +928,8 @@ function BlueprintEditorModal({
     setEditingSection(null);
     setNewSectionTitle("");
     setNewSectionContent("");
+    setNewSectionRecordType("OTHER");
+    setNewSectionIsRecordable(false);
     setIsSectionFormOpen(false);
     loadSections();
   };
@@ -1006,6 +1070,8 @@ function BlueprintEditorModal({
                     setEditingSection(null);
                     setNewSectionTitle("");
                     setNewSectionContent("");
+                    setNewSectionRecordType("OTHER");
+                    setNewSectionIsRecordable(false);
                     setIsSectionFormOpen(true);
                   }}
                   disabled={isSaving}
@@ -1117,6 +1183,8 @@ function BlueprintEditorModal({
             setEditingSection(null);
             setNewSectionTitle("");
             setNewSectionContent("");
+            setNewSectionRecordType("OTHER");
+            setNewSectionIsRecordable(false);
           }
         }}
       >
@@ -1140,6 +1208,58 @@ function BlueprintEditorModal({
               label={tPlan("sectionTitle") || "제목"}
               disabled={isSaving}
             />
+
+            {/* Record Type */}
+            <div className="space-y-2">
+              <Label>기록 유형</Label>
+              <Select
+                value={newSectionRecordType}
+                onValueChange={(value) =>
+                  setNewSectionRecordType(
+                    value as
+                      | "TIME_BASED"
+                      | "WEIGHT_BASED"
+                      | "REP_BASED"
+                      | "DISTANCE_BASED"
+                      | "SURVEY"
+                      | "CHECKLIST"
+                      | "PHOTO"
+                      | "OTHER"
+                  )
+                }
+                disabled={isSaving}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="기록 유형 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="TIME_BASED">시간 기록</SelectItem>
+                  <SelectItem value="WEIGHT_BASED">무게 기록</SelectItem>
+                  <SelectItem value="REP_BASED">횟수 기록</SelectItem>
+                  <SelectItem value="DISTANCE_BASED">거리 기록</SelectItem>
+                  <SelectItem value="SURVEY">설문/숙제</SelectItem>
+                  <SelectItem value="CHECKLIST">체크리스트</SelectItem>
+                  <SelectItem value="PHOTO">사진 업로드</SelectItem>
+                  <SelectItem value="OTHER">기타</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Is Recordable */}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isRecordable"
+                checked={newSectionIsRecordable}
+                onCheckedChange={setNewSectionIsRecordable}
+                disabled={isSaving}
+              />
+              <Label
+                htmlFor="isRecordable"
+                className="cursor-pointer"
+              >
+                기록 가능 (사용자가 제출할 수 있음)
+              </Label>
+            </div>
 
             {/* Section content (TipTap editor) */}
             <div className="space-y-2">
@@ -1174,6 +1294,8 @@ function BlueprintEditorModal({
                 setEditingSection(null);
                 setNewSectionTitle("");
                 setNewSectionContent("");
+                setNewSectionRecordType("OTHER");
+                setNewSectionIsRecordable(false);
               }}
               disabled={isSaving}
               className="flex-1"

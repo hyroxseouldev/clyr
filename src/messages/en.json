@@ -275,6 +275,8 @@
     "totalWeeks": "Total Weeks",
     "daysPerWeek": "Days Per Week",
     "accessPeriodDays": "Access Period (days / leave empty for lifetime)",
+    "startDate": "Start Date",
+    "endDate": "End Date",
     "description": "Description",
     "descriptionPlaceholder": "Enter a detailed description of the program...",
     "isPublic": "Public",

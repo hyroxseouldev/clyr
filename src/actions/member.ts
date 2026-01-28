@@ -298,6 +298,74 @@ export async function extendEnrollmentAction(
 }
 
 /**
+ * 수강 시작일 업데이트
+ */
+export async function updateEnrollmentStartDateAction(
+  enrollmentId: string,
+  startDate: Date | null
+) {
+  const coachId = await getUserId();
+
+  if (!coachId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    const updatedEnrollment = await updateEnrollmentStartDateQuery(
+      enrollmentId,
+      startDate
+    );
+
+    revalidatePath("/coach/dashboard");
+    revalidatePath("/coach/members");
+    revalidatePath("/coach/dashboard/[pid]/members/[memberId]");
+
+    return {
+      success: true,
+      data: updatedEnrollment,
+      message: "시작일이 변경되었습니다.",
+    };
+  } catch (error) {
+    console.error("UPDATE_ENROLLMENT_START_DATE_ERROR", error);
+    return { success: false, message: "시작일 변경에 실패했습니다." };
+  }
+}
+
+/**
+ * 수강 종료일 업데이트
+ */
+export async function updateEnrollmentEndDateAction(
+  enrollmentId: string,
+  endDate: Date | null
+) {
+  const coachId = await getUserId();
+
+  if (!coachId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    const updatedEnrollment = await updateEnrollmentEndDateQuery(
+      enrollmentId,
+      endDate
+    );
+
+    revalidatePath("/coach/dashboard");
+    revalidatePath("/coach/members");
+    revalidatePath("/coach/dashboard/[pid]/members/[memberId]");
+
+    return {
+      success: true,
+      data: updatedEnrollment,
+      message: "종료일이 변경되었습니다.",
+    };
+  } catch (error) {
+    console.error("UPDATE_ENROLLMENT_END_DATE_ERROR", error);
+    return { success: false, message: "종료일 변경에 실패했습니다." };
+  }
+}
+
+/**
  * ==========================================
  * PERFORMANCE & PR (퍼포먼스 & 기록) ACTIONS
  * ==========================================

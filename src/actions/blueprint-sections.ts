@@ -55,6 +55,16 @@ export async function createBlueprintSectionAction(data: {
   programId: string;
   title: string;
   content: string;
+  recordType?:
+    | "TIME_BASED"
+    | "WEIGHT_BASED"
+    | "REP_BASED"
+    | "DISTANCE_BASED"
+    | "SURVEY"
+    | "CHECKLIST"
+    | "PHOTO"
+    | "OTHER";
+  isRecordable?: boolean;
 }) {
   const userId = await getUserId();
 
@@ -83,6 +93,8 @@ export async function createBlueprintSectionAction(data: {
     const section = await createBlueprintSectionQuery({
       title: data.title,
       content: data.content,
+      recordType: data.recordType,
+      isRecordable: data.isRecordable,
     });
 
     // Add to blueprint
@@ -114,6 +126,16 @@ export async function updateBlueprintSectionAction(
   data: {
     title?: string;
     content?: string;
+    recordType?:
+      | "TIME_BASED"
+      | "WEIGHT_BASED"
+      | "REP_BASED"
+      | "DISTANCE_BASED"
+      | "SURVEY"
+      | "CHECKLIST"
+      | "PHOTO"
+      | "OTHER";
+    isRecordable?: boolean;
   }
 ) {
   const userId = await getUserId();
