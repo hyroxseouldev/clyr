@@ -1,5 +1,5 @@
-import { eq, and, desc, sql, gte, lte, count, max } from "drizzle-orm";
-import { enrollments, orders, workoutLogs, programBlueprints, programs, account, userProfile } from "@/db/schema";
+import { eq, and, desc, sql, gte, lte, count } from "drizzle-orm";
+import { enrollments, orders, programBlueprints, programs, account, userProfile } from "@/db/schema";
 import { db } from "@/db";
 
 /**
@@ -35,32 +35,7 @@ export const getMembersByProgramIdQuery = async (programId: string) => {
     orderBy: [desc(enrollments.createdAt)],
   });
 
-  // 각 회원의 운동 기록 통계 계산
-  const membersWithStats = await Promise.all(
-    enrollmentList.map(async (enrollment) => {
-      const workoutStats = await db
-        .select({
-          count: count(),
-          lastWorkoutDate: max(workoutLogs.logDate),
-        })
-        .from(workoutLogs)
-        .innerJoin(programBlueprints, eq(workoutLogs.blueprintId, programBlueprints.id))
-        .where(
-          and(
-            eq(workoutLogs.userId, enrollment.userId),
-            eq(programBlueprints.programId, programId)
-          )
-        );
-
-      return {
-        ...enrollment,
-        workoutCount: workoutStats[0]?.count || 0,
-        lastWorkoutDate: workoutStats[0]?.lastWorkoutDate || null,
-      };
-    })
-  );
-
-  return membersWithStats;
+  return enrollmentList;
 };
 
 /**
@@ -111,58 +86,6 @@ export const getMemberDetailQuery = async (memberId: string, programId: string) 
 };
 
 /**
- * 회원의 운동 기록 목록 조회 (특정 프로그램)
- */
-export const getMemberWorkoutLogsByProgramQuery = async (
-  memberId: string,
-  programId: string
-) => {
-  return await db.query.workoutLogs.findMany({
-    where: eq(workoutLogs.userId, memberId),
-    orderBy: [desc(workoutLogs.logDate)],
-    with: {
-      user: true,
-      library: true,
-      blueprint: {
-        with: {
-          program: true,
-        },
-      },
-    },
-  }).then(logs => logs.filter(log => log.blueprint?.programId === programId));
-};
-
-/**
- * 회원의 코치 코멘트 목록 조회 (특정 프로그램)
- * workout_logs의 coachComment 필드 사용
- */
-export const getMemberCoachCommentsQuery = async (
-  memberId: string,
-  programId: string
-) => {
-  const comments = await db
-    .select({
-      id: workoutLogs.id,
-      logDate: workoutLogs.logDate,
-      coachComment: workoutLogs.coachComment,
-      isCheckedByCoach: workoutLogs.isCheckedByCoach,
-      createdAt: workoutLogs.createdAt,
-    })
-    .from(workoutLogs)
-    .innerJoin(programBlueprints, eq(workoutLogs.blueprintId, programBlueprints.id))
-    .where(
-      and(
-        eq(workoutLogs.userId, memberId),
-        eq(programBlueprints.programId, programId),
-        sql`${workoutLogs.coachComment} IS NOT NULL`
-      )
-    )
-    .orderBy(desc(workoutLogs.logDate));
-
-  return comments.filter(c => c.coachComment !== null);
-};
-
-/**
  * 회원의 구매 이력 조회
  */
 export const getMemberOrdersQuery = async (memberId: string, coachId?: string) => {
@@ -192,132 +115,6 @@ export const getMemberOrdersQuery = async (memberId: string, coachId?: string) =
       },
     },
   });
-};
-
-/**
- * ==========================================
- * PERFORMANCE & PR (퍼포먼스 & 기록) QUERIES
- * ==========================================
- */
-
-/**
- * 회원의 PR 기록 추출 (특정 종목)
- */
-export const getMemberPRHistoryQuery = async (
-  memberId: string,
-  programId: string,
-  libraryId?: string
-) => {
-  const conditions = [
-    eq(workoutLogs.userId, memberId),
-    sql`${workoutLogs.maxWeight} > 0`,
-  ];
-
-  const logs = await db.query.workoutLogs.findMany({
-    where: eq(workoutLogs.userId, memberId),
-    orderBy: [workoutLogs.logDate],
-    with: {
-      library: true,
-      blueprint: {
-        with: {
-          program: true,
-        },
-      },
-    },
-  }).then(logs =>
-    logs.filter(log => {
-      if (libraryId && log.libraryId !== libraryId) return false;
-      if (log.blueprint?.programId !== programId) return false;
-      return parseFloat(log.maxWeight || "0") > 0;
-    })
-  );
-
-  // 종목별로 그룹화하고 PR 이력 추출
-  const prHistory = new Map<string, Array<{
-    date: Date;
-    weight: number;
-    reps: number;
-    volume: number;
-    logId: string;
-  }>>();
-
-  logs.forEach(log => {
-    const key = log.libraryId;
-    if (!key) return;
-
-    const weight = parseFloat(log.maxWeight || "0");
-    const record = {
-      date: log.logDate,
-      weight,
-      reps: parseFloat(log.totalVolume || "0") || 0,
-      volume: parseFloat(log.totalVolume || "0") || 0,
-      logId: log.id,
-    };
-
-    if (!prHistory.has(key)) {
-      prHistory.set(key, []);
-    }
-    prHistory.get(key)!.push(record);
-  });
-
-  return prHistory;
-};
-
-/**
- * 회원의 현재 1RM 기록 조회 (상위 5개 종목)
- */
-export const getMemberCurrentPRsQuery = async (
-  memberId: string,
-  programId: string
-) => {
-  const logs = await db.query.workoutLogs.findMany({
-    where: eq(workoutLogs.userId, memberId),
-    orderBy: [desc(workoutLogs.maxWeight)],
-    with: {
-      library: true,
-      blueprint: {
-        with: {
-          program: true,
-        },
-      },
-    },
-  }).then(logs =>
-    logs.filter(log => {
-      if (log.blueprint?.programId !== programId) return false;
-      return parseFloat(log.maxWeight || "0") > 0;
-    })
-  );
-
-  // 종목별 최고 기록 추출
-  const prMap = new Map<string, {
-    libraryId: string;
-    exerciseName: string;
-    category: string | null;
-    maxWeight: number;
-    date: Date;
-  }>();
-
-  logs.forEach(log => {
-    if (!log.library) return;
-
-    const weight = parseFloat(log.maxWeight || "0");
-    const existing = prMap.get(log.libraryId);
-
-    if (!existing || weight > existing.maxWeight) {
-      prMap.set(log.libraryId, {
-        libraryId: log.libraryId,
-        exerciseName: log.library.title,
-        category: log.library.category,
-        maxWeight: weight,
-        date: log.logDate,
-      });
-    }
-  });
-
-  // 최고 기록 5개 반환
-  return Array.from(prMap.values())
-    .sort((a, b) => b.maxWeight - a.maxWeight)
-    .slice(0, 5);
 };
 
 /**

@@ -225,31 +225,6 @@ export const sectionRecords = pgTable(
 // 4. 상거래 및 수강 권한 (Commerce & Access)
 // ==========================================
 
-// [WorkoutLogs] 사용자 운동 기록 (User & Coach)
-export const workoutLogs = pgTable("workout_logs", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .references(() => account.id, { onDelete: "cascade" })
-    .notNull(),
-  libraryId: uuid("library_id")
-    .references(() => workoutLibrary.id)
-    .notNull(),
-  blueprintId: uuid("blueprint_id").references(() => programBlueprints.id),
-  logDate: timestamp("log_date").notNull(), // 운동 날짜
-  content: jsonb("content").default({}).$type<Record<string, unknown>>(), // 운동 기록 상세 내용 (JSON)
-  intensity: text("intensity").$type<"LOW" | "MEDIUM" | "HIGH">(), // 운동 강도
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-
-  // 리더보드 랭킹 산출용 요약 필드
-  maxWeight: numeric("max_weight").default("0"),
-  totalVolume: numeric("total_volume").default("0"), // AMRAP의 경우 총 횟수 저장 가능
-  totalDuration: integer("total_duration"), // FOR_TIME 기록 (초 단위)
-
-  coachComment: text("coach_comment"),
-  isCheckedByCoach: boolean("is_checked_by_coach").default(false),
-});
-
 // [Orders] 결제 내역 (판매 영수증)
 export const orders = pgTable("orders", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -310,7 +285,6 @@ export const accountRelations = relations(account, ({ one, many }) => ({
     references: [userProfile.accountId],
   }),
   programs: many(programs),
-  workoutLogs: many(workoutLogs),
   sectionRecords: many(sectionRecords),
   workoutLibrary: many(workoutLibrary),
   ordersAsBuyer: many(orders, { relationName: "buyer" }),
@@ -356,12 +330,11 @@ export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
 // workoutLibrary 관계
 export const workoutLibraryRelations = relations(
   workoutLibrary,
-  ({ one, many }) => ({
+  ({ one }) => ({
     coach: one(account, {
       fields: [workoutLibrary.coachId],
       references: [account.id],
     }),
-    workoutLogs: many(workoutLogs),
   })
 );
 
@@ -399,7 +372,6 @@ export const programBlueprintsRelations = relations(
       references: [programs.id],
     }),
     sections: many(blueprintSectionItems), // many-to-many via join table
-    workoutLogs: many(workoutLogs),
   })
 );
 
@@ -420,21 +392,6 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
     references: [programs.id],
   }),
   enrollments: many(enrollments),
-}));
-
-export const workoutLogsRelations = relations(workoutLogs, ({ one }) => ({
-  user: one(account, {
-    fields: [workoutLogs.userId],
-    references: [account.id],
-  }),
-  library: one(workoutLibrary, {
-    fields: [workoutLogs.libraryId],
-    references: [workoutLibrary.id],
-  }),
-  blueprint: one(programBlueprints, {
-    fields: [workoutLogs.blueprintId],
-    references: [programBlueprints.id],
-  }),
 }));
 
 // sectionRecords 관계
@@ -473,7 +430,6 @@ export type BlueprintSectionItem = InferSelectModel<
 export type SectionRecord = InferSelectModel<typeof sectionRecords>;
 export type Program = InferSelectModel<typeof programs>;
 export type ProgramBlueprint = InferSelectModel<typeof programBlueprints>;
-export type WorkoutLog = InferSelectModel<typeof workoutLogs>;
 export type Order = InferSelectModel<typeof orders>;
 export type Enrollment = InferSelectModel<typeof enrollments>;
 
@@ -489,6 +445,5 @@ export type NewBlueprintSectionItem = InferInsertModel<
 export type NewSectionRecord = InferInsertModel<typeof sectionRecords>;
 export type NewProgram = InferInsertModel<typeof programs>;
 export type NewProgramBlueprint = InferInsertModel<typeof programBlueprints>;
-export type NewWorkoutLog = InferInsertModel<typeof workoutLogs>;
 export type NewOrder = InferInsertModel<typeof orders>;
 export type NewEnrollment = InferInsertModel<typeof enrollments>;

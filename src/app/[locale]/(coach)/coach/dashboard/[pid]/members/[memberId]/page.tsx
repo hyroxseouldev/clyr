@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getMemberDetailAction, getMemberWorkoutLogsAction, getMemberCoachCommentsAction } from "@/actions/member";
+import { getMemberDetailAction } from "@/actions/member";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,14 +36,6 @@ export default async function MemberDetailPage({ params }: PageProps) {
     }
     notFound();
   }
-
-  // 운동 기록 조회
-  const workoutLogsResult = await getMemberWorkoutLogsAction(programId, memberId);
-  const workoutLogs = workoutLogsResult.success ? workoutLogsResult.data : [];
-
-  // 코치 코멘트 조회
-  const commentsResult = await getMemberCoachCommentsAction(programId, memberId);
-  const coachComments = commentsResult.success ? commentsResult.data : [];
 
   const member = memberResult.data;
 
@@ -100,8 +92,6 @@ export default async function MemberDetailPage({ params }: PageProps) {
         programId={programId}
         memberId={memberId}
         member={member}
-        workoutLogs={workoutLogs || []}
-        coachComments={coachComments || []}
       />
     </div>
   );

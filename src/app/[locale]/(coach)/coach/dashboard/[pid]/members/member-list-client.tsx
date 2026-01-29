@@ -39,8 +39,6 @@ interface MemberListClientProps {
       id: string;
       title: string;
     };
-    workoutCount: number;
-    lastWorkoutDate: Date | null;
   }>;
 }
 
@@ -51,7 +49,7 @@ export function MemberListClient({
   const t = useTranslations('members');
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "EXPIRED" | "PAUSED">("ALL");
-  const [sortBy, setSortBy] = useState<"name" | "enrollmentDate" | "status" | "lastWorkout">("enrollmentDate");
+  const [sortBy, setSortBy] = useState<"name" | "enrollmentDate" | "status">("enrollmentDate");
   const [currentPage, setCurrentPage] = useState(1);
 
   // 필터링 및 정렬된 회원 목록
@@ -86,10 +84,6 @@ export function MemberListClient({
         case "status":
           const statusOrder = { ACTIVE: 0, PAUSED: 1, EXPIRED: 2 };
           return statusOrder[a.status] - statusOrder[b.status];
-        case "lastWorkout":
-          const aDate = a.lastWorkoutDate?.getTime() || 0;
-          const bDate = b.lastWorkoutDate?.getTime() || 0;
-          return bDate - aDate;
         default:
           return 0;
       }
@@ -167,7 +161,6 @@ export function MemberListClient({
               <SelectItem value="enrollmentDate">{t('sortBy.enrollmentDate')}</SelectItem>
               <SelectItem value="name">{t('sortBy.name')}</SelectItem>
               <SelectItem value="status">{t('sortBy.status')}</SelectItem>
-              <SelectItem value="lastWorkout">{t('sortBy.lastWorkout')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -203,8 +196,6 @@ export function MemberListClient({
                 programName={member.program.title}
                 enrollmentStatus={member.status}
                 enrollmentEnd={member.endDate}
-                lastWorkoutDate={member.lastWorkoutDate}
-                workoutCount={member.workoutCount}
                 programId={programId}
               />
             ))}

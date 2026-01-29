@@ -17,8 +17,6 @@ export interface MemberCardProps {
   programName: string;
   enrollmentStatus: "ACTIVE" | "EXPIRED" | "PAUSED";
   enrollmentEnd: Date | null;
-  lastWorkoutDate: Date | null;
-  workoutCount: number;
   programId: string;
 }
 
@@ -34,8 +32,6 @@ export function MemberCard({
   programName,
   enrollmentStatus,
   enrollmentEnd,
-  lastWorkoutDate,
-  workoutCount,
   programId,
 }: MemberCardProps) {
   const router = useRouter();
@@ -121,17 +117,7 @@ export function MemberCard({
                   : "무기한"}
               </span>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="font-medium">{workoutCount}</span>
-              <span>회 운동</span>
-            </div>
           </div>
-
-          {lastWorkoutDate && (
-            <p className="text-xs text-muted-foreground">
-              최근 운동: {format(new Date(lastWorkoutDate), "yyyy.MM.dd", { locale: ko })}
-            </p>
-          )}
         </div>
       </CardContent>
     </Card>

@@ -36,10 +36,10 @@ const testUsers = Array.from({ length: 10 }, (_, i) => ({
 const randomItem = <T>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)]
 const randomBool = () => Math.random() > 0.5
 
-const FITNESS_LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as const
-const FITNESS_GOALS = ['체중감량', '근력증가', '체력증진', '건강유지'] as const
-const GENDERS = ['MALE', 'FEMALE', 'OTHER'] as const
-const WORKOUT_TYPES = ['GYM', 'CROSSFIT', 'RUNNING', 'OTHER'] as const
+const FITNESS_LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED']
+const FITNESS_GOALS = ['체중감량', '근력증가', '체력증진', '건강유지']
+const GENDERS = ['MALE', 'FEMALE', 'OTHER']
+const WORKOUT_TYPES = ['GYM', 'CROSSFIT', 'RUNNING', 'OTHER']
 
 // Track created user IDs for cleanup
 const seedData = {
@@ -110,16 +110,16 @@ async function main() {
         )
 
         const [userProfile] = await tx.insert(schema.userProfile).values({
-          accountId: account.id,
+          accountId: account.id as string,
           nickname: user.fullName,
-          fitnessLevel: randomItem(FITNESS_LEVELS),
+          fitnessLevel: randomItem(FITNESS_LEVELS) as "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
           fitnessGoals,
           onboardingCompleted: true,
           onboardingData: {
-            gender: randomItem(GENDERS),
-            currentWorkoutType: randomItem(WORKOUT_TYPES),
+            gender: randomItem(GENDERS) as "MALE" | "FEMALE" | "OTHER",
+            currentWorkoutType: randomItem(WORKOUT_TYPES) as "HYROX" | "CROSSFIT" | "RUNNING" | "GYM" | "OTHER",
           },
-        }).returning()
+        } as any).returning()
 
         seedData.profileIds.push(userProfile.id)
 

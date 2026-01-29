@@ -22,17 +22,14 @@ import {
   FileTextIcon,
   CalendarIcon,
   MessageSquareIcon,
-  TrendingUpIcon,
   UserIcon,
-  ShoppingBagIcon,
-  LoaderIcon,
   CheckIcon,
   XIcon,
 } from "lucide-react";
-import { format, addDays, addWeeks, addMonths } from "date-fns";
+import { format, addDays } from "date-fns";
 import { ko } from "date-fns/locale";
 import { toast } from "sonner";
-import type { Enrollment, WorkoutLog } from "@/db/schema";
+import type { Enrollment } from "@/db/schema";
 
 interface MemberDetailClientProps {
   programId: string;
@@ -62,36 +59,16 @@ interface MemberDetailClientProps {
       fitnessLevel: string | null;
     } | null;
   };
-  workoutLogs: WorkoutLog[];
-  coachComments: Array<{
-    id: string;
-    logDate: Date;
-    coachComment: string | null;
-    isCheckedByCoach: boolean | null;
-    createdAt: Date;
-  }>;
 }
-
-const INTENSITY_VARIANTS: Record<
-  string,
-  "default" | "secondary" | "outline"
-> = {
-  LOW: "secondary",
-  MEDIUM: "default",
-  HIGH: "outline",
-};
 
 export function MemberDetailClient({
   programId,
   memberId,
   member,
-  workoutLogs,
-  coachComments,
 }: MemberDetailClientProps) {
   const t = useTranslations('memberDetail');
   const tToast = useTranslations('toast');
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"enrollment" | "performance">("enrollment");
   const [isUpdating, setIsUpdating] = useState(false);
 
   // 날짜 편집 상태
@@ -198,49 +175,10 @@ export function MemberDetailClient({
     setTempDate(null);
   };
 
-  // 3대 운동 PR 계산 (content에서 운동 이름 찾기)
-  const bigThreePRs = {
-    bench: workoutLogs
-      .filter(log => {
-        const exerciseName = log.content?.exerciseName as string | undefined || "";
-        return exerciseName.toLowerCase().includes("벤치") || exerciseName.toLowerCase().includes("bench");
-      })
-      .sort((a, b) => parseFloat(b.maxWeight || "0") - parseFloat(a.maxWeight || "0"))[0],
-    deadlift: workoutLogs
-      .filter(log => {
-        const exerciseName = log.content?.exerciseName as string | undefined || "";
-        return exerciseName.toLowerCase().includes("데드") || exerciseName.toLowerCase().includes("deadlift");
-      })
-      .sort((a, b) => parseFloat(b.maxWeight || "0") - parseFloat(a.maxWeight || "0"))[0],
-    squat: workoutLogs
-      .filter(log => {
-        const exerciseName = log.content?.exerciseName as string | undefined || "";
-        return exerciseName.toLowerCase().includes("스쿼트") || exerciseName.toLowerCase().includes("squat");
-      })
-      .sort((a, b) => parseFloat(b.maxWeight || "0") - parseFloat(a.maxWeight || "0"))[0],
-  };
-
   return (
-    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-      <TabsList className="grid w-full max-w-md grid-cols-2">
-        <TabsTrigger value="enrollment">
-          <div className="flex items-center gap-2">
-            <UserIcon className="size-4" />
-            {t('enrollmentManagement')}
-          </div>
-        </TabsTrigger>
-        <TabsTrigger value="performance">
-          <div className="flex items-center gap-2">
-            <TrendingUpIcon className="size-4" />
-            {t('performanceLog')}
-          </div>
-        </TabsTrigger>
-      </TabsList>
-
-      {/* 수강 관리 탭 */}
-      <TabsContent value="enrollment" className="space-y-6">
-        {/* 수강 상태 카드 */}
-        <Card>
+    <div className="space-y-6">
+      {/* 수강 상태 카드 */}
+      <Card>
           <CardHeader>
             <CardTitle>{t('enrollmentStatus')}</CardTitle>
             <CardDescription>
@@ -451,185 +389,7 @@ export function MemberDetailClient({
             </CardContent>
           </Card>
         )}
+      </div>
+    );
+  }
 
-        {/* 코치 코멘트 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquareIcon className="size-5" />
-              {t('coachComments')}
-              <Badge variant="secondary">{coachComments.length}</Badge>
-            </CardTitle>
-            <CardDescription>
-              {t('coachCommentsDesc')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {coachComments.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                {t('noCoachComments')}
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {coachComments.map((comment) => (
-                  <div key={comment.id} className="border-l-2 border-primary pl-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                      <CalendarIcon className="size-4" />
-                      {format(new Date(comment.logDate), "yyyy.MM.dd", { locale: ko })}
-                    </div>
-                    <p className="text-sm">{comment.coachComment}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* 퍼포먼스 로그 탭 */}
-      <TabsContent value="performance" className="space-y-6">
-        {/* 3대 운동 PR */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('bigThreePR')}</CardTitle>
-            <CardDescription>
-              {t('bigThreePRDesc')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              {/* 벤치프레스 */}
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium">{t('benchPress')}</p>
-                  {bigThreePRs.bench && (
-                    <Badge variant="default">PR</Badge>
-                  )}
-                </div>
-                {bigThreePRs.bench ? (
-                  <>
-                    <p className="text-2xl font-bold">
-                      {parseFloat(bigThreePRs.bench.maxWeight || "0").toFixed(1)}{t('kg')}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(bigThreePRs.bench.logDate), "yyyy.MM.dd", { locale: ko })}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground">{t('noRecord')}</p>
-                )}
-              </div>
-
-              {/* 데드리프트 */}
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium">{t('deadlift')}</p>
-                  {bigThreePRs.deadlift && (
-                    <Badge variant="default">PR</Badge>
-                  )}
-                </div>
-                {bigThreePRs.deadlift ? (
-                  <>
-                    <p className="text-2xl font-bold">
-                      {parseFloat(bigThreePRs.deadlift.maxWeight || "0").toFixed(1)}{t('kg')}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(bigThreePRs.deadlift.logDate), "yyyy.MM.dd", { locale: ko })}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground">{t('noRecord')}</p>
-                )}
-              </div>
-
-              {/* 스쿼트 */}
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium">{t('squat')}</p>
-                  {bigThreePRs.squat && (
-                    <Badge variant="default">PR</Badge>
-                  )}
-                </div>
-                {bigThreePRs.squat ? (
-                  <>
-                    <p className="text-2xl font-bold">
-                      {parseFloat(bigThreePRs.squat.maxWeight || "0").toFixed(1)}{t('kg')}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(bigThreePRs.squat.logDate), "yyyy.MM.dd", { locale: ko })}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground">{t('noRecord')}</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 운동 기록 타임라인 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileTextIcon className="size-5" />
-              {t('workoutLog')}
-              <Badge variant="secondary">{workoutLogs.length}</Badge>
-            </CardTitle>
-            <CardDescription>
-              {t('workoutLogDesc')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {workoutLogs.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <FileTextIcon className="size-12 mx-auto mb-4 opacity-50" />
-                <p>{t('noWorkoutLog')}</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {workoutLogs.slice(0, 20).map((log) => {
-                  const exerciseName = log.content?.exerciseName as string | undefined || t('exercise');
-                  return (
-                    <div key={log.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="font-medium">{exerciseName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {format(new Date(log.logDate), "yyyy.MM.dd HH:mm", { locale: ko })}
-                          </p>
-                        </div>
-                        <Badge
-                          variant={INTENSITY_VARIANTS[log.intensity || "MEDIUM"]}
-                        >
-                          {t(`intensity.${log.intensity || "MEDIUM"}`)}
-                        </Badge>
-                      </div>
-
-                    {parseFloat(log.maxWeight || "0") > 0 && (
-                      <div className="mt-2">
-                        <p className="text-sm">
-                          <span className="font-medium">{t('maxWeight')}:</span>{" "}
-                          {parseFloat(log.maxWeight || "0").toFixed(1)}{t('kg')}
-                        </p>
-                      </div>
-                    )}
-
-                    {log.coachComment && (
-                      <div className="mt-2 p-2 bg-muted rounded text-sm">
-                        <p className="font-medium text-xs text-muted-foreground mb-1">
-                          {t('coachComment')}:
-                        </p>
-                        <p>{log.coachComment}</p>
-                      </div>
-                    )}
-                  </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
-  );
-}

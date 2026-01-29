@@ -1250,7 +1250,7 @@ function BlueprintEditorModal({
               <Checkbox
                 id="isRecordable"
                 checked={newSectionIsRecordable}
-                onCheckedChange={setNewSectionIsRecordable}
+                onCheckedChange={(checked) => setNewSectionIsRecordable(checked === true)}
                 disabled={isSaving}
               />
               <Label

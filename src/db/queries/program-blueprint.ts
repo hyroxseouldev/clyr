@@ -19,6 +19,8 @@ export interface ProgramBlueprintWithSections {
     id: string;
     title: string;
     content: string;
+    recordType: "OTHER" | "TIME_BASED" | "WEIGHT_BASED" | "REP_BASED" | "DISTANCE_BASED" | "SURVEY" | "CHECKLIST" | "PHOTO";
+    isRecordable: boolean;
     orderIndex: number;
   }>;
   notes: string | null;
@@ -59,6 +61,8 @@ export async function getProgramBlueprintsQuery(
       sectionId: blueprintSections.id,
       sectionTitle: blueprintSections.title,
       sectionContent: blueprintSections.content,
+      recordType: blueprintSections.recordType,
+      isRecordable: blueprintSections.isRecordable,
       orderIndex: blueprintSectionItems.orderIndex,
     })
     .from(programBlueprints)
@@ -103,6 +107,8 @@ export async function getProgramBlueprintsQuery(
         id: row.sectionId,
         title: row.sectionTitle ?? "",
         content: row.sectionContent ?? "",
+        recordType: row.recordType ?? "OTHER",
+        isRecordable: row.isRecordable ?? false,
         orderIndex: row.orderIndex ?? 0,
       });
     }

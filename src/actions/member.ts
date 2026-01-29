@@ -4,11 +4,7 @@ import { revalidatePath } from "next/cache";
 import {
   getMembersByProgramIdQuery,
   getMemberDetailQuery,
-  getMemberWorkoutLogsByProgramQuery,
-  getMemberCoachCommentsQuery,
   getMemberOrdersQuery,
-  getMemberPRHistoryQuery,
-  getMemberCurrentPRsQuery,
   getExpiringEnrollmentsQuery,
   getMemberStatsByProgramQuery,
   searchMembersQuery,
@@ -127,68 +123,6 @@ export async function getMemberDetailAction(programId: string, memberId: string)
   } catch (error) {
     console.error("GET_MEMBER_DETAIL_ERROR", error);
     return { success: false, message: "회원 정보를 불러오는데 실패했습니다." };
-  }
-}
-
-/**
- * 회원의 운동 기록 조회
- */
-export async function getMemberWorkoutLogsAction(programId: string, memberId: string) {
-  const coachId = await getUserId();
-
-  if (!coachId) {
-    return { success: false, message: "인증되지 않은 사용자입니다." };
-  }
-
-  try {
-    // 1. 프로그램 소유자 확인
-    const program = await getProgramByIdQuery(programId);
-
-    if (!program || program.coachId !== coachId) {
-      return { success: false, message: "권한이 없습니다." };
-    }
-
-    // 2. 운동 기록 조회
-    const workoutLogs = await getMemberWorkoutLogsByProgramQuery(memberId, programId);
-
-    return {
-      success: true,
-      data: workoutLogs,
-    };
-  } catch (error) {
-    console.error("GET_MEMBER_WORKOUT_LOGS_ERROR", error);
-    return { success: false, message: "운동 기록을 불러오는데 실패했습니다." };
-  }
-}
-
-/**
- * 회원의 코치 코멘트 목록 조회
- */
-export async function getMemberCoachCommentsAction(programId: string, memberId: string) {
-  const coachId = await getUserId();
-
-  if (!coachId) {
-    return { success: false, message: "인증되지 않은 사용자입니다." };
-  }
-
-  try {
-    // 1. 프로그램 소유자 확인
-    const program = await getProgramByIdQuery(programId);
-
-    if (!program || program.coachId !== coachId) {
-      return { success: false, message: "권한이 없습니다." };
-    }
-
-    // 2. 코치 코멘트 조회
-    const comments = await getMemberCoachCommentsQuery(memberId, programId);
-
-    return {
-      success: true,
-      data: comments,
-    };
-  } catch (error) {
-    console.error("GET_MEMBER_COACH_COMMENTS_ERROR", error);
-    return { success: false, message: "코치 코멘트를 불러오는데 실패했습니다." };
   }
 }
 
@@ -362,78 +296,6 @@ export async function updateEnrollmentEndDateAction(
   } catch (error) {
     console.error("UPDATE_ENROLLMENT_END_DATE_ERROR", error);
     return { success: false, message: "종료일 변경에 실패했습니다." };
-  }
-}
-
-/**
- * ==========================================
- * PERFORMANCE & PR (퍼포먼스 & 기록) ACTIONS
- * ==========================================
- */
-
-/**
- * 회원의 PR 기록 조회
- */
-export async function getMemberPRHistoryAction(
-  programId: string,
-  memberId: string,
-  libraryId?: string
-) {
-  const coachId = await getUserId();
-
-  if (!coachId) {
-    return { success: false, message: "인증되지 않은 사용자입니다." };
-  }
-
-  try {
-    // 1. 프로그램 소유자 확인
-    const program = await getProgramByIdQuery(programId);
-
-    if (!program || program.coachId !== coachId) {
-      return { success: false, message: "권한이 없습니다." };
-    }
-
-    // 2. PR 기록 조회
-    const prHistory = await getMemberPRHistoryQuery(memberId, programId, libraryId);
-
-    return {
-      success: true,
-      data: prHistory,
-    };
-  } catch (error) {
-    console.error("GET_MEMBER_PR_HISTORY_ERROR", error);
-    return { success: false, message: "PR 기록을 불러오는데 실패했습니다." };
-  }
-}
-
-/**
- * 회원의 현재 1RM 기록 조회
- */
-export async function getMemberCurrentPRsAction(programId: string, memberId: string) {
-  const coachId = await getUserId();
-
-  if (!coachId) {
-    return { success: false, message: "인증되지 않은 사용자입니다." };
-  }
-
-  try {
-    // 1. 프로그램 소유자 확인
-    const program = await getProgramByIdQuery(programId);
-
-    if (!program || program.coachId !== coachId) {
-      return { success: false, message: "권한이 없습니다." };
-    }
-
-    // 2. 현재 PR 조회
-    const currentPRs = await getMemberCurrentPRsQuery(memberId, programId);
-
-    return {
-      success: true,
-      data: currentPRs,
-    };
-  } catch (error) {
-    console.error("GET_MEMBER_CURRENT_PRS_ERROR", error);
-    return { success: false, message: "현재 PR을 불러오는데 실패했습니다." };
   }
 }
 
