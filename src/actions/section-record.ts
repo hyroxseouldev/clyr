@@ -9,13 +9,16 @@ import {
   updateSectionRecordQuery,
   deleteSectionRecordQuery,
   getSectionRecordsByProgramAndDayQuery,
+  getHomeworkPageDataQuery,
+  getGroupedSectionRecordsForProgramQuery,
 } from "@/db/queries/section-records";
 import { getEnrollmentsByUserIdQuery } from "@/db/queries/order";
 import { getProgramByIdQuery } from "@/db/queries/program";
 import { getSectionItemByIdQuery } from "@/db/queries/blueprint-sections";
 import { getUserId } from "@/actions/auth";
 import { db } from "@/db";
-import { sectionRecords, userProfile } from "@/db/schema";
+import { sectionRecords, userProfile, programs } from "@/db/schema";
+import type { HomeworkPageData, GroupedHomeworkPageData } from "@/db/queries/section-records.types";
 
 // ==========================================
 // USER ACTIONS
@@ -354,5 +357,79 @@ export async function deleteSectionRecordByCoachAction(recordId: string) {
   } catch (error) {
     console.error("DELETE_SECTION_RECORD_BY_COACH_ERROR", error);
     return { success: false, message: "삭제에 실패했습니다." };
+  }
+}
+
+// ==========================================
+// HOMEWORK PAGE ACTIONS (COACH)
+// ==========================================
+
+/**
+ * Get homework page initial data (program info, available days, stats)
+ */
+export async function getHomeworkPageDataAction(
+  programId: string
+): Promise<{ success: boolean; data?: HomeworkPageData; message?: string }> {
+  const coachId = await getUserId();
+
+  if (!coachId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // Verify coach owns the program
+    const program = await db.query.programs.findFirst({
+      where: eq(programs.id, programId),
+    });
+
+    if (!program || program.coachId !== coachId) {
+      return { success: false, message: "권한이 없습니다." };
+    }
+
+    const pageData = await getHomeworkPageDataQuery(programId);
+
+    if (!pageData) {
+      return { success: false, message: "프로그램을 찾을 수 없습니다." };
+    }
+
+    return { success: true, data: pageData };
+  } catch (error) {
+    console.error("GET_HOMEWORK_PAGE_DATA_ERROR", error);
+    return { success: false, message: "페이지 데이터를 불러오는데 실패했습니다." };
+  }
+}
+
+/**
+ * Get grouped homework page data (all records grouped by blueprint → section)
+ */
+export async function getGroupedHomeworkPageDataAction(
+  programId: string
+): Promise<{ success: boolean; data?: GroupedHomeworkPageData; message?: string }> {
+  const coachId = await getUserId();
+
+  if (!coachId) {
+    return { success: false, message: "인증되지 않은 사용자입니다." };
+  }
+
+  try {
+    // Verify coach owns the program
+    const program = await db.query.programs.findFirst({
+      where: eq(programs.id, programId),
+    });
+
+    if (!program || program.coachId !== coachId) {
+      return { success: false, message: "권한이 없습니다." };
+    }
+
+    const pageData = await getGroupedSectionRecordsForProgramQuery(programId);
+
+    if (!pageData) {
+      return { success: false, message: "프로그램을 찾을 수 없습니다." };
+    }
+
+    return { success: true, data: pageData };
+  } catch (error) {
+    console.error("GET_GROUPED_HOMEWORK_PAGE_DATA_ERROR", error);
+    return { success: false, message: "페이지 데이터를 불러오는데 실패했습니다." };
   }
 }
